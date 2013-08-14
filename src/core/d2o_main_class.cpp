@@ -574,7 +574,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
     c_occup_group &curr_group = occup_groups[i];
     
     if( (curr_group.items.size() == 1) && 
-        (manual_population.count(curr_group.items[0].label) == 0) &&
+        (!(*manual_properties)[curr_group.items[0].label].popul_specified) &&
         (abs(1 - curr_group.get_total_occup_input()) < 1E-4) )
     {
       rangi rd;
@@ -592,7 +592,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         rangi rd;
         rd.group_index = i;
         rd.atom_index = j;
-        if(manual_population.count(curr_group.items[j].label) == 0)
+        if(!(*manual_properties)[curr_group.items[0].label].popul_specified)
         {  
           correct_rms_range(curr_group.number_of_sites, 
                             occup_groups[i].items[j].occup_target, x2,
@@ -601,7 +601,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         }
         else
         {
-          int value = manual_population[curr_group.items[j].label];
+          int value = (*manual_properties)[curr_group.items[j].label].manual_pop;
           rd.min_value  = value;
           rd.max_value  = value;
           rd.curr_value = value;
@@ -697,7 +697,7 @@ bool d2o_main_class::get_atoms_population()
         
         for(int j = 0; j < occup_groups[i].items.size(); j++)
         {
-           man_occup_group = manual_population.count(occup_groups[i].items[j].label) > 0;
+           man_occup_group = (*manual_properties)[occup_groups[i].items[j].label].popul_specified;
            if( man_occup_group )
              break;
         }
@@ -840,15 +840,9 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
     
     if( cb != cb_no )
     {  
-      if( manual_charges.count((*it).first) > 0 ) 
-        (*it).second.curr_charge = manual_charges[(*it).first];
-    
-      for(map<string, double>::const_iterator itc = manual_charges_wc.begin();
-                                              itc != manual_charges_wc.end(); itc++)
-      {
-        if( match_wildcard(itc->first, (*it).first) )
-          (*it).second.curr_charge = (*itc).second;
-      }  
+      
+      if( (*manual_properties)[(*it).first].charge_specified) 
+        (*it).second.curr_charge = (*manual_properties)[(*it).first].charge;
     }   
   }
 
@@ -1244,28 +1238,57 @@ bool d2o_main_class::read_molecule(std::string file_name)
 }
 
 
+bool d2o_main_class::set_labels_to_manual()
+{
+  set<string> set_lbl;
+  
+  for(OBAtomIterator it = mol_initial.BeginAtoms(); it != mol_initial.EndAtoms(); ++it)
+  {
+    string label = (*it)->GetData("_atom_site_label")->GetValue();
+    set_lbl.insert(label);
+  }
+  
+  (*manual_properties).convert_properties(set_lbl);
+  
+  if( (verbose_level >= 1) && (manual_properties->data().size() > 0))
+  {
+    cout << "Manual atoms" << endl;
+    cout << "" << endl;
+    for(c_man_atom_prop::data_type::const_iterator it  = manual_properties->data().begin();
+                                                   it != manual_properties->data().end(); it++)
+    {
+      
+    }
+  }  
+   
+  return true;
+}
+
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              const std::vector<int> scs,
-                             charge_balance cb, double tolerance_v, 
-                             const std::map<std::string, int> manual_population_v,
-                             const std::map<std::string, double> manual_charges_v,
-                             const std::map<std::string, double> manual_charges_wc_v,        
+                             charge_balance cb, double tolerance_v,
                              bool merge_confs,
-                             double n_store,        
+                             c_man_atom_prop &manual_properties_v,
+                             double n_store,
                              std::string output_base_name)
 {
   assert(scs.size() == 3);
   
   r_tolerance = max(tolerance_v, 1.0E-6);
-  manual_population = manual_population_v;
-  manual_charges    = manual_charges_v;
-  manual_charges_wc = manual_charges_wc_v;  
-  
+  manual_properties = &manual_properties_v;  
+          
   if(!read_molecule(input_file_name))
   {
     cerr << "Input file cannot be opened." << endl;
     return false;
   }
+  
+  if(!set_labels_to_manual())
+  {
+    cerr << "Manual labels cannot be set." << endl;
+    return false;
+  }
+  
   
   if(!create_super_cell(scs[0], scs[1], scs[2]))
   {
