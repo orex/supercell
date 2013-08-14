@@ -110,34 +110,29 @@ bool c_man_atom_prop_cli::get_params(std::string right_str, c_man_atom_prop_item
   regex rx_charge("(^|\\s)c(harge){0,1}\\s*=\\s*(\\S*)(\\s|$)");
   good_param = get_param(right_str, rx_charge, 3, param);
   result = result && good_param;
-  if(good_param)
+  if(good_param && (param != "") )
   {
-    c_prop.charge_specified = param != "";
-    if( c_prop.charge_specified )
-      result = result && is_double(param, c_prop.charge);
+    double tmp;
+    if( is_double(param, tmp) )
+      c_prop.charge = tmp;
+    else
+      result = false;
   }  
   
   //extract population
   regex rx_pop("(^|\\s)p(opulation){0,1}\\s*=\\s*(\\d+)(\\s|$)");
   good_param = get_param(right_str, rx_pop, 3, param);
   result = result && good_param;
-  if(good_param)
-  {
-    c_prop.popul_specified = param != "";
-    if( c_prop.popul_specified )
-      c_prop.manual_pop = lexical_cast<int>(param);
-  }  
+  if(good_param && (param != "") )
+    c_prop.population = lexical_cast<int>(param);
+
 
   //extract fixation
   regex rx_fix("(^|\\s)(fixed|notfixed)(\\s|$)");
   good_param = get_param(right_str, rx_fix, 2, param);
   result = result && good_param;
-  if(good_param)
-  {
-    c_prop.fixed_specified = param != "";
-    if( c_prop.fixed_specified )
-      c_prop.fixed = param == "fixed";
-  }  
+  if(good_param && (param != "") )
+    c_prop.fixed = param == "fixed";
   
   trim(right_str);
   
@@ -308,7 +303,7 @@ void c_man_atom_prop_cli::convert_properties(const std::set<std::string> &labels
       the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltRegex) && 
                                   ( regex_match(*it_lbl, regex(it_p->label)) ) );
       if( the_label )
-        data_map[*it_lbl] = *it_p;
+        data_map[*it_lbl].assign(*it_p);
     }  
   }
 }
