@@ -1,0 +1,255 @@
+'\" t
+.\" Manual page created with latex2man on Tue Aug 13 16:36:33 CEST 2013
+.\" NOTE: This file is generated, DO NOT EDIT.
+.de Vb
+.ft CW
+.nf
+..
+.de Ve
+.ft R
+
+.fi
+..
+.TH "SUPERCELL" "1" "2013/09/01" "Scientific Tools " "Scientific Tools "
+.SH NAME
+
+.PP
+supercell
+is a tool to convert a crystallographic structure with partial occupancy and/or vacancies to ordinary supercell structure suitable for calculations. 
+.PP
+.SH SYNOPSIS
+
+.PP
+supercell
+\fB\-h, \-\-help\fP
+.br
+supercell
+[\fBOPTIONS\fP]
+\fB\-i \fP\fIinput\-file\fP
+.br
+supercell
+[\fBOPTIONS\fP]
+\fB\-\-input=\fP\fIinput\-file\fP
+.br
+.PP
+.SH DESCRIPTION
+
+supercell
+reads the file \fIinfile\fP
+and writes \fIoutfile\fP\&.
+The 
+input must be a LaTeX document using the latex2man
+LaTeXpackage. 
+Latex2man
+translates that document into the \fItroff\fP(1)
+format using 
+the \fB\-man\fP
+macro package. 
+.PP
+Using the \fB\-H\fP
+option, HTML code can be produced, instead of 
+\fItroff\fP(1)\&.
+With this option you can, optionally, specify a \fICSSfile\fP
+as an argument. 
+CSS (Cascading Style Sheets) allows you to control the appearance of the resulting HTML page. 
+See below for the names of CSS classes that are included in the HTML tags as attributes. 
+.PP
+Using the \fB\-T\fP
+option, TexInfo code can be produced, instead of 
+\fItroff\fP(1)\&.
+.PP
+Using the \fB\-M\fP
+option, \fItroff\fP(1)
+input is produced. 
+.PP
+Using the \fB\-L\fP
+option, LaTeX ouput can be produced, instead of 
+\fItroff\fP(1)\&.
+.PP
+.SH OPTIONS
+
+.PP
+.TP
+\fB\-h\fP, \fB\-\-help\fP
+Print help message and exit the program. 
+.PP
+.TP
+\fB\-v \fP\fIlevel\fP, \fB\-\-verbose=\fP\fIlevel\fP
+Change verbosity level from default 1. Level 0 \- quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
+.PP
+.TP
+\fB\-i \fP\fIinput\-file\fP, \fB\-\-input=\fP\fIinput\-file\fP
+Required options. Input file with in CIF format. Only one file can be specified. 
+.PP
+.TP
+\fB\-d\fP, \fB\-\-dry\-run\fP
+The option is highly recommended for the first run of the program with new input specified. 
+With the option the program will do everything, but not write file. Be careful, if you switched \fB\-m\fP,
+\fB\-\-merge\-by\-distance\fP
+option. With the option dry\-run should go through all crystal structures. So, it can take time. 
+.PP
+.TP
+\fB\-s \fP\fIcell\-size\fP, \fB\-\-cell\-size=\fP\fIcell\-size\fP
+The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1". 
+.PP
+.TP
+\fB\-c \fP\fIbalance\-type\fP, \fB\-\-charge\-balance=\fP\fIbalance\-type\fP
+The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are 
+.RS
+.TP
+no
+No charge balancing. The option will set all charges to zero. 
+.TP
+try
+Default. Try to charge balance system, if all charges known and initial system is not charged. 
+.TP
+yes
+Check input file first for charges, if not exists use formal one. 
+.TP
+form
+Experimental. Formal charges from internal openbabel
+database. Current version of openbabel
+provides charges only for few elements. 
+.RE
+.RS
+.PP
+.RE
+.TP
+\fB\-p \fP\fIlabels\-properties\fP, \fB\-\-property=\fP\fIlabels\-properties\fP
+The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax. 
+.RS
+.TP
+.B *
+Simple: <label>:<property_name>[=<property_value>]. 
+.TP
+.B *
+Extended: "<OPT>(<labels>):{<properties>}". DONT forget to put extended syntax in quotes. 
+.RE
+.RS
+.PP
+Where <label> is a label of atom, which property you want to change, <labels> set of space separate labels. <OPT> is type of string processing you want to set for labels. The possible values of <OPT> are 
+.RS
+.RE
+.TP
+p
+Treat the labels in parenthesis like a plain string. 
+.TP
+"", w
+Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * \- any numbers of any symbol and ? \- any symbol (exactly one). 
+.TP
+r
+Treat the labels in parenthesis like a Perl Regex. Syntax description you can find at \fBhttp://en.wikipedia.org/wiki/Regular_expression\fP\&.
+.RE
+.RS
+.PP
+The <property_name> is a name of the property you want to set for all specified atoms. Some properties can have values, which you should set using equal symbol. The properties can be 
+.RS
+.RE
+.TP
+c[charge]
+Set charge of atoms with specified label(s). Floaing\-point value in elementary charge units. 
+.TP
+p[opulation]
+Number of atoms with specific label(s) in output supercell structure. 
+.TP
+[not]fixed
+Exclude atoms from combinations. The output file will contain partial occupancy sites. 
+.RE
+.RS
+.PP
+Some fancy examples you can find below. 
+.PP
+.RE
+.TP
+\fB\-t \fP\fItolerance\fP, \fB\-\-tolerance=\fP\fItolerance\fP
+An argument of the option specify the maximum distance between sites, which will be treated like equivalent. Check carefully output of supercell
+before changing the parameter. Default \fB\fP\fItolerance\fP=0.75.
+.PP
+.TP
+\fB\-m \fP, \fB\-\-merge\-by\-distance\fP
+The option allows you significantly decrease the number of output structures. Applying the option you will switch on merge algorithm, which will merge structures with the same set of distances between sites with specific label. Be careful, the algorithm requires all unique structures to be stored in memory (usually 10^4 \- 10^5 unique structures per 1Gb RAM). Also the algorithm can decrease the speed. For cases with more than 10^4 of total combination it is recommended to treat execution of supercell
+using verbosity level 2 or higher. 
+.PP
+.TP
+\fB\-n \fP\fIcount\fP, \fB\-\-store\-structures=\fP\fIcount\fP
+An argument of the option is the average number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm. On each stage the new structure generated the algorithm will accept the structure with probability p=\fB\fP\fIcount\fP/total\-number\-of\-combination.
+So, the output structures distribution can be described with binomial distribution F(k, p, count). If you are using the algorithm with merge algorithm \fB\-m\fP\fI\fP
+this algorithm will run first. 
+.PP
+.TP
+\fB\-o \fP\fIoutput\-prefix\fP, \fB\-\-output=\fP\fIoutput\-prefix\fP
+The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \-\-output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output\-prefix>_ind<index>.cif. Fon merging run the template will be <output\-prefix>_ind<index>_w<weight>.cif, where <weight> \- number of the structures merged to the structure. 
+.PP
+.SH FILES
+
+.PP
+.TP
+somthing
+The LaTeX file containing this Man\-page. 
+.TP
+\fB1.pdf\fP
+The PDF version of this document. 
+.PP
+.SH EXAMPLES
+
+.PP
+.SH REQUIREMENTS
+
+.PP
+.TP
+openbabel
+Need. 
+.PP
+.SH BUGS
+
+.PP
+.TP
+In case of huge (more than 10^9) number of total combaintions supercell can work quite slow or even freeze. The situation most of the time appears with large supresses. Always try small cells first.
+.TP
+If you are merging significant number of combinations ( more than 10^5) the program can make get all available physical memory and freeze your system. Control supercell with top etc.
+.PP
+.SH SEE ALSO
+
+.PP
+\fIopenbabel\fP(1)\&.
+.PP
+.SH VERSION
+
+.PP
+Version: 0.1 of 2013/09/01\&.
+.PP
+.SH LICENSE AND COPYRIGHT
+
+.PP
+.TP
+Copyright
+All rights to the program belongs to authors. 
+.PP
+.TP
+License
+This program can be redistributed and/or modified under the 
+terms of the LaTeX Project Public License Distributed from CTAN archives 
+in directory macros/latex/base/lppl.txt;
+either version 1 of the 
+License, or any later version. 
+.PP
+.TP
+Misc
+The actual version of supercell
+may be found on my homepage
+.br
+\fBhttps://github.com/orex/supercell\fP\&.
+.PP
+.SH AUTHOR
+
+Kirill Okhotnikov, e\-mail: \fBkirill.okhotnikov@gmail.com\fP
+.br
+Sylvian Cadars, e\-mail: \fBsylvian.cadars@cnrs\-orleans.fr\fP
+.br
+CEMHTI \- UPR3079 CNRS Site Haute Temperature 
+.br
+1D avenue de la Recherche Scientifique 
+.br
+45071 Orleans Cedex 2 France 
+.PP
+.\" NOTE: This file is generated, DO NOT EDIT.

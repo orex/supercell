@@ -1,0 +1,204 @@
+\documentclass[a4paper,english]{article}
+\usepackage{a4wide}
+\usepackage[latin1]{inputenc}
+\usepackage{babel}
+\usepackage{verbatim}
+
+%% do we have the `hyperref package?
+\IfFileExists{hyperref.sty}
+{
+  \usepackage[bookmarksopen,bookmarksnumbered]{hyperref}
+}
+{
+
+}
+
+%% do we have the `fancyhdr' package?
+\IfFileExists{fancyhdr.sty}
+{
+  \usepackage[fancyhdr]{latex2man}
+}
+{
+  %% do we have the `fancyheadings' package?
+  \IfFileExists{fancyheadings.sty}
+  {
+    \usepackage[fancy]{latex2man}
+  }
+  {
+    \usepackage[nofancy]{latex2man}
+    \message{no fancyhdr or fancyheadings package present, discard it}
+  }
+}
+
+\setDate{2013/09/01}    %%%% must be manually set, if rcsinfo is not present
+\setVersionWord{Version:}  %%% that's the default, no need to set it.
+\setVersion{0.1}
+
+\begin{document}
+
+\begin{Name}{1}{supercell}{Kirill Okhotnikov, Sylvian Cadars}{Scientific Tools}{supercell\\--\\ A Scientific Tool}
+
+  \Prog{supercell} is a tool to convert a crystallographic structure with partial occupancy and/or vacancies to  ordinary supercell structure suitable for calculations.
+\end{Name}
+
+\section{Synopsis}
+%%%%%%%%%%%%%%%%%%
+
+\Prog{supercell} \Opt{-h, --help}\\
+\Prog{supercell} \oOpt{OPTIONS} \OptArg{-i }{input-file} \\
+\Prog{supercell} \oOpt{OPTIONS} \OptArg{--input=}{input-file} \\
+
+\section{Description}
+%%%%%%%%%%%%%%%%%%%%%
+\Prog{supercell} reads the file \Arg{infile} and writes \Arg{outfile}. The
+input must be a \LaTeX\ document using the \Prog{latex2man} \LaTeX\ package.
+\Prog{Latex2man} translates that document into the \Cmd{troff}{1} format using
+the \Opt{-man} macro package.
+
+Using the \Opt{-H} option, HTML code can be produced, instead of
+\Cmd{troff}{1}.
+With this option you can, optionally, specify a \Arg{CSSfile} as an argument.
+CSS (Cascading Style Sheets) allows you to control the appearance of the resulting HTML page.
+See below for the names of CSS classes that are included in the HTML tags as attributes.
+
+Using the \Opt{-T} option, TexInfo code can be produced, instead of
+\Cmd{troff}{1}.
+
+Using the \Opt{-M} option, \Cmd{troff}{1} input is produced.
+
+Using the \Opt{-L} option, \LaTeX\ ouput can be produced, instead of
+\Cmd{troff}{1}.
+
+
+\section{Options}
+%%%%%%%%%%%%%%%%%
+\begin{Description}
+
+\item[\Opt{-h}, \Opt{--help}]
+      Print help message and exit the program.
+
+\item[\OptArg{-v }{level}, \OptArg{--verbose=}{level}] 
+      Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
+
+\item[\OptArg{-i }{input-file}, \OptArg{--input=}{input-file}]
+      Required options. Input file with in CIF format. Only one file can be specified.
+
+\item[\Opt{-d}, \Opt{--dry-run}]
+      The option is highly recommended for the first run of the program with new input specified. 
+      With the option the program will do everything, but not write file. Be careful, if you switched \Opt{-m}, \Opt{--merge-by-distance} option. With the option dry-run should go through all crystal structures. So, it can take time.
+
+\item[\OptArg{-s }{cell-size}, \OptArg{--cell-size=}{cell-size}]
+      The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1".
+
+\item[\OptArg{-c }{balance-type}, \OptArg{--charge-balance=}{balance-type}]
+      The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are
+      \begin{itemize}
+         \item[no]   No charge balancing. The option will set all charges to zero.
+         \item[try]  Default. Try to charge balance system, if all charges known and initial system is not charged.
+         \item[yes]  Check input file first for charges, if not exists use formal one.
+         \item[form] Experimental. Formal charges from internal \Prog{openbabel} database. Current version of \Prog{openbabel} provides charges only for few elements. 
+      \end{itemize}
+
+\item[\OptArg{-p }{labels-properties}, \OptArg{--property=}{labels-properties}]
+      The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax. 
+       \begin{itemize}
+         \item Simple: $<$label$>$:$<$property\_name$>$[=$<$property\_value$>$].
+         \item Extended: "$<$OPT$>$($<$labels$>$):{$<$properties$>$}". DONT forget to put extended syntax in quotes.
+       \end{itemize}
+       Where $<$label$>$ is a label of atom, which property you want to change, $<$labels$>$ set of space separate labels. $<$OPT$>$ is type of string processing you want to set for labels. The possible values of $<$OPT$>$ are
+       \begin{itemize}
+         \item[p] Treat the labels in parenthesis like a plain string. 
+         \item[w, ""] Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * - any numbers of any symbol and ? - any symbol (exactly one).
+         \item[r] Treat the labels in parenthesis like a Perl Regex. Syntax description you can find at \URL{http://en.wikipedia.org/wiki/Regular\_expression}.
+       \end{itemize}
+       The $<$property\_name$>$ is a name of the property you want to set for all specified atoms. Some properties can have values, which you should set using equal symbol. The properties can be
+       \begin{itemize}
+         \item[c\Lbr charge\Rbr] Set charge of atoms with specified label(s). Floaing-point value in elementary charge units.
+         \item[p\Lbr opulation\Rbr] Number of atoms with specific label(s) in output supercell structure.
+         \item[\Lbr not\Rbr fixed] Exclude atoms from combinations. The output file will contain partial occupancy sites.
+       \end{itemize}
+       Some fancy examples you can find below.       
+      
+\item[\OptArg{-t }{tolerance}, \OptArg{--tolerance=}{tolerance}]
+      An argument of the option specify the maximum distance between sites, which will be treated like equivalent.     Check carefully output of \Prog{supercell} before changing the parameter. Default \OptArg{}{tolerance}=0.75.
+
+\item[\Opt{-m }, \Opt{--merge-by-distance}]
+      The option allows you significantly decrease the number of output structures. Applying the option you will switch on merge algorithm, which will merge structures with the same set of distances between sites with specific label. Be careful, the algorithm requires all unique structures to be stored in memory (usually 10\Circum 4 - 10\Circum 5 unique structures per 1Gb RAM). Also the algorithm can decrease the speed. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher.
+
+\item[\OptArg{-n }{count}, \OptArg{--store-structures=}{count}]
+      An argument of the option is the average number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm. On each stage the new structure generated the algorithm will accept the structure with probability p=\OptArg{}{count}/total-number-of-combination. So, the output structures distribution can be described with binomial distribution F(k, p, count). If you are using the algorithm with merge algorithm \OptArg{-m}{} this algorithm will run first. 
+      
+\item[\OptArg{-o }{output-prefix}, \OptArg{--output=}{output-prefix}]
+      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. Fon merging run the template will be <output-prefix>\_ind<index>\_w<weight>.cif, where <weight> - number of the structures merged to the structure.
+
+\end{Description}
+
+\section{Files}
+%%%%%%%%%%%%%%%
+
+\begin{Description}\setlength{\itemsep}{0cm}
+\item[\File{somthing}] The \LaTeX\ file containing this Man-page.
+\item[\URL{1.pdf}] The PDF version of this document.
+\end{Description}
+
+\section{Examples}
+%%%%%%%%%%%%%%%
+
+
+\section{Requirements}
+%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{description}\setlength{\itemsep}{0cm}
+\item[openbabel] Need.
+\end{description}
+
+\section{Bugs}
+
+\begin{description}\setlength{\itemsep}{0cm}
+\item In case of huge (more than 10\Circum 9) number of total combaintions \Prog{supercell} can work quite slow or even freeze. The situation most of the time appears with large supresses. Always try small cells first.
+\item If you are merging significant number of combinations ( more than 10\Circum 5) the program can make get all available physical memory and freeze your system. Control \Prog{supercell} with \Prog{top} etc.
+
+\end{description}
+
+\section{See Also}
+%%%%%%%%%%%%%%%%%%
+
+\Cmd{openbabel}{1}.
+
+
+\section{Version}
+%%%%%%%%%%%%%%%%%
+
+Version: \Version\ of \Date.
+
+\section{License and Copyright}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{description}
+\item[Copyright] 
+     All rights to the program belongs to authors.
+
+
+\item[License] This program can be redistributed and/or modified under the
+     terms of the LaTeX Project Public License Distributed from CTAN archives
+     in directory \File{macros/latex/base/lppl.txt}; either version 1 of the
+     License, or any later version.
+
+\item[Misc]
+     The actual version of  \Prog{supercell} may be found on my homepage\\
+     \URL{https://github.com/orex/supercell}.
+
+\end{description}
+
+\section{Author}
+%%%%%%%%%%%%%%%%
+Kirill Okhotnikov, e-mail: \Email{kirill.okhotnikov@gmail.com} \\
+Sylvian Cadars, e-mail: \Email{sylvian.cadars@cnrs-orleans.fr} \\ 
+CEMHTI - UPR3079 CNRS Site Haute Temperature \\
+1D avenue de la Recherche Scientifique \\
+45071 Orleans Cedex 2 France
+\noindent
+
+\LatexManEnd
+
+\end{document}

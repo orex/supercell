@@ -134,24 +134,22 @@ protected:
   OpenBabel::OBMol mol_initial;
   OpenBabel::OBMol mol_supercell;  
   
-  std::map<std::string, int> manual_population;
-  std::map<std::string, double> manual_charges;  
-  std::map<std::string, double> manual_charges_wc;    
-  
+  c_man_atom_prop * manual_properties;
+
   std::vector<c_occup_group> occup_groups;
-  
+
   double r_tolerance;
   double min_dist_between_groups;
-  
-  std::map<std::string, site_charges> scs;  
-  
+
+  std::map<std::string, site_charges> scs;
+
   bool read_molecule(std::string file_name);
   void correct_rms_range(const int total_sites, 
                          const double occup, 
                          const double x2,
                          int &min_value,
                          int &max_value);
-  
+
   int64_t total_combinations();
   
   bool add_to_list(std::list<map_comp_item *> &mpis, map_comp_item * mpi);  
@@ -167,6 +165,7 @@ protected:
   bool add_conf_to_mol(OpenBabel::OBMol *cmol, int group_index, std::vector<int> ppc);
   std::string get_formula(const OpenBabel::OBMol &mol);
   std::string get_formula_by_groups();
+  bool set_labels_to_manual();
 public:
   static const double charge_tol = 1E-1;
   static const double occup_tol = 2E-3;
@@ -177,10 +176,8 @@ public:
   bool process(std::string input_file_name, bool dry_run,
                const std::vector<int> scs,
                charge_balance cb, double tolerance_v, 
-               const std::map<std::string, int> manual_population_v,
-               const std::map<std::string, double> manual_charges_v,
-               const std::map<std::string, double> manual_charges_wc_v,                       
                bool merge_confs,
+               c_man_atom_prop &manual_properties,
                double n_store,                       
                std::string output_base_name);
   virtual ~d2o_main_class();

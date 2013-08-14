@@ -39,6 +39,15 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+  /*
+  c_man_atom_prop_cli p_test;
+  
+  p_test.regex_test("fixed");
+  p_test.regex_test("notfixed");  
+  
+  return 0;
+  */ 
+   
   try 
   { 
     std::string appName = boost::filesystem::basename(argv[0]); 
@@ -55,9 +64,7 @@ int main(int argc, char** argv)
     double pos_tol;
     double store_structures;
     
-    vector<string> manual_population;
-    vector<string> manual_charges;
-    vector<string> manual_charges_wc;
+    vector<string> manual_properties;
     vector<int> supercell_mult;
     supercell_mult.resize(3);
     
@@ -69,7 +76,7 @@ int main(int argc, char** argv)
     desc.add_options() 
       ("help,h", "Print help messages") 
       ("verbose,v", po::value<int>(&verb_level)->default_value(1), 
-                  "output data with verbosity level. Default 1. Suggested for regular users.") 
+                  "output data with verbosity level. Default is 1. Suggested for regular users.") 
       ("input,i", po::value<std::string>(&input_file)->required(), 
                   "Input structure")
       ("dry-run,d", "Show information, but not generate structures")
@@ -82,20 +89,16 @@ int main(int argc, char** argv)
                                                            "if all charges known and inintial system is not charged.\n" +
                             cb_names::get_name(cb_input)  + " - check input file first for charges, " +
                            "if not exists use formal one.").c_str())
-      ("charges,q", po::value<vector<string> >(&manual_charges), 
-                    (string("Set charges of atoms with the label manually.") +
-                            "Syntax <label>:<charge>. Has priority to other charge setting methods").c_str())
-      ("charges-wildcard,Q", po::value<vector<string> >(&manual_charges_wc), 
-                             "The same as \"--charges\", but you can use wildcard *?")
+      ("property,p", po::value<vector<string> >(&manual_properties), 
+                    (string("Set properties of atoms by labels. ") +
+                            "For detail description see manual.").c_str())
       ("tolerance,t", po::value<double>(&pos_tol)->default_value(0.75), 
                       "Skip structures with atoms closer than arg Angstrom.")
-      ("population,p", po::value<vector<string> >(&manual_population), 
-                      "Set the number of atoms with the label manually. Syntax <label>:<num_of_atoms>.")
       ("merge-by-distance,m", "Merge output structures with equivalent distances between all atoms.")
       ("store-structures,n", po::value<double>(&store_structures)->default_value(-1),
                        "Set average number structures to write. Default write all")
-      //("memory-limit,l", po::value<double>(&memory_limit)->default_value(-1),
-       //                "Memory limit in Mb for the program. Default half of physical memory. 0 - no limit.")
+//      ("include-only,e", po::value<vector<string> >(&included_atoms),
+  //                     "Include only specified atom labels to configuration loop. Default include all")
       ("output,o", po::value<std::string>(&output_file)->default_value("supercell"), 
                    "Output file name base. The extension will be cif. The multiplicity of structure will be added."); 
  
@@ -147,40 +150,15 @@ int main(int argc, char** argv)
       cerr << "Wrong supercell format input." << endl;
       return ERROR_IN_COMMAND_LINE;
     }
-    
-    map<string, int> mp_map;
-    
-    if(!parse_d2o_input::get_manual_populations_map(manual_population, mp_map, "\\d+"))
-    {
-      cerr << "Wrong Manual Population input." << endl;
-      return ERROR_IN_COMMAND_LINE;
-    }
-    
-    map<string, double> ch_map;
-    
-    if(!parse_d2o_input::get_manual_populations_map(manual_charges, ch_map))
-    {
-      cerr << "Wrong Manual charges input." << endl;
-      return ERROR_IN_COMMAND_LINE;
-    }
 
-    map<string, double> ch_map_wc;    
+    c_man_atom_prop_cli m_prop;
+    m_prop.set_verbose(verb_level);
+    string param_error;
     
-    if(!parse_d2o_input::get_manual_populations_map(manual_charges_wc, ch_map_wc))
+    if(!m_prop.parse_input(manual_properties, param_error))
     {
-      cerr << "Wrong Manual charges-wildcard input." << endl;
-      return ERROR_IN_COMMAND_LINE;
-    }
-    
-    if(verb_level >= 2)    
-    {
-      if( mp_map.size() > 0 )
-        cout << "Manual populations: " << endl;
-      
-      for(map<string, int>::iterator it = mp_map.begin(); it != mp_map.end(); it++)
-        cout << "  " << (*it).first << " " << (*it).second << endl;
-      
-      cout << endl;      
+      cerr << "Error in input parameter " << param_error << endl;
+      return false;
     }  
     
     charge_balance cb;
@@ -195,8 +173,8 @@ int main(int argc, char** argv)
     
     mc.set_verbosity(verb_level);
     mc.process(input_file, dry_run, supercell_mult, cb, 
-               pos_tol, mp_map, ch_map, ch_map_wc, 
-               merge_confs, store_structures, output_file);
+               pos_tol, merge_confs, m_prop,
+               store_structures, output_file);
               
   } 
   catch(std::exception& e) 
@@ -238,4 +216,14 @@ int main(int argc, char** argv)
   cout << i << endl;
   
   return 0; 
+ 
+   c_man_atom_prop_cli cit;
+  
+  cit.regex_test(" c= 0 c = 2 fixed p=4 charge=1.2 ");
+  cit.regex_test("c=-1.2");
+  //cit.parse_input_item("r(La(    M):p");
+  
+  return 0;
+
+ 
  */
