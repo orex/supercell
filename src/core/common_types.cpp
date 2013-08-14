@@ -12,27 +12,6 @@
 std::map<charge_balance, std::string> cb_names::mp_cb;
 cb_names::cb_init cb_names::_init;
 
-c_man_atom_prop_item::c_man_atom_prop_item(const c_man_atom_prop_item & orig)
-{
-  if(orig.charge_specified)
-  {
-    charge = orig.charge;
-    charge_specified = true;
-  }
-
-  if(orig.fixed_specified)
-  {
-    fixed = orig.fixed;
-    fixed_specified = true;
-  }
-
-  if(orig.popul_specified)
-  {
-    manual_pop = orig.manual_pop;
-    popul_specified = true;
-  }
-}
-
 cb_names::cb_init::cb_init()
 {
   cb_names::mp_cb[cb_no]     = "no";

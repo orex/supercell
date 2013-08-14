@@ -52,7 +52,7 @@ std::vector<float> map_comp_item::get_lengths_by_labels(const lbl_order lbl)
 {
   std::vector<float> result;
   
-  string map_key = lbl.lbl1 + "  -   " + lbl.lbl2;
+  string map_key = lbl.lbl1 + "  -  " + lbl.lbl2;
   
   assert(dsts != NULL);
   assert(labels_order != NULL);
@@ -123,16 +123,6 @@ int map_comp_item::comp ( map_comp_item &r1, map_comp_item &r2 )
     f1 = r1.get_lengths_by_labels(r1.labels_order->at(i));
     f2 = r2.get_lengths_by_labels(r2.labels_order->at(i));
     
-    /*
-    cout << endl;
-    cout << r1.labels_order->at(i).lbl1 << " " << r1.labels_order->at(i).lbl2 << endl;
-    
-    for(int j = 0; j < f1.size(); j++)
-    {
-      cout << f1[j] << " vs " << f2[j] << endl;
-    }
-     * */  
-        
     cmp = compare_distances(f1, f2, r1.labels_order->at(i).tolerance);
     if(cmp != 0) break;
   }
@@ -574,7 +564,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
     c_occup_group &curr_group = occup_groups[i];
     
     if( (curr_group.items.size() == 1) && 
-        (!(*manual_properties)[curr_group.items[0].label].popul_specified) &&
+        (!(*manual_properties)[curr_group.items[0].label].population.assigned()) &&
         (abs(1 - curr_group.get_total_occup_input()) < 1E-4) )
     {
       rangi rd;
@@ -592,7 +582,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         rangi rd;
         rd.group_index = i;
         rd.atom_index = j;
-        if(!(*manual_properties)[curr_group.items[0].label].popul_specified)
+        if(!(*manual_properties)[curr_group.items[0].label].population.assigned())
         {  
           correct_rms_range(curr_group.number_of_sites, 
                             occup_groups[i].items[j].occup_target, x2,
@@ -601,7 +591,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         }
         else
         {
-          int value = (*manual_properties)[curr_group.items[j].label].manual_pop;
+          int value = (*manual_properties)[curr_group.items[j].label].population.value();
           rd.min_value  = value;
           rd.max_value  = value;
           rd.curr_value = value;
@@ -697,7 +687,7 @@ bool d2o_main_class::get_atoms_population()
         
         for(int j = 0; j < occup_groups[i].items.size(); j++)
         {
-           man_occup_group = (*manual_properties)[occup_groups[i].items[j].label].popul_specified;
+           man_occup_group = (*manual_properties)[occup_groups[i].items[j].label].population.assigned();
            if( man_occup_group )
              break;
         }
@@ -840,9 +830,8 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
     
     if( cb != cb_no )
     {  
-      
-      if( (*manual_properties)[(*it).first].charge_specified) 
-        (*it).second.curr_charge = (*manual_properties)[(*it).first].charge;
+      if( (*manual_properties)[(*it).first].charge.assigned()) 
+        (*it).second.curr_charge = (*manual_properties)[(*it).first].charge.value();
     }   
   }
 
@@ -1216,8 +1205,6 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
     cout << boost::format("  Size a=%1%, b=%2%, c=%3%") %super_unitcell->GetA() 
                                                         %super_unitcell->GetB() 
                                                         %super_unitcell->GetC() << endl;    
-    
-    cout << "  Chemical Formula: " << mol_supercell.GetFormula() << endl;
     cout << endl;
   }  
   
@@ -1252,13 +1239,17 @@ bool d2o_main_class::set_labels_to_manual()
   
   if( (verbose_level >= 1) && (manual_properties->data().size() > 0))
   {
-    cout << "Manual atoms" << endl;
-    cout << "" << endl;
+    cout << "Manual properties" << endl;
+    cout << "Label\t|fixed\t|charge\t|popul\t|" << endl;
     for(c_man_atom_prop::data_type::const_iterator it  = manual_properties->data().begin();
                                                    it != manual_properties->data().end(); it++)
     {
-      
+      cout << it->first << "\t|"
+           << it->second.fixed      << "\t|"
+           << it->second.charge     << "\t|"
+           << it->second.population << "\t|" << endl;
     }
+    cout << endl;
   }  
    
   return true;

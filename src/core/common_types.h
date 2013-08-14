@@ -38,18 +38,17 @@ public:
 class c_man_atom_prop_item
 {
 public:
-  bool charge_specified;
-  double charge;
-  
-  bool fixed_specified;
-  bool fixed;  
-  
-  bool popul_specified;
-  int manual_pop;
-  c_man_atom_prop_item() : charge_specified(false), 
-                           fixed_specified(false),
-                           popul_specified(false) {};
-  c_man_atom_prop_item(const c_man_atom_prop_item & orig);
+  c_assigned_value<double> charge;
+  c_assigned_value<bool> fixed;  
+  c_assigned_value<int> population;
+ 
+  c_man_atom_prop_item() {};
+  void assign(const c_man_atom_prop_item &orig)
+  { 
+    charge.assign(orig.charge);
+    fixed.assign(orig.fixed);
+    population.assign(orig.population);
+  };
 };        
 
 class c_man_atom_prop

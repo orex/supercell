@@ -10,8 +10,15 @@
 
 #include <string>
 #include <assert.h>
+#include <ostream>
 
 #include <boost/lexical_cast.hpp>
+
+template <typename T>
+class c_assigned_value;
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const c_assigned_value<T> &cav);
 
 template <typename T>
 class c_assigned_value 
@@ -51,8 +58,22 @@ public:
       *this = p;
   }
   
+  friend std::ostream& operator<< <T>(std::ostream& os, const c_assigned_value<T> &cav);
+  
   virtual ~c_assigned_value() {};
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const c_assigned_value<T> &cav)
+{
+  if(cav.assigned())
+    os << cav.value();
+  else
+    os << "N/A";
+    
+  return os;
+}
+
 
 #endif	/* TASSIGNEDVALUE_H */
 
