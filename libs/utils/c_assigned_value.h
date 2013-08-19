@@ -43,6 +43,14 @@ public:
     assert(_assigned);
     return _value; 
   }  
+
+  T value_def(const T def_value) const
+  {
+    if( assigned() )
+      return value(); 
+    else
+      return def_value;
+  }  
   
   std::string to_string() const
   {
@@ -52,7 +60,7 @@ public:
       return "N/A";
   }
   
-  bool assign(const c_assigned_value<T> &p)
+  void assign(const c_assigned_value<T> &p)
   {
     if( p.assigned() )
       *this = p;
@@ -73,7 +81,6 @@ std::ostream& operator<<(std::ostream& os, const c_assigned_value<T> &cav)
     
   return os;
 }
-
 
 #endif	/* TASSIGNEDVALUE_H */
 

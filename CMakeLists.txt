@@ -3,6 +3,10 @@ cmake_minimum_required (VERSION 2.8)
 project(supercell)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wno-sign-compare " )
+
+message(STATUS ${CMAKE_CXX_FLAGS_DEBUG})
+
 set(CMAKE_BUILD_TYPE Debug)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

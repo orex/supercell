@@ -28,6 +28,7 @@ namespace
   const size_t ERROR_IN_COMMAND_LINE = 1; 
   const size_t SUCCESS = 0; 
   const size_t ERROR_UNHANDLED_EXCEPTION = 2; 
+  const size_t ERROR_PROCESS_EXECUTION = 3; 
  
 } // namespace 
 
@@ -39,15 +40,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-  /*
-  c_man_atom_prop_cli p_test;
-  
-  p_test.regex_test("fixed");
-  p_test.regex_test("notfixed");  
-  
-  return 0;
-  */ 
-   
+ 
   try 
   { 
     std::string appName = boost::filesystem::basename(argv[0]); 
@@ -172,10 +165,14 @@ int main(int argc, char** argv)
     d2o_main_class mc;
     
     mc.set_verbosity(verb_level);
+    
+    bool processed = 
     mc.process(input_file, dry_run, supercell_mult, cb, 
                pos_tol, merge_confs, m_prop,
                store_structures, output_file);
-              
+    
+    if(!processed)
+      return ERROR_PROCESS_EXECUTION;
   } 
   catch(std::exception& e) 
   { 
