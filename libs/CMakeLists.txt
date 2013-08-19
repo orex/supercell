@@ -1,2 +1,1 @@
-add_subdirectory(combinatorics)
 #add_subdirectory(open_babel)

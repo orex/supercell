@@ -31,6 +31,7 @@ map_comp_item::map_comp_item(std::vector<lbl_order> &lbl)
   mol = new OBMol;
   dsts = new std::map<std::string, std::vector<float> > ;
   uc = NULL;
+  mult = 0;
 }
 
 OpenBabel::OBUnitCell * map_comp_item::unitcell()
@@ -42,11 +43,6 @@ OpenBabel::OBUnitCell * map_comp_item::unitcell()
   return uc;
 }
 
-
-map_comp_item::map_comp_item( map_comp_item &orig)
-{
-  assert(false);
-}
 
 std::vector<float> map_comp_item::get_lengths_by_labels(const lbl_order lbl)
 {
@@ -134,21 +130,21 @@ d2o_main_class::d2o_main_class()
 {
 }
 
-double c_occup_group::get_total_occup_input()
+double c_occup_group::get_total_occup_input() const
 {
   double result = 0.0;
   
-  for(std::vector<c_occup_item>::iterator it = items.begin(); it != items.end(); it++)
+  for(std::vector<c_occup_item>::const_iterator it = items.begin(); it != items.end(); it++)
     result += (*it).occup_target;
   
   return result;
 }
 
-int c_occup_group::get_total_num_occup_sites()
+int c_occup_group::get_total_num_occup_sites() const
 {
   int result = 0;
   
-  for(std::vector<c_occup_item>::iterator it = items.begin(); it != items.end(); it++)
+  for(std::vector<c_occup_item>::const_iterator it = items.begin(); it != items.end(); it++)
     result += (*it).num_of_atoms_sc;
   
   return result;
@@ -158,22 +154,25 @@ int64_t c_occup_group::get_number_of_combinations() const
 {
   int result = 1;
 
-  std::map<int,int> nm;
-  
-  int sum = 0;  
-  for(int i = 0; i < items.size(); i++)
-  {  
-    nm[i] = items[i].num_of_atoms_sc;
-    sum += items[i].num_of_atoms_sc;
-  }  
-  
-  if(sum <= number_of_sites)
-  {  
-    nm[-1] = number_of_sites - sum;    
-    result = num_combinations(nm);
+  if( !_fixed )
+  {
+    std::map<int,int> nm;
+
+    int sum = 0;  
+    for(int i = 0; i < items.size(); i++)
+    {  
+      nm[i] = items[i].num_of_atoms_sc;
+      sum  += items[i].num_of_atoms_sc;
+    }  
+
+    if(sum <= number_of_sites)
+    {  
+      nm[-1] = number_of_sites - sum;    
+      result = num_combinations(nm);
+    }
+    else
+      result = 0;
   }
-  else
-    result = 0;
   
   return result;
 }
@@ -260,11 +259,11 @@ std::string d2o_main_class::get_formula_by_groups()
   return result;      
 }
 
-std::string d2o_main_class::get_formula(const OpenBabel::OBMol &mol)
+std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
 {
   map<string, double> formula_map;
   
-  for(OBAtomIterator it = mol_initial.BeginAtoms(); it != mol_initial.EndAtoms(); ++it)
+  for(OBAtomIterator it = mol.BeginAtoms(); it != mol.EndAtoms(); ++it)
   {
     string atom_symbol = etab.GetSymbol((*it)->GetAtomicNum());
     
@@ -289,34 +288,57 @@ std::string d2o_main_class::get_formula(const OpenBabel::OBMol &mol)
   return result;      
 }
 
-bool d2o_main_class::add_conf_to_mol(OpenBabel::OBMol *cmol, int group_index, std::vector<int> ppc)
+bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const std::map<int, std::vector<int> > &ppc)
 {
-  int curr_pos = 0;
+  map<int, int> curr_pos;
   
   FOR_ATOMS_OF_MOL(a, mol_supercell)
   {
-    if(dynamic_cast<OBPairInteger *>(a->GetData("group_number"))->GetGenericValue() != group_index)
-      continue;
+    int group_index = dynamic_cast<OBPairInteger *>(a->GetData("group_number"))->GetGenericValue();
     
-    assert(curr_pos < ppc.size());
+    assert( ( group_index >= 0 ) && ( group_index < occup_groups.size() ) );
     
-    int item_index = ppc[curr_pos];
-        
-    if(item_index >= 0)
+    c_occup_group &curr_group = occup_groups[group_index];
+    
+    for(int i  = 0; i < curr_group.items.size(); i++)
     {
+      double occup_value;
+      
+      if( curr_group.is_fixed() )
+      {
+        assert( ppc.count(group_index) == 0 );
+        occup_value = double(curr_group.items[i].num_of_atoms_sc) /
+                      double(curr_group.number_of_sites);
+      }
+      else
+      {
+        assert( ppc.count(group_index) > 0);        
+        assert( ppc.at(group_index).size() > 0);
+        assert( curr_pos[group_index] < ppc.at(group_index).size() );
+        if( ppc.at(group_index)[curr_pos[group_index]] != i )
+          continue;
+        occup_value = 1.0;
+      }  
+            
+      //Adding atom
       OBAtom atm;
-      
-      atm.Duplicate(occup_groups[group_index].items[item_index].obp);
-      
+      atm.Duplicate( curr_group.items[i].obp );
+
       if( atm.HasData("_atom_site_occupancy") )
-        dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(1.0);
+        dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(occup_value);
+      else
+      {
+        OBPairFloatingPoint * obo = new OBPairFloatingPoint();
+        obo->SetAttribute("_atom_site_occupancy");
+        obo->SetValue(occup_value);
+        atm.SetData(obo);
+      }  
   
       atm.SetVector(a->GetVector());
-      
       cmol->AddAtom(atm, true);
-    }
+    }  
     
-    curr_pos++;
+    curr_pos[group_index]++;
   }
  
   return true;
@@ -366,29 +388,29 @@ bool d2o_main_class::add_to_list(std::list<map_comp_item *> &mpis, map_comp_item
 
 bool d2o_main_class::write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs)
 {
-  vector< map<int, int> > mvc;
-  
-  mvc.resize(occup_groups.size());
-  for(int i = 0; i < occup_groups.size(); i++)  
-  {
-    for(int j = 0; j < occup_groups[i].items.size(); j++)
-      mvc[i][j] = occup_groups[i].items[j].num_of_atoms_sc;
-    
-    mvc[i][-1] = occup_groups[i].number_of_sites - 
-                    occup_groups[i].get_total_num_occup_sites();
-  }
-  
   std::vector<lbl_order> lo;
   lo = set_lbl_order();
   
   list<map_comp_item *> mpis;
       
-  vector< CB_combination<int> > cur_combs;
+  typedef map<int, vector<int> > t_map_comb;
+  t_map_comb cur_combs;
 
-  cur_combs.resize(occup_groups.size());
+  for(int i = 0; i < occup_groups.size(); i++)
+  {  
+    if( occup_groups[i].is_fixed() )
+      continue;
+    
+    map<int, int> mvc;
 
-  for(int i = 0; i < cur_combs.size(); i++)
-    cur_combs[i].create_first_combination(mvc[i]);
+    for(int j = 0; j < occup_groups[i].items.size(); j++)
+      mvc[j] = occup_groups[i].items[j].num_of_atoms_sc;
+    
+    mvc[-1] = occup_groups[i].number_of_sites - 
+                      occup_groups[i].get_total_num_occup_sites();
+    
+    cur_combs[i] = create_start_combination(mvc);
+  }  
   
   int index = 0;
   bool done;
@@ -413,8 +435,7 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
       map_comp_item * mpi = new map_comp_item(lo);
       init_atom_change_mol(mpi->mol);
 
-      for(int i = 0; i < cur_combs.size(); i++)
-        add_conf_to_mol(mpi->mol, i, cur_combs[i].get_current_combination());
+      add_confs_to_mol(mpi->mol, cur_combs);
 
       if( !merge_confs )
       {  
@@ -434,7 +455,7 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
       }
       else if( merge_confs )
       {
-        bool bl = add_to_list(mpis, mpi);
+        add_to_list(mpis, mpi);
         if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
         {  
           cout << index << " total configuration merged to " << 
@@ -443,13 +464,12 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
       }
       index++;    
     }  
-            
+
     done = true;    
-    for(int i = 0; i < cur_combs.size(); i++)
+    for(t_map_comb::iterator it  = cur_combs.begin(); 
+                             it != cur_combs.end(); it++)
     {
-      if(!cur_combs[i].next_combination())
-        cur_combs[i].create_first_combination(mvc[i]);
-      else
+      if( std::next_permutation(it->second.begin(), it->second.end()) )
       {
         done = false;
         break;
@@ -758,26 +778,6 @@ bool d2o_main_class::get_atoms_population()
 
 bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
 {
-  bool result = true;
-  
-  OBAtom * a;
-  
-  /*
-  OBChargeModel *gasteiger = dynamic_cast<OBChargeModel *>(OBPlugin::GetPlugin("charges", "gasteiger"));
-
-  if( gasteiger && gasteiger->ComputeCharges(mol_initial))
-  {
-    etab.
-    std::vector<double> formal_charges;
-    formal_charges = gasteiger->GetFormalCharges();
-    assert(formal_charges.size() == mol_initial.NumAtoms());
-    for(int i = 0; i < formal_charges.size(); i++)
-    {  
-      cout << formal_charges[i] << endl;
-      mol_initial.GetAtom(i + 1)->SetFormalCharge(formal_charges[i]);
-    }  
-  }*/
-  
   FOR_ATOMS_OF_MOL(a, mol_initial)
   {
     string label = a->GetData("_atom_site_label")->GetValue();
@@ -884,6 +884,37 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   }
   
   return true;
+}
+
+bool d2o_main_class::fix_groups()
+{
+  bool result = true;
+  
+  for(vector< c_occup_group >::iterator itg  = occup_groups.begin();
+                                        itg != occup_groups.end(); itg++)
+  {
+    assert(itg->items.size() > 0);
+    bool fixed_status = (*manual_properties)[itg->items[0].label].fixed.value_def(false);
+    bool wrong_status = false;
+    for(vector< c_occup_item >::iterator iti  = itg->items.begin();
+                                         iti != itg->items.end(); iti++)
+    {
+      wrong_status = fixed_status != (*manual_properties)[iti->label].fixed.value_def(false);
+      if(wrong_status)
+        break;
+    }    
+    
+    if(wrong_status)
+    {
+      cerr << "Fixation error at group " << distance(occup_groups.begin(), itg) << endl;
+      result = false;
+      break;
+    }
+    else
+      itg->set_fixation(fixed_status);
+  }  
+  
+  return result;
 }
 
 bool d2o_main_class::create_occup_groups()
@@ -1126,10 +1157,16 @@ bool d2o_main_class::show_groups_information()
     {        
       cout << "  WARN: Vacancy introduced to fully occupied state." << endl;
     }
+    
+    if(occup_groups[i].is_fixed())    
+      cout << "  FIXED: No combinations will be applied." << endl;
+    
     cout << endl;
   }
   
   cout << "Total combinations is " << total_combinations() << endl;
+  
+  return true;
 }
 
 bool d2o_main_class::create_super_cell(int a, int b, int c)
@@ -1299,6 +1336,12 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     return false;
   }
   
+  if( !fix_groups() )
+  {
+    cerr << "Error while fixing groups." << endl;
+    return false;
+  }  
+  
   if( !get_atoms_population() )
   {
     cerr << "Create population error." << endl;
@@ -1321,6 +1364,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     return false;
   }
   
+  return true;
 }
 
 

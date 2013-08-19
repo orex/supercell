@@ -52,10 +52,7 @@ c_man_atom_prop::c_man_atom_prop()
   
 }
 
-void c_man_atom_prop::convert_properties(const std::set<std::string> &labels)
-{
-  assert(false);
-}
+//void c_man_atom_prop::convert_properties(const std::set<std::string> &labels)
 
 c_man_atom_prop::~c_man_atom_prop()
 {
