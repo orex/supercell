@@ -15,8 +15,6 @@
 
 #include "common_types.h"
 
-#include "boost/utility.hpp"
-
 struct c_occup_item
 {
   std::string label;
@@ -42,26 +40,21 @@ struct c_occup_item
   { delete obp; }
   
   
-  bool operator < ( const c_occup_item &r ) const
+  const bool operator < ( const c_occup_item &r ) const
   { return ( label < r.label ); }
 };
 
 
 class c_occup_group
 {
-protected:
-  bool _fixed;  
 public:
   std::vector<c_occup_item> items;
-  double get_total_occup_input() const;
-  int    get_total_num_occup_sites() const;
+  double get_total_occup_input();
+  int    get_total_num_occup_sites();
   int64_t get_number_of_combinations() const;
-  void set_fixation(bool fix = true)
-  { _fixed = fix; };
-  bool is_fixed() const 
-  { return _fixed || (get_number_of_combinations() == 1); }
   double max_dis_within_group;
   int number_of_sites;
+  
 };
 
 struct site_charges
@@ -89,11 +82,11 @@ public:
     lbl2 = max(l1, l2);
   };
 
-  bool operator < ( const lbl_order &r ) const
+  const bool operator < ( const lbl_order &r ) const
   { return ( mult2 < r.mult2 ); }
 };
 
-class map_comp_item : private boost::noncopyable
+class map_comp_item
 {
 protected:
   static int compare_distances(const std::vector<float> &f1, const std::vector<float> &f2, float tol);  
@@ -109,6 +102,7 @@ protected:
 public:  
   map_comp_item(std::vector<lbl_order> &lbl);
   OpenBabel::OBMol *mol;
+  map_comp_item( map_comp_item &orig);
   
   void inc_mult()
   { mult++; };
@@ -149,8 +143,6 @@ protected:
 
   std::map<std::string, site_charges> scs;
 
-  bool fix_groups();
-  
   bool read_molecule(std::string file_name);
   void correct_rms_range(const int total_sites, 
                          const double occup, 
@@ -170,8 +162,8 @@ protected:
   bool process_charges(charge_balance cb, bool verbose = false);
   bool write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs);
   bool init_atom_change_mol(OpenBabel::OBMol *cmol);
-  bool add_confs_to_mol(OpenBabel::OBMol *cmol, const std::map<int, std::vector<int> > &ppc);
-  std::string get_formula(OpenBabel::OBMol &mol);
+  bool add_conf_to_mol(OpenBabel::OBMol *cmol, int group_index, std::vector<int> ppc);
+  std::string get_formula(const OpenBabel::OBMol &mol);
   std::string get_formula_by_groups();
   bool set_labels_to_manual();
 public:

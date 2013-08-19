@@ -15,6 +15,3 @@ tmp/
 *.lai
 *.la
 *.a
-
-# Backup files
-*.backup

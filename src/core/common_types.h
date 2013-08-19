@@ -65,7 +65,7 @@ public:
   { return data_map[lbl]; };
   bool exist(const std::string &lbl)
   { return data_map.count(lbl) != 0; };
-  virtual void convert_properties(const std::set<std::string> &labels) = 0;
+  virtual void convert_properties(const std::set<std::string> &labels);
   ~c_man_atom_prop();
 };        
 

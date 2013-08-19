@@ -5,7 +5,6 @@ set(sc_cli_libraries ${sc_libraries} ${Boost_LIBRARIES})
 
 include_directories(${sc_includes})
 
+
 add_executable(supercell ${sc_cli_source})
 target_link_libraries(supercell ${sc_cli_libraries})
-
-install(TARGETS supercell RUNTIME DESTINATION bin)

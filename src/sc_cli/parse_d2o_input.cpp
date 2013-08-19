@@ -90,6 +90,7 @@ bool c_man_atom_prop_cli::get_param(std::string &right_str, const boost::regex &
 bool c_man_atom_prop_cli::get_params(std::string right_str, c_man_atom_prop_item_cli &c_prop)
 {
   bool result = true;
+  int sc;
   string param;
   bool good_param;
   
@@ -131,7 +132,7 @@ bool c_man_atom_prop_cli::get_params(std::string right_str, c_man_atom_prop_item
   good_param = get_param(right_str, rx_fix, 2, param);
   result = result && good_param;
   if(good_param && (param != "") )
-    c_prop.fixed = (param == "fixed");
+    c_prop.fixed = param == "fixed";
   
   trim(right_str);
   
@@ -255,7 +256,7 @@ bool c_man_atom_prop_cli::parse_input_item(std::string inp_str)
   if( !get_params(right_str, prop_item) )
     return false;
   
-  for(size_t i = 0; i < lbls.size(); i++)
+  for(int i = 0; i < lbls.size(); i++)
   {
     prop_item.label = lbls[i];
     prop_item.l_type = lblt;
@@ -273,7 +274,7 @@ bool c_man_atom_prop_cli::parse_input(const std::vector<std::string> &inp, std::
   
   param_error = "";
   
-  for(size_t i = 0; i < inp.size(); i++)
+  for(int i = 0; i < inp.size(); i++)
   {  
     result = parse_input_item(inp[i]);
     if(!result) 

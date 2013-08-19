@@ -1,6 +1,10 @@
 #set common includes
 set(sc_includes ${sc_includes} ${CMAKE_CURRENT_SOURCE_DIR}/core)
 
+ExternalProject_Get_Property(combinatorics SOURCE_DIR)
+set(sc_includes ${sc_includes} ${SOURCE_DIR})
+unset(SOURCE_DIR)
+
 set(sc_includes ${sc_includes} /usr/local/include/openbabel-2.0/)
 set(sc_includes ${sc_includes} ${CMAKE_SOURCE_DIR}/libs/utils/)
 
