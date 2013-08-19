@@ -50,7 +50,25 @@
 
 \section{Description}
 %%%%%%%%%%%%%%%%%%%%%
-\Prog{supercell} ... 
+\Prog{supercell} reads the file \Arg{infile} and writes \Arg{outfile}. The
+input must be a \LaTeX\ document using the \Prog{latex2man} \LaTeX\ package.
+\Prog{Latex2man} translates that document into the \Cmd{troff}{1} format using
+the \Opt{-man} macro package.
+
+Using the \Opt{-H} option, HTML code can be produced, instead of
+\Cmd{troff}{1}.
+With this option you can, optionally, specify a \Arg{CSSfile} as an argument.
+CSS (Cascading Style Sheets) allows you to control the appearance of the resulting HTML page.
+See below for the names of CSS classes that are included in the HTML tags as attributes.
+
+Using the \Opt{-T} option, TexInfo code can be produced, instead of
+\Cmd{troff}{1}.
+
+Using the \Opt{-M} option, \Cmd{troff}{1} input is produced.
+
+Using the \Opt{-L} option, \LaTeX\ ouput can be produced, instead of
+\Cmd{troff}{1}.
+
 
 \section{Options}
 %%%%%%%%%%%%%%%%%
