@@ -388,6 +388,9 @@ bool d2o_main_class::add_to_list(std::list<map_comp_item *> &mpis, map_comp_item
 
 bool d2o_main_class::write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs)
 {
+  if(dry_run && (!merge_confs) )
+    return true;
+  
   std::vector<lbl_order> lo;
   lo = set_lbl_order();
   
@@ -426,7 +429,7 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   {
     string del_command = "rm -f " + output_base_name + "*.cif";
     system(del_command.c_str());
-  }          
+  }
   
   do
   {
@@ -1136,10 +1139,19 @@ bool d2o_main_class::show_groups_information()
          << " sites:" << endl;
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
-      cout << "   Atom " << j << " - "
+      cout << "   Atom #" << j + 1 << " - "
            << occup_groups[i].items[j].label << "(occup: " 
-           << occup_groups[i].items[j].occup_target << ")" 
-           << " has now " << occup_groups[i].items[j].num_of_atoms_sc << " sites." << endl;
+           << occup_groups[i].items[j].occup_target << ")";
+      
+      if( occup_groups[i].is_fixed() )
+        cout << " stored with occupancy " << 
+                boost::format("%.3f") %
+                ( double(occup_groups[i].items[j].num_of_atoms_sc) /
+                  double(occup_groups[i].number_of_sites) );
+      else
+        cout << " has now " << occup_groups[i].items[j].num_of_atoms_sc << " sites.";
+      
+      cout << endl;
     }
 
     if( occup_groups[i].max_dis_within_group > 1E-3)

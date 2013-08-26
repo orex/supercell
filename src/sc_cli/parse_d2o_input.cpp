@@ -267,7 +267,7 @@ bool c_man_atom_prop_cli::parse_input_item(std::string inp_str)
 
 bool c_man_atom_prop_cli::parse_input(const std::vector<std::string> &inp, std::string &param_error)
 {
-  bool result;
+  bool result = true;
   
   vc_raw.clear();
   
