@@ -453,7 +453,9 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
           obc.SetOutFormat("cif");
           obc.WriteFile(mpi->mol, 
                 output_base_name + "_ind" + index_str + ".cif");
-        
+          
+          if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
+            cout << "Processed " << index << " configuration..." << endl;
         }
         
         delete mpi;
@@ -463,8 +465,8 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
         add_to_list(mpis, mpi);
         if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
         {  
-          cout << index << " total configuration merged to " << 
-                  mpis.size() << " configuration"  << endl;
+          cout << "Processed " << index << " configuration merged to " << 
+                  mpis.size() << " configuration..."  << endl;
         }  
       }
       index++;    
