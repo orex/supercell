@@ -187,8 +187,6 @@ bool c_man_atom_prop_cli::get_labels(std::string left_str,
     }
   }
 
-  cout << result << endl;  
-  
   if( !result )
     lables_pattern.clear();
     

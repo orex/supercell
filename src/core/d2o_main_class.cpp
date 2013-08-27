@@ -609,7 +609,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         rangi rd;
         rd.group_index = i;
         rd.atom_index = j;
-        if(!(*manual_properties)[curr_group.items[0].label].population.assigned())
+        if(!(*manual_properties)[curr_group.items[j].label].population.assigned())
         {  
           correct_rms_range(curr_group.number_of_sites, 
                             occup_groups[i].items[j].occup_target, x2,
@@ -1236,11 +1236,11 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
   
   if(verbose_level >= 1)
   { 
-    cout << "Initial molecule:" << endl;
+    cout << "Initial system:" << endl;
     cout << "  Chemical Formula: " << get_formula(mol_initial) << endl;
     cout << endl;
     
-    cout << "Supercell molecule " << boost::format("(%1%x%2%x%3%)") %a %b %c << ":" << endl;
+    cout << "Supercell system " << boost::format("(%1%x%2%x%3%)") %a %b %c << ":" << endl;
     cout << boost::format("  Size a=%1%, b=%2%, c=%3%") %super_unitcell->GetA() 
                                                         %super_unitcell->GetB() 
                                                         %super_unitcell->GetC() << endl;    
