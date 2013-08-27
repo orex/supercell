@@ -428,7 +428,9 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   if(!dry_run)
   {
     string del_command = "rm -f " + output_base_name + "*.cif";
-    system(del_command.c_str());
+    int rc = system(del_command.c_str());
+    if( (verbose_level >= 2) && (rc == 0) )
+      cout << "Output files was deleted successfully" << endl;
   }
   
   do
