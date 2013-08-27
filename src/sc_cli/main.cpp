@@ -43,7 +43,7 @@ int main(int argc, char** argv)
  
   try 
   { 
-    std::string appName = boost::filesystem::basename(argv[0]); 
+    //std::string appName = boost::filesystem::basename(argv[0]); 
 
     string input_file;
     string output_file;
@@ -77,11 +77,9 @@ int main(int argc, char** argv)
                   "Supercell size. Example: -s 2x2x5")
       ("charge-balance,c", po::value<std::string>(&charge_balance_str)->default_value("try"), 
                            (cb_names::get_name(cb_no)     + " - no charge balancing.\n" +
-                            cb_names::get_name(cb_formal) + " - Formal charges from internal database.\n" +
                             cb_names::get_name(cb_try)    + " - Try to charge balance system, " +
-                                                           "if all charges known and inintial system is not charged.\n" +
-                            cb_names::get_name(cb_input)  + " - check input file first for charges, " +
-                           "if not exists use formal one.").c_str())
+                                                           "if initial system is not charged.\n" +
+                            cb_names::get_name(cb_input)  + " - Charge balance the system. ").c_str())
       ("property,p", po::value<vector<string> >(&manual_properties), 
                     (string("Set properties of atoms by labels. ") +
                             "For detail description see manual.").c_str())

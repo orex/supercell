@@ -15,7 +15,6 @@ cb_names::cb_init cb_names::_init;
 cb_names::cb_init::cb_init()
 {
   cb_names::mp_cb[cb_no]     = "no";
-  cb_names::mp_cb[cb_formal] = "form";
   cb_names::mp_cb[cb_input]  = "yes";
   cb_names::mp_cb[cb_try]    = "try";
 }
@@ -27,7 +26,7 @@ std::string cb_names::get_name(const charge_balance cb)
   return result;
 }
 
-bool cb_names::get_cb(const std::string str, charge_balance &cb)
+bool cb_names::get_cb(const std::string &str, charge_balance &cb)
 {
   bool result = false;
   

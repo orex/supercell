@@ -15,7 +15,7 @@
 
 #include "libs/utils/c_assigned_value.h"
 
-enum charge_balance {cb_no, cb_formal, cb_input, cb_try};
+enum charge_balance {cb_no, cb_input, cb_try};
 
 class cb_names
 {
@@ -32,7 +32,7 @@ private:
   static std::map<charge_balance, std::string> mp_cb;
 public:  
   static std::string get_name(const charge_balance cb);
-  static bool get_cb(const std::string str, charge_balance &cb);
+  static bool get_cb(const std::string &str, charge_balance &cb);
 };
 
 class c_man_atom_prop_item

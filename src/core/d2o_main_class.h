@@ -66,7 +66,6 @@ public:
 
 struct site_charges
 {
-  double formal_charge;
   double input_charge;
   double curr_charge;
   double occup;

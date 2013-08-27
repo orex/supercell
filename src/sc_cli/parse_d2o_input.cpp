@@ -64,7 +64,7 @@ void c_man_atom_prop_cli::regex_test(std::string test_str)
 bool c_man_atom_prop_cli::get_param(std::string &right_str, const boost::regex &rx, 
                                     int param_num, std::string &param)
 {
-  bool result;
+  bool result = false;
   
   vector<string> match;
   int sc = search_count(right_str, match, rx);
@@ -331,10 +331,9 @@ bool parse_d2o_input::get_supercell_size(const std::string &sc_size_str, std::ve
 
 bool parse_d2o_input::get_charge_balance(std::string cb_str, charge_balance &cb)
 {
-  bool result = false;
   trim(cb_str);
   
-  result = cb_names::get_cb(cb_str, cb);
+  bool result = cb_names::get_cb(cb_str, cb);
 
   return result;
 }

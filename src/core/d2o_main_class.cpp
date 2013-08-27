@@ -674,7 +674,6 @@ bool d2o_main_class::get_atoms_population()
     bool last_conf = false;
     while(!last_conf)
     {
-      double rms_curr = 0;
 
       //check charge balance and occupancy
       vector<int> ocp_t;
@@ -742,6 +741,7 @@ bool d2o_main_class::get_atoms_population()
       
       if( (abs(charge) < charge_tol) && (!overoccup) && (!underoccup))
       {  
+        double rms_curr = 0;
         //calculate RMS
         for(int i = 0; i < rc.size(); i++)
         {  
@@ -787,22 +787,18 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   {
     string label = a->GetData("_atom_site_label")->GetValue();
     double curr_input_charge = dynamic_cast<OBPairFloatingPoint *>(a->GetData("input_charge"))->GetGenericValueDef(NAN);
-    double curr_formal_charge = a->GetFormalCharge();
     double curr_occup = dynamic_cast<OBPairFloatingPoint *>(a->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
     if( scs.count(label) > 0 )
     {  
       if(!isnan(scs[label].input_charge) || !isnan(curr_input_charge))
         assert(scs[label].input_charge  == curr_input_charge);
-      
-      assert(scs[label].formal_charge == curr_formal_charge);
-      
+
       scs[label].occup += curr_occup;
       scs[label].cif_mult++;
     }
     else
     {
       scs[label].input_charge  = curr_input_charge;
-      scs[label].formal_charge = curr_formal_charge;
       scs[label].occup = curr_occup; 
       scs[label].cif_mult = 1;
     }  
@@ -818,16 +814,10 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
 
       case cb_input:
       case cb_try:  
-        if(isnan((*it).second.input_charge))
-          (*it).second.curr_charge = (*it).second.formal_charge;
-        else
+        if(! isnan((*it).second.input_charge) )
           (*it).second.curr_charge = (*it).second.input_charge;
       break;  
       
-      case cb_formal:
-        (*it).second.curr_charge = (*it).second.formal_charge;
-      break;
-
       default:
         assert(false);
       break;  
@@ -841,13 +831,11 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   }
 
   double total_input_charge = 0;
-  double total_form_charge = 0;
   double total_used_charge = 0;
     
   for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
   {
     total_input_charge += (*it).second.input_charge * (*it).second.occup;
-    total_form_charge  += (*it).second.formal_charge * (*it).second.occup;
     total_used_charge  += (*it).second.curr_charge * (*it).second.occup;
   }
 
@@ -870,17 +858,15 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   if(verbose_level >= 1)
   {  
     cout << "Total charge oxydation state (cif):  " << total_input_charge << endl;
-    cout << "Total charge formal: " << total_form_charge << endl;
     cout << "Total charge used:   " << total_used_charge << endl << endl;
 
-    cout << "| Atom Label\t| \t\tcharge  \t| mult\t| occup x mult" << endl;
-    cout << "| \t\t| Ox. state\t| Formal | Used\t| (cif)\t|\t\t " << endl;
+    cout << "| Atom Label\t| \tcharge  \t| mult\t| occup x mult" << endl;
+    cout << "| \t\t| Ox. state\t| Used\t| (cif)\t|\t\t " << endl;
     for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
     {
 
       cout << "|  " << (*it).first                << "\t\t|  "
                     << (*it).second.input_charge  << "\t\t|  "
-                    << (*it).second.formal_charge << "\t |  "
                     << (*it).second.curr_charge   << "\t|  " 
                     << (*it).second.cif_mult      << "\t|  "              
                     << (*it).second.occup  << endl;
