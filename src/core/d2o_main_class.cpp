@@ -44,7 +44,7 @@ OpenBabel::OBUnitCell * map_comp_item::unitcell()
 }
 
 
-std::vector<float> map_comp_item::get_lengths_by_labels(const lbl_order lbl)
+std::vector<float> map_comp_item::get_lengths_by_labels(const lbl_order &lbl)
 {
   std::vector<float> result;
   
@@ -109,7 +109,7 @@ int map_comp_item::compare_distances(const std::vector<float> &f1, const std::ve
   return result;  
 }
 
-int map_comp_item::comp ( map_comp_item &r1, map_comp_item &r2 )
+int map_comp_item::comp( map_comp_item &r1, map_comp_item &r2 )
 {
   int cmp;
   assert(r1.labels_order->size() == r2.labels_order->size());
@@ -218,6 +218,35 @@ OpenBabel::vector3 d2o_main_class::get_minimal_distance(OpenBabel::vector3 dist,
   
   return result;
 }
+
+OpenBabel::vector3 d2o_main_class::center_mass(const std::vector<OpenBabel::vector3> &atoms_pos,
+                                               OpenBabel::OBUnitCell * unitcell,
+                                               const double tol)
+{
+  assert(atoms_pos.size() > 0);
+  
+  vector3 central_pos = atoms_pos[0];
+  
+  vector3 dist_central(0, 0, 0);  
+  for(int i = 0; i < atoms_pos.size(); i++)
+  {
+    vector3 dist = atoms_pos[i] - central_pos;
+    dist = get_minimal_distance(dist, unitcell);
+    assert(dist.length() < tol);
+    dist_central += dist;
+  }
+  
+  dist_central /= double(atoms_pos.size());
+  
+  vector3 result = central_pos + dist_central;
+  
+  unitcell->WrapCartesianCoordinate(result);
+  
+  assert(get_minimal_distance(result - central_pos, unitcell).length() < dist_central.length() + 0.001);
+  
+  return result;
+}
+
 
 bool d2o_main_class::init_atom_change_mol(OpenBabel::OBMol *cmol)
 {
@@ -551,14 +580,16 @@ std::vector<lbl_order> d2o_main_class::set_lbl_order()
   
   for(int i = 0; i < occup_groups.size(); i++)
   {
-    double tol1 = occup_groups[i].max_dis_within_group + min_tol;
+    // tolerance depricated
+    //double tol1 = occup_groups[i].max_dis_within_group + min_tol;
     int64_t m1 = occup_groups[i].get_number_of_combinations();
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
       string lbl1 = occup_groups[i].items[j].label;
       for(int k = i; k < occup_groups.size(); k++)
       {
-        double tol2 = occup_groups[k].max_dis_within_group + min_tol;
+        // tolerance depricated
+        //double tol2 = occup_groups[k].max_dis_within_group + min_tol;
         int64_t m2 = occup_groups[k].get_number_of_combinations();
         
         int begp = k == i ? j : 0;
@@ -568,7 +599,7 @@ std::vector<lbl_order> d2o_main_class::set_lbl_order()
           string lbl2 = occup_groups[k].items[l].label;
           if( m1 * m2 > 1)
           {  
-            lbl_order tp(lbl1, lbl2, tol1 + tol2, m1 * m2);
+            lbl_order tp(lbl1, lbl2, min_tol, m1 * m2);
             result.push_back(tp);
           }  
         }  
@@ -922,18 +953,19 @@ bool d2o_main_class::create_occup_groups()
     OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
     for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
     {
-      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);      
-      string label_i = atom_i->GetData("original_label")->GetValue();      
+      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);
+      string label_i = atom_i->GetData("original_label")->GetValue();
       vector3 dist = atom_i->GetVector() - atom_j->GetVector();
       dist = get_minimal_distance(dist, unitcell);
       if(dist.length() < r_tolerance)
-      {  
+      {
         string label_j = atom_j->GetData("original_label")->GetValue();
         if((label_i == label_j))
           to_delete.insert(atom_j);
-      }  
-    }  
+      }
+    }
   }
+  
   for(set<OBAtom *>::iterator it = to_delete.begin(); it != to_delete.end(); it++)
     mol_supercell.DeleteAtom(*it, false);
   
@@ -1068,6 +1100,8 @@ bool d2o_main_class::create_occup_groups()
   for(int i = 0; i < mol_supercell.NumAtoms(); i++)
   {
     OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
+    vector<vector3> pos_near;
+    pos_near.push_back(atom_i->GetVector());
     for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
     {
       OBAtom * atom_j = mol_supercell.GetAtom(j + 1);      
@@ -1077,17 +1111,23 @@ bool d2o_main_class::create_occup_groups()
       {  
         int group_index = dynamic_cast<OBPairInteger *> (atom_i->GetData("group_number"))->GetGenericValue();
         occup_groups[group_index].max_dis_within_group = max(occup_groups[group_index].max_dis_within_group, dist.length());
+        pos_near.push_back(atom_j->GetVector());
         mol_supercell.DeleteAtom(atom_j);
       }
       else
         min_dist_between_groups = min(min_dist_between_groups, dist.length());
     }  
+    atom_i->SetVector(center_mass(pos_near, unitcell, r_tolerance));
   }
   
   //calculate statistic for atoms of the same type
   for(int i = 0; i < mol_supercell.NumAtoms(); i++)
   {
     OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
+    
+    vector<vector3> pos_near;
+    pos_near.push_back(atom_i->GetVector());
+    
     for(set<OBAtom *>::iterator it = to_delete.begin(); it != to_delete.end(); it++)
     {  
       OBAtom * atom_j = *it;      
@@ -1097,10 +1137,13 @@ bool d2o_main_class::create_occup_groups()
       {  
         int group_index = dynamic_cast<OBPairInteger *> (atom_i->GetData("group_number"))->GetGenericValue();
         occup_groups[group_index].max_dis_within_group = max(occup_groups[group_index].max_dis_within_group, dist.length());
+        pos_near.push_back(atom_j->GetVector());
       }
       else
         min_dist_between_groups = min(min_dist_between_groups, dist.length());
     }  
+    atom_i->SetVector(center_mass(pos_near, unitcell, r_tolerance));
+    
   }
   for(set<OBAtom *>::iterator it = to_delete.begin(); it != to_delete.end(); it++)
     delete *it;  

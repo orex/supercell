@@ -103,7 +103,7 @@ protected:
   std::vector<lbl_order> * labels_order;
   std::map<std::string, std::vector<float> > * dsts;
   //output is sorted
-  std::vector<float> get_lengths_by_labels(const lbl_order lbl);
+  std::vector<float> get_lengths_by_labels(const lbl_order &lbl);
   int mult;
 public:  
   map_comp_item(std::vector<lbl_order> &lbl);
@@ -125,6 +125,9 @@ public: //Static
   static OpenBabel::vector3 get_minimal_distance(OpenBabel::vector3 dist, 
                                                  OpenBabel::OBUnitCell * unitcell);
   
+  static OpenBabel::vector3 center_mass(const std::vector<OpenBabel::vector3> &atoms_pos,
+                                        OpenBabel::OBUnitCell * unitcell,
+                                        const double tol);
   
 protected:
   struct rangi
