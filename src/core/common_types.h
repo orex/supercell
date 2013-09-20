@@ -13,7 +13,7 @@
 #include <vector>
 #include <set>
 
-#include "libs/utils/c_assigned_value.h"
+#include "assigned_variable/av_base.hpp"
 
 enum charge_balance {cb_no, cb_input, cb_try};
 

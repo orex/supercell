@@ -16,10 +16,10 @@
 
 #include <openbabel/chargemodel.h>
 
-#include "combinatorics.h"
+#include "science/combinatorics.h"
 
-#include "rnd_utils.h"
-#include "string_utils.h"
+#include "others/rnd_utils.h"
+#include "others/string_utils.h"
 
 
 using namespace OpenBabel;

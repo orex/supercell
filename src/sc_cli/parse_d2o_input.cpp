@@ -7,7 +7,7 @@
 
 #include "parse_d2o_input.h"
 
-#include "string_utils.h"
+#include "others/string_utils.h"
 #include "d2o_main_class.h"
 
 #include <assert.h>
