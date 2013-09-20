@@ -1,0 +1,3 @@
+[submodule "libs/common_utils"]
+	path = libs/common_utils
+	url = https://github.com/orex/common_utils.git
