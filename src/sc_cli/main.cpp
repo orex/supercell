@@ -13,15 +13,11 @@
 #include "d2o_main_class.h"
 #include <eigen3/Eigen/Dense>
 
-//#include "combinatorics.h"
-
 #include "common_types.h"
  
 #include <iostream> 
 #include <string> 
 #include <set>
-
-//#include "string_utils.h"
 
 namespace 
 { 
