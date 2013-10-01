@@ -12,6 +12,9 @@ set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string
 set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp)
 
 #set_common_libraries
+add_library(openbabel UNKNOWN IMPORTED)
+set_property(TARGET openbabel PROPERTY IMPORTED_LOCATION "${OB_LIB}")
+
 set(sc_libraries ${sc_libraries} openbabel)
 
 add_subdirectory(sc_cli)
