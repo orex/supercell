@@ -13,8 +13,16 @@ else()
   set(OB_LIB_NAMES libopenbabel.so openbabel.dll openbabel)
 endif()
 
+#GLIBC_2.4
+option(GLIBC_24_COMPATIBLE "Build project compatible with GLIBC 2.4. Gold linker required." OFF)
+if(GLIBC_24_COMPATIBLE AND UNIX)
+  set(WRAP_MEMCPY_SRC ${CMAKE_SOURCE_DIR}/libs/common_utils/others/memcpy.c)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--wrap=memcpy")  
+endif()
+
+
 if( ${CMAKE_COMPILER_IS_GNUCXX} AND ${LINK_STATIC_LIBS} )
-  set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -static-libstdc++ -static-libgcc")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wl,-no-gnu-unique")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 endif()
 
