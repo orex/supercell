@@ -8,8 +8,8 @@ set(sc_includes ${sc_includes} ${CMAKE_SOURCE_DIR}/libs/common_utils/)
 file(GLOB core_sources ${CMAKE_CURRENT_SOURCE_DIR}/core/*.cpp)
 set(sc_sources ${WRAP_MEMCPY_SRC} ${sc_sources} ${core_sources})
 
-set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string_utils.cpp)
-#                             ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp)
+set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string_utils.cpp
+                             ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp)
 
 #set_common_libraries
 add_library(openbabel UNKNOWN IMPORTED)
