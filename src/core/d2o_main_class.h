@@ -121,14 +121,6 @@ public:
 
 class d2o_main_class 
 {
-public: //Static
-  static OpenBabel::vector3 get_minimal_distance(OpenBabel::vector3 dist, 
-                                                 OpenBabel::OBUnitCell * unitcell);
-  
-  static OpenBabel::vector3 center_mass(const std::vector<OpenBabel::vector3> &atoms_pos,
-                                        OpenBabel::OBUnitCell * unitcell,
-                                        const double tol);
-  
 protected:
   struct rangi
   {
