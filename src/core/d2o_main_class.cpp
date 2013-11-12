@@ -380,10 +380,16 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   
   double tot_comb = total_combinations();
   
-  if( n_store <= 0 )
-    n_store = 2 * tot_comb;
-  
+  #ifdef USE_FIXED_N_RND
+  set<int> rnd_index;
+  if(n_store > 0 )
+  {
+    vector<int> rnd_index_v = get_random_numbers(n_store, tot_comb - 1);
+    rnd_index.insert(rnd_index_v.begin(), rnd_index_v.end());
+  }
+  #else
   boost::mt19937 rnd_gen = create_rnd_gen();
+  #endif
 
   if(!dry_run)
   {
@@ -392,10 +398,16 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
     if( (verbose_level >= 2) && (rc == 0) )
       cout << "Output files was deleted successfully" << endl;
   }
-  
+    
+    
+  int total_index;
   do
   {
-    if( get_rnd_value_in_interval(rnd_gen, 0, tot_comb) <= n_store )
+    #ifdef USE_FIXED_N_RND
+    if( (n_store <= 0) || (rnd_index.count(total_index) > 0) )    
+    #else
+    if( (n_store <= 0) || get_rnd_value_in_interval(rnd_gen, 0, tot_comb) <= n_store )
+    #endif
     {  
       map_comp_item * mpi = new map_comp_item(lo);
       init_atom_change_mol(mpi->mol);
@@ -442,6 +454,7 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
         break;
       }  
     }
+    total_index++;
   }while(!done);
   
   if(merge_confs && (verbose_level >= 1) )

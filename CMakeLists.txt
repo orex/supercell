@@ -20,7 +20,6 @@ if(GLIBC_24_COMPATIBLE AND UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--wrap=memcpy")  
 endif()
 
-
 if( ${CMAKE_COMPILER_IS_GNUCXX} AND ${LINK_STATIC_LIBS} )
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wl,-no-gnu-unique")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
@@ -34,6 +33,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
 endif(CMAKE_BUILD_TYPE STREQUAL "")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+#Fixed n random algorithm
+add_definitions(-DUSE_FIXED_N_RND)
 
 add_subdirectory(libs)
 add_subdirectory(src)
