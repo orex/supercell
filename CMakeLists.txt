@@ -35,7 +35,11 @@ endif(CMAKE_BUILD_TYPE STREQUAL "")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #Fixed n random algorithm
-add_definitions(-DUSE_FIXED_N_RND)
+option(USE_FIXED_N_RND_OPT "Use fixed number of structures in random output" ON)
+
+if(USE_FIXED_N_RND_OPT)
+  add_definitions(-DUSE_FIXED_N_RND)
+endif()  
 
 add_subdirectory(libs)
 add_subdirectory(src)
