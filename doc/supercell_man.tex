@@ -107,24 +107,18 @@
       The option allows you significantly decrease the number of output structures. Applying the option you will switch on merge algorithm, which will merge structures with the same set of distances between sites with specific label. Be careful, the algorithm requires all unique structures to be stored in memory (usually 10\Circum 4 - 10\Circum 5 unique structures per 1Gb RAM). Also the algorithm can decrease the speed. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher.
 
 \item[\OptArg{-n }{count}, \OptArg{--store-structures=}{count}]
-      
       %@% IF !NFIX %@%
-
       %@% IF NOTHING %@%
         %workaround to skip macro when do latex2man      
         \ifx \NFix \undefined
       %@% END-IF %@%        
-      
-        The argument of the option is the average number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm. On each stage the new structure generated the algorithm will accept the structure with probability p=\OptArg{}{count}/total-number-of-combination. So, the output structures distribution can be described with binomial distribution F(k, p, count). If you are using the algorithm with merge algorithm \OptArg{-m}{} this algorithm will run first. 
-      
+        The argument of the option is the avarage number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm. On each stage the new structure generated the algorithm will accept the structure with probability p=\OptArg{}{count}/total-number-of-combination. So, the output structures distribution can be described with binomial distribution F(k, p, count). If you are using the algorithm with merge algorithm \OptArg{-m}{} this algorithm will run first. 
       %@% IF NOTHING %@%        
       \else
       %@% END-IF %@%
-      
       %@% ELSE %@%
-        The argument of the option is the average number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm.
+        The argument of the option is the number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm.
       %@% END-IF %@%
-      
       %@% IF NOTHING %@%      
       \fi
       %@% END-IF %@%              

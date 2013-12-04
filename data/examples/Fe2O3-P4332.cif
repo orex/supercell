@@ -1,0 +1,93 @@
+data_79196-ICSD
+#©2012 by Fachinformationszentrum Karlsruhe, and the U.S. Secretary of 
+#Commerce on behalf of the United States.  All rights reserved.
+_database_code_ICSD                79196
+_audit_creation_date               1996/10/14
+_audit_update_record               2010/08/01
+_chemical_name_systematic          'Iron Oxide (21.34/32) - Gamma'
+_chemical_formula_structural       'Fe21.34 O32'
+_chemical_formula_sum              'Fe21.34 O32'
+_chemical_name_mineral             Maghemite
+_publ_section_title
+;
+Vacancy ordering in gamma-Fe2 O3: synchrotron x-ray powder 
+diffraction and high-resolution electron microscopy studies
+;
+loop_
+_citation_id
+_citation_journal_abbrev
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary 'Journal of Applied Crystallography' 1995 28 141 145 JACGAR
+2 'Powder Diffraction' 1988 3 104 105 PODIE2
+_publ_author_name
+;
+Shmakov, A.N.;Kryukova, G.N.;Tsybulya, S.V.;Chuvilin, A.L.;Solov'eva, 
+L.P.
+;
+_cell_length_a                     8.3474(2)
+_cell_length_b                     8.3474(2)
+_cell_length_c                     8.3474(2)
+_cell_angle_alpha                  90.
+_cell_angle_beta                   90.
+_cell_angle_gamma                  90.
+_cell_volume                       581.64
+_cell_formula_units_Z              1
+_symmetry_space_group_name_H-M     'P 43 3 2'
+_symmetry_Int_Tables_number        212
+_refine_ls_R_factor_all            0.069
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+  1	'z+1/4, y+3/4, -x+3/4'
+  2	'-z+3/4, y+1/4, x+3/4'
+  3	'y+1/4, x+3/4, -z+3/4'
+  4	'-y+3/4, x+1/4, z+3/4'
+  5	'x+1/4, z+3/4, -y+3/4'
+  6	'-x+3/4, z+1/4, y+3/4'
+  7	'z+3/4, -y+3/4, x+1/4'
+  8	'-z+1/4, -y+1/4, -x+1/4'
+  9	'y+3/4, -x+3/4, z+1/4'
+ 10	'-y+1/4, -x+1/4, -z+1/4'
+ 11	'x+3/4, -z+3/4, y+1/4'
+ 12	'-x+1/4, -z+1/4, -y+1/4'
+ 13	'-y+1/2, -z, x+1/2'
+ 14	'-y, z+1/2, -x+1/2'
+ 15	'y+1/2, -z+1/2, -x'
+ 16	'y, z, x'
+ 17	'z+1/2, -x+1/2, -y'
+ 18	'-z+1/2, -x, y+1/2'
+ 19	'-z, x+1/2, -y+1/2'
+ 20	'z, x, y'
+ 21	'-x+1/2, -y, z+1/2'
+ 22	'-x, y+1/2, -z+1/2'
+ 23	'x+1/2, -y+1/2, -z'
+ 24	'x, y, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Fe2.999+	2.999
+O2-	-2
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_attached_hydrogens
+_atom_site_B_iso_or_equiv
+Fe1 Fe2.999+ 8 c 0.9921(5) 0.9921(5) 0.9921(5) 1. 0 0.45 
+Fe2 Fe2.999+ 12 d 0.8650(5) 0.6150(5) 0.875 1. 0 0.45 
+Fe3 Fe2.999+ 4 b 0.375 0.125 0.875 0.335(5) 0 0.45 
+O1 O2- 8 c 0.861(1) 0.861(1) 0.861(1) 1. 0 0.45 
+O2 O2- 24 e 0.372(1) 0.377(1) 0.876(2) 1. 0 0.45 
+
+#End of data_79196-ICSD
+
+
