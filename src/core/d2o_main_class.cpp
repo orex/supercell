@@ -80,9 +80,13 @@ std::vector<float> map_comp_item::get_lengths_by_labels(const lbl_order &lbl)
         continue;
       
       vector3 dist = atom_i->GetVector() - atom_j->GetVector();
-      dist = get_minimal_distance(dist, unitcell());
+      std::vector<vector3> v_dist = get_image_distances(dist, unitcell());
       
-      result.push_back(dist.length());
+      for(int k = 0; k < 1; k++)
+      {  
+        double ds = v_dist[k].length();
+        result.push_back(ds);
+      }  
     }  
   }
 
