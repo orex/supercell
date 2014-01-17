@@ -20,120 +20,30 @@
 
 #include "others/rnd_utils.h"
 #include "others/string_utils.h"
+#include "containers/array_common.hpp"
 
-#include "obabel/obabel_utils.h"
+#include "obabel/eigen2babel.h"
+#include "cryst_tools/comb_points.h"
+#include "cryst_tools/cryst_tools.h"
+
+#include <Eigen/Dense>
 
 
 using namespace OpenBabel;
 using namespace std;
 
-map_comp_item::map_comp_item(std::vector<lbl_order> &lbl)
-{ 
-  labels_order = &lbl;
-  mol = new OBMol;
-  dsts = new std::map<std::string, std::vector<float> > ;
-  uc = NULL;
-  mult = 0;
-}
-
-OpenBabel::OBUnitCell * map_comp_item::unitcell()
-{
-  assert(mol->HasData(OBGenericDataType::UnitCell));
-  if( uc == NULL)
-    uc = dynamic_cast<OBUnitCell *>(mol->GetData(OBGenericDataType::UnitCell));
-  
-  return uc;
-}
-
-
-std::vector<float> map_comp_item::get_lengths_by_labels(const lbl_order &lbl)
-{
-  std::vector<float> result;
-  
-  string map_key = lbl.lbl1 + "  -  " + lbl.lbl2;
-  
-  assert(dsts != NULL);
-  assert(labels_order != NULL);
-  
-  if(dsts->count(map_key) > 0)
-  {  
-    result = (*dsts)[map_key];
-    return result;
-  }
-  
-  bool homo_dist = lbl.lbl1 == lbl.lbl2;
-  
-  for(int i = 0; i < mol->NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol->GetAtom(i + 1);
-    string label_i = atom_i->GetData("original_label")->GetValue();
-    
-    if(label_i != lbl.lbl1)
-      continue;
-    
-    for(int j = homo_dist ? i + 1: 0; j < mol->NumAtoms(); j++)
-    {
-      OBAtom * atom_j = mol->GetAtom(j + 1);
-      string label_j = atom_j->GetData("original_label")->GetValue();
-    
-      if(label_j != lbl.lbl2)
-        continue;
-      
-      vector3 dist = atom_i->GetVector() - atom_j->GetVector();
-      std::vector<vector3> v_dist = get_image_distances(dist, unitcell());
-      
-      for(int k = 0; k < 1; k++)
-      {  
-        double ds = v_dist[k].length();
-        result.push_back(ds);
-      }  
-    }  
-  }
-
-  std::sort(result.begin(), result.end());
-  (*dsts)[map_key] = result;
-  
-  return result;
-}
-
-int map_comp_item::compare_distances(const std::vector<float> &f1, const std::vector<float> &f2, float tol)
-{
-  assert(f1.size() == f2.size());
-  
-  int result = 0;
-  
-  for(int i = 0; i < f1.size(); i++)
-  {
-    result = f1[i] < f2[i] ? -1 : 1;
-
-    if( abs(f1[i] - f2[i]) < tol)
-      result = 0;
-    
-    if( result != 0 ) break;
-  }
-
-  return result;  
-}
-
-int map_comp_item::comp( map_comp_item &r1, map_comp_item &r2 )
-{
-  int cmp;
-  assert(r1.labels_order->size() == r2.labels_order->size());
-  for(int i = 0; i < r1.labels_order->size(); i++)
-  {
-    std::vector<float> f1, f2;
-    f1 = r1.get_lengths_by_labels(r1.labels_order->at(i));
-    f2 = r2.get_lengths_by_labels(r2.labels_order->at(i));
-    
-    cmp = compare_distances(f1, f2, r1.labels_order->at(i).tolerance);
-    if(cmp != 0) break;
-  }
-  
-  return cmp;
-}
-
 d2o_main_class::d2o_main_class()
 {
+}
+
+c_occup_item::c_occup_item(OpenBabel::OBAtom *ob)
+{ 
+  obp = new OpenBabel::OBAtom(); 
+  obp->Duplicate(ob);
+  
+  label = obp->GetData("original_label")->GetValue();
+  occup_target = dynamic_cast<OBPairFloatingPoint *> (obp->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+  
 }
 
 double c_occup_group::get_total_occup_input() const
@@ -171,9 +81,9 @@ int64_t c_occup_group::get_number_of_combinations() const
       sum  += items[i].num_of_atoms_sc;
     }  
 
-    if(sum <= number_of_sites)
+    if(sum <= number_of_sites())
     {  
-      nm[-1] = number_of_sites - sum;    
+      nm[-1] = number_of_sites() - sum;    
       result = num_combinations(nm);
     }
     else
@@ -181,6 +91,12 @@ int64_t c_occup_group::get_number_of_combinations() const
   }
   
   return result;
+}
+
+void c_occup_group::add_item(OpenBabel::OBAtom * oba)
+{
+  c_occup_item item(oba);
+  items.push_back(item);
 }
 
 bool d2o_main_class::init_atom_change_mol(OpenBabel::OBMol *cmol)
@@ -252,102 +168,210 @@ std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
   return result;      
 }
 
-bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const std::map<int, std::vector<int> > &ppc)
+bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &ppc)
 {
-  map<int, int> curr_pos;
-  
-  FOR_ATOMS_OF_MOL(a, mol_supercell)
+  cmol->BeginModify();
+  for(int i = 0; i < occup_groups.size(); i++)
   {
-    int group_index = dynamic_cast<OBPairInteger *>(a->GetData("group_number"))->GetGenericValue();
-    
-    assert( ( group_index >= 0 ) && ( group_index < occup_groups.size() ) );
-    
-    c_occup_group &curr_group = occup_groups[group_index];
-    
-    for(int i  = 0; i < curr_group.items.size(); i++)
+    c_occup_group &curr_group = occup_groups[i];
+    bool fixed_group = curr_group.is_fixed();    
+    for(int j = 0; j < curr_group.positions.size(); j++)
     {
-      double occup_value;
-      
-      if( curr_group.is_fixed() )
+      for(int k = 0; k < curr_group.items.size(); k++)
       {
-        assert( ppc.count(group_index) == 0 );
-        occup_value = double(curr_group.items[i].num_of_atoms_sc) /
-                      double(curr_group.number_of_sites);
-      }
-      else
-      {
-        assert( ppc.count(group_index) > 0);        
-        assert( ppc.at(group_index).size() > 0);
-        assert( curr_pos[group_index] < ppc.at(group_index).size() );
-        if( ppc.at(group_index)[curr_pos[group_index]] != i )
-          continue;
-        occup_value = 1.0;
-      }  
-            
-      //Adding atom
-      OBAtom atm;
-      atm.Duplicate( curr_group.items[i].obp );
+        if( fixed_group || (k == ppc[i][j]) )
+        {  
+          OBAtom atm;
+          atm.Duplicate( curr_group.items[k].obp );
+          
+          double occup_value;
+          
+          if( fixed_group )
+            occup_value = double(curr_group.items[k].num_of_atoms_sc) / 
+                          double(curr_group.number_of_sites());
+          else
+            occup_value = 1.0;
 
-      if( atm.HasData("_atom_site_occupancy") )
-        dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(occup_value);
-      else
-      {
-        OBPairFloatingPoint * obo = new OBPairFloatingPoint();
-        obo->SetAttribute("_atom_site_occupancy");
-        obo->SetValue(occup_value);
-        atm.SetData(obo);
-      }  
+          if( atm.HasData("_atom_site_occupancy") )
+            dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(occup_value);
+          else
+          {
+            OBPairFloatingPoint * obo = new OBPairFloatingPoint();
+            obo->SetAttribute("_atom_site_occupancy");
+            obo->SetValue(occup_value);
+            atm.SetData(obo);
+          }  
   
-      atm.SetVector(a->GetVector());
-      cmol->AddAtom(atm, true);
+          atm.SetVector(curr_group.positions[j]);
+          cmol->AddAtom(atm, true);
+        }
+      }
     }  
-    
-    curr_pos[group_index]++;
   }
- 
+  
+  cmol->EndModify();
+
   return true;
 }
 
-bool d2o_main_class::add_to_list(std::list<map_comp_item *> &mpis, map_comp_item * mpi)
+bool d2o_main_class::create_symmetry_operations_groups()
 {
-  typedef std::list<map_comp_item *>::iterator c_it;
+  using namespace cryst_tools;
+  using namespace Eigen;
+
+  OBUnitCell * uc = static_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell));
+
+  vc_sets vc;
+  vc.resize(occup_groups.size());
   
-  c_it min_it = mpis.begin();
-  c_it max_it = mpis.end();
-  c_it curr_pos = mpis.end();
-  
-  bool fnd = false;
-  while(min_it != max_it)
+  vector<bool> bc;
+  bc.resize(occup_groups.size());
+  for(int i = 0; i < occup_groups.size(); i++)
   {
-    curr_pos = min_it;
-    advance(curr_pos, (std::distance(min_it, max_it) / 2));
- 
-    int cmp = map_comp_item::comp(*(*curr_pos), *mpi);
-    
-    if(cmp == 0)
-    {
-      fnd = true;
-      break;
-    }
-    else if(cmp > 0)
-    {
-      max_it = curr_pos;
-    }
-    else
+    vc[i].resize(occup_groups[i].positions.size());
+    bc[i] = occup_groups[i].is_fixed();
+    for(int j = 0; j < occup_groups[i].positions.size(); j++)
     {  
-      curr_pos++;
-      min_it = curr_pos;
-    }  
+      matrix3x3 m_cell = (uc->GetCellMatrix().transpose()).inverse();
+      vector3 v3 = m_cell * occup_groups[i].positions[j];
+      vc[i][j] = b2e_vector<double>(v3);
+    }
   }
   
-  if(!fnd)
-    curr_pos = mpis.insert(curr_pos, mpi);
-  else
-    delete mpi;
-    
-  (*curr_pos)->inc_mult();  
+  vector<Affine3d> syms;
   
-  return !fnd;
+  Matrix3d cell;
+  cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
+  
+  syms = get_all_symmetries(cell, vc, bc, symm_tol);
+  
+  if(verbose_level >= 2)
+    cout << syms.size() << " symmetry operation found for supercell." << endl;
+  
+  bool good_set = true;
+  
+  for(int i = 0; i < occup_groups.size(); i++)    
+  {
+    occup_groups[i].symms_sets.resize(syms.size());
+    for(int j = 0; j < syms.size(); j++)
+    {  
+      occup_groups[i].symms_sets[j] = index_symmetries(uc, syms[j], 
+                                      occup_groups[i].positions);
+
+      if( occup_groups[i].is_fixed() )
+      {  
+        good_set = find(occup_groups[i].symms_sets[j].begin(), 
+                        occup_groups[i].symms_sets[j].end(), -1) == 
+                        occup_groups[i].symms_sets[j].end();
+      }          
+      if(!good_set)
+        break;
+    }
+    if(!good_set)
+      break;
+  }
+  
+  if(verbose_level >= 2)
+    cout << "Symmetries operation assigned to groups." << endl;
+  
+  return good_set;
+}
+
+std::vector<int> d2o_main_class::index_symmetries(OpenBabel::OBUnitCell * uc, 
+                                                  const Eigen::Affine3d &af, 
+                                                  const std::vector<OpenBabel::vector3> &pos)
+{
+  using namespace Eigen;
+  
+  std::vector<int> result;
+  Matrix3d cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
+  Matrix3d r_cell = cell.inverse();
+  Affine3d cart_tr, cl_d, cl_i;
+  
+  cl_d.setIdentity();
+  cl_d.linear() = cell;
+  
+  cl_i.setIdentity();
+  cl_i.linear() = cell.inverse();
+  
+  cart_tr = cl_d * af * cl_i;
+  
+  std::vector<Vector3d> pose;  
+  for(int i = 0; i < pos.size(); i++)
+    pose.push_back(b2e_vector<double>(pos[i]));
+  
+  result.resize(pos.size(), -1);
+  
+  for(int i = 0; i < pose.size(); i++)
+  {
+    int index_sym = -1;
+    int index_count = 0;
+    for(int j = 0; j < pose.size(); j++)
+    {
+      Vector3d ve = pose[j] - cart_tr * pose[i];
+      ve = cell * cryst_tools::min_frac(r_cell * ve);
+      if(ve.norm() < symm_tol)
+      {
+        index_sym = j;
+        index_count++;
+      }  
+    }
+    assert(index_count <= 1);
+    result[i] = index_sym;
+  }  
+  
+  return result;
+}
+
+bool d2o_main_class::create_comb(const symm_set &sc, std::vector<int> &cmb)
+{
+  assert(sc.size() == cmb.size());
+  std::vector<int> cb;
+  
+  cb.resize(cmb.size());
+  bool result = true;
+  for(int i = 0; i < cb.size(); i++)
+  {  
+    if(sc[i] >= 0)
+      cb[sc[i]] = cmb[i];
+    else
+      result = result && (cmb[i] < 0);
+  }  
+    
+  cmb = cb;
+  
+  return result;
+}
+
+bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
+{
+  assert(occup_groups.size() > 0);
+  assert(mc.size() == occup_groups.size());
+  int syms_num = occup_groups[0].symms_sets.size();
+  assert(syms_num > 0);
+  
+  set< t_vec_comb > st;
+  
+  for(int i = 0; i < syms_num; i++)
+  {
+    t_vec_comb nc;
+    nc.resize(mc.size());
+    bool good_cb = true;
+    for(int j = 0; j < mc.size(); j++)
+    {
+      assert(syms_num == occup_groups[j].symms_sets.size());
+      
+      nc[j] = mc[j];
+      good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], nc[j]);
+    }
+    if(good_cb)
+      st.insert(nc);
+  }
+  merged_comb = st.size();
+  
+  assert(*st.begin() <= mc);
+  
+  return *st.begin() == mc;
 }
 
 bool d2o_main_class::write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs)
@@ -355,32 +379,21 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   if(dry_run && (!merge_confs) )
     return true;
   
-  std::vector<lbl_order> lo;
-  lo = set_lbl_order();
+  t_vec_comb cur_combs;
   
-  list<map_comp_item *> mpis;
-      
-  typedef map<int, vector<int> > t_map_comb;
-  t_map_comb cur_combs;
-
+  cur_combs.resize(occup_groups.size());
   for(int i = 0; i < occup_groups.size(); i++)
   {  
-    if( occup_groups[i].is_fixed() )
-      continue;
-    
     map<int, int> mvc;
 
     for(int j = 0; j < occup_groups[i].items.size(); j++)
       mvc[j] = occup_groups[i].items[j].num_of_atoms_sc;
     
-    mvc[-1] = occup_groups[i].number_of_sites - 
+    mvc[-1] = occup_groups[i].number_of_sites() - 
                       occup_groups[i].get_total_num_occup_sites();
     
     cur_combs[i] = create_start_combination(mvc);
   }  
-  
-  int index = 0;
-  bool done;
   
   double tot_comb = total_combinations();
   
@@ -403,8 +416,11 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
       cout << "Output files was deleted successfully" << endl;
   }
     
-    
-  int total_index;
+  int total_index = 0;
+  int index = 0;
+  bool done;
+  
+  OBMol cmol;
   do
   {
     #ifdef USE_FIXED_N_RND
@@ -412,76 +428,55 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
     #else
     if( (n_store <= 0) || get_rnd_value_in_interval(rnd_gen, 0, tot_comb) <= n_store )
     #endif
-    {  
-      map_comp_item * mpi = new map_comp_item(lo);
-      init_atom_change_mol(mpi->mol);
-
-      add_confs_to_mol(mpi->mol, cur_combs);
-
-      if( !merge_confs )
+    {
+      bool u_comb;
+      int merged_conf_num;
+    
+      if( merge_confs )
+        u_comb = check_comb_unique(cur_combs, merged_conf_num);
+      else
+        u_comb = true;
+    
+      if( u_comb )
       {  
         if(!dry_run)
-        {  
+        {
+          init_atom_change_mol(&cmol);
+          add_confs_to_mol(&cmol, cur_combs);
+      
           OBConversion obc;
         
           string index_str = get_index_str(index, tot_comb - 1);
+          string fname_str = output_base_name + "_ind" + index_str;
+          if( merge_confs ) 
+            fname_str += "w_" + boost::lexical_cast<string>(merged_conf_num);
 
           obc.SetOutFormat("cif");
-          obc.WriteFile(mpi->mol, 
-                output_base_name + "_ind" + index_str + ".cif");
-          
-          if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
-            cout << "Processed " << index << " configuration..." << endl;
+          obc.WriteFile(&cmol, fname_str + ".cif");
         }
-        
-        delete mpi;
+        index++;
       }
-      else if( merge_confs )
+    
+      if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
+        cout << "Stored " << index << " configurations. " << endl;
+    
+      //Next combination
+      done = true;    
+      for(t_vec_comb::iterator it  = cur_combs.begin(); 
+                               it != cur_combs.end(); it++)
       {
-        add_to_list(mpis, mpi);
-        if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
-        {  
-          cout << "Processed " << index << " configuration merged to " << 
-                  mpis.size() << " configuration..."  << endl;
+        if( std::next_permutation(it->begin(), it->end()) )
+        {
+          done = false;
+          break;
         }  
       }
-      index++;    
     }  
-
-    done = true;    
-    for(t_map_comb::iterator it  = cur_combs.begin(); 
-                             it != cur_combs.end(); it++)
-    {
-      if( std::next_permutation(it->second.begin(), it->second.end()) )
-      {
-        done = false;
-        break;
-      }  
-    }
     total_index++;
   }while(!done);
   
   if(merge_confs && (verbose_level >= 1) )
-    cout << "Combinations after merge: " << mpis.size() << endl;
-  
-  if( (!dry_run) && merge_confs )
-  {
-    int c_num = 0;
-    for(list<map_comp_item *>::iterator it = mpis.begin(); it != mpis.end(); it++)
-    {  
-      OBConversion obc;
-      
-      string index_str = get_index_str(c_num, mpis.size() - 1);      
-      
-      obc.SetOutFormat("cif");
-      obc.WriteFile((*it)->mol, 
-              output_base_name + "_ind" + index_str +
-              "w_" + boost::lexical_cast<string>((*it)->get_mult())
-              + ".cif");
-      delete (*it);
-      c_num++;
-    }  
-  }  
+    cout << "Combinations after merge: " << index << endl;
   
   return true;
 }
@@ -521,46 +516,6 @@ void d2o_main_class::correct_rms_range(const int total_sites,
   assert((min_value >= 0) && (max_value <= total_sites));
 }
 
-std::vector<lbl_order> d2o_main_class::set_lbl_order()
-{
-  const double min_tol = 0.01;
-  std::vector<lbl_order> result;
-  
-  for(int i = 0; i < occup_groups.size(); i++)
-  {
-    // tolerance depricated
-    //double tol1 = occup_groups[i].max_dis_within_group + min_tol;
-    int64_t m1 = occup_groups[i].get_number_of_combinations();
-    for(int j = 0; j < occup_groups[i].items.size(); j++)
-    {
-      string lbl1 = occup_groups[i].items[j].label;
-      for(int k = i; k < occup_groups.size(); k++)
-      {
-        // tolerance depricated
-        //double tol2 = occup_groups[k].max_dis_within_group + min_tol;
-        int64_t m2 = occup_groups[k].get_number_of_combinations();
-        
-        int begp = k == i ? j : 0;
-          
-        for(int l = begp; l < occup_groups[k].items.size(); l++)
-        {
-          string lbl2 = occup_groups[k].items[l].label;
-          if( m1 * m2 > 1)
-          {  
-            lbl_order tp(lbl1, lbl2, min_tol, m1 * m2);
-            result.push_back(tp);
-          }  
-        }  
-      }  
-    }  
-  }  
-  
-  std::sort(result.begin(), result.end());
-  std::reverse(result.begin(), result.end());
-  
-  return result;
-}
-
 std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const double x2)
 {
   vector< rangi > rc;
@@ -576,8 +531,8 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
       rangi rd;
       rd.group_index = i;
       rd.atom_index = 0;
-      rd.min_value = curr_group.number_of_sites;
-      rd.max_value = curr_group.number_of_sites;
+      rd.min_value = curr_group.number_of_sites();
+      rd.max_value = curr_group.number_of_sites();
       rd.curr_value = rd.min_value;
       rc.push_back(rd);
     }
@@ -590,7 +545,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         rd.atom_index = j;
         if(!(*manual_properties)[curr_group.items[j].label].population.assigned())
         {  
-          correct_rms_range(curr_group.number_of_sites, 
+          correct_rms_range(curr_group.number_of_sites(), 
                             occup_groups[i].items[j].occup_target, x2,
                             rd.min_value, rd.max_value);
           rd.curr_value = rd.min_value;
@@ -675,7 +630,7 @@ bool d2o_main_class::get_atoms_population()
       bool overoccup = false;
       for(int i = 0; i < occup_groups.size(); i++)
       {
-        overoccup = overoccup || (occup_groups[i].number_of_sites < ocp_t[i]);
+        overoccup = overoccup || (occup_groups[i].number_of_sites() < ocp_t[i]);
         if( overoccup ) 
         {
           if(verbose_level >= 5)
@@ -700,7 +655,7 @@ bool d2o_main_class::get_atoms_population()
           underoccup = false;
         else
         {  
-          underoccup = (occup_groups[i].number_of_sites > ocp_t[i]) &&
+          underoccup = (occup_groups[i].number_of_sites() > ocp_t[i]) &&
                        (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol);
         }          
         
@@ -713,7 +668,7 @@ bool d2o_main_class::get_atoms_population()
       if(verbose_level >= 5)
       {
         for(int i = 0; i < occup_groups.size(); i++)
-          cout << "Curr occup is " << ocp_t[i] << ". Total is " << occup_groups[i].number_of_sites << endl;
+          cout << "Curr occup is " << ocp_t[i] << ". Total is " << occup_groups[i].number_of_sites() << endl;
       }  
       
       if(verbose_level >= 5)
@@ -726,7 +681,7 @@ bool d2o_main_class::get_atoms_population()
         //calculate RMS
         for(int i = 0; i < rc.size(); i++)
         {  
-          double group_sites = occup_groups[rc[i].group_index].number_of_sites;
+          double group_sites = occup_groups[rc[i].group_index].number_of_sites();
           c_occup_item cp = occup_groups[rc[i].group_index].items[rc[i].atom_index];
           double rms_item = pow( double(rc[i].curr_value)/group_sites - cp.occup_target ,2);
 
@@ -889,6 +844,176 @@ bool d2o_main_class::fix_groups()
   return result;
 }
 
+class ob_comb_atoms : public points_clusters 
+{
+protected:
+  OBMol * obm;
+  ob_min_dist min_dist_obm;  
+public:
+  virtual int get_points_size() const;
+  virtual double get_distance(int i, int j) const;
+public:
+  ob_comb_atoms(OBMol * mol_v, double tolerance);
+  vector3 average_vector(const cmb_group &cbg);
+  bool total_shift(const cmb_group &cbg, int poins_num);
+  void create_groups(groups_vc &vc);
+};
+
+ob_comb_atoms::ob_comb_atoms(OBMol * mol_v, double tolerance)
+{
+  obm = mol_v;
+  OBUnitCell * uc = (OBUnitCell *) obm->GetData(OBGenericDataType::UnitCell);
+  tol_list = tolerance;
+  min_dist_obm.set_cell(uc->GetCellMatrix().transpose());
+}
+
+int ob_comb_atoms::get_points_size() const
+{
+  return obm->NumAtoms();
+}
+
+double ob_comb_atoms::get_distance(int i, int j) const
+{
+  vector3 dist;
+  
+  dist = obm->GetAtom(i + 1)->GetVector() - 
+         obm->GetAtom(j + 1)->GetVector();
+  
+  dist = min_dist_obm(dist);
+  
+  return dist.length();
+}
+
+void ob_comb_atoms::create_groups(groups_vc &vc)
+{
+  create_groups_internal(vc, tol_list, 2);
+  assign_max_dist(vc);
+}
+
+vector3 ob_comb_atoms::average_vector(const cmb_group &cbg)
+{
+  vector<vector3> vc;
+    
+  for(set<int>::const_iterator it  = cbg.indexes.begin();
+                               it != cbg.indexes.end(); ++it)
+    vc.push_back( obm->GetAtom(*it + 1)->GetVector() );
+
+  return min_dist_obm.average_vector(vc);
+}
+
+
+bool d2o_main_class::create_occup_groups()
+{
+  //Check, that all labels has the same properties
+  bool same_properties = true;
+  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
+  {
+    OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
+    string label_i = atom_i->GetData("original_label")->GetValue();
+    double occup_i = dynamic_cast<OBPairFloatingPoint *> (atom_i->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+    for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
+    {
+      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);
+      string label_j = atom_j->GetData("original_label")->GetValue();
+      if(label_i == label_j)
+      {
+        if( atom_i->GetAtomicNum() != atom_j->GetAtomicNum() )
+        {
+          same_properties = false;
+          cerr << "ERROR: Label " << label_i
+               << " has 2 type of atoms " 
+               << etab.GetSymbol(atom_i->GetAtomicNum()) << " != "   
+               << etab.GetSymbol(atom_j->GetAtomicNum()) << endl;
+        }
+        
+        double occup_j = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+        if( abs(occup_i - occup_j) > occup_tol )
+        {
+          same_properties = false;
+          cerr << "ERROR: Label " << label_i
+               << " has 2 different occupations "
+               << occup_i << " != "   
+               << occup_j << endl;
+        }
+      }
+    }
+  }
+  
+  if(!same_properties)
+    return false;
+  
+  groups_vc gvc;
+  
+  ob_comb_atoms obc(&mol_supercell, r_tolerance);
+  obc.create_groups(gvc);
+  min_dist_between_groups = obc.min_dist_between_groups(gvc);
+  
+  assert(min_dist_between_groups > r_tolerance);
+  
+  //Check that all groups within tolerance
+  bool unique_groups = true;
+  for(int i = 0; i < gvc.size(); i++)  
+  {
+    if(gvc[i].max_dist > r_tolerance)
+    {
+      unique_groups = false;
+      cerr << "ERROR: Group has no unique connection. " << endl;
+    }  
+  }
+  
+  if(!unique_groups)
+    return false;
+  
+  typedef map< set<string>, c_occup_group> cc;
+  cc coc;
+  
+  for(int i = 0; i < gvc.size(); i++)  
+  {
+    vector3 avg_dist = obc.average_vector(gvc[i]);
+    set<string> sc;
+    for(set<int>::const_iterator it  = gvc[i].indexes.begin();
+                                 it != gvc[i].indexes.end(); ++it)
+    {
+      OBAtom * a = mol_supercell.GetAtom(*it + 1);
+      string label = a->GetData("original_label")->GetValue();
+      sc.insert(label);
+    }
+    
+    if( coc.count(sc) == 0 )
+    {
+      for(set<int>::const_iterator it  = gvc[i].indexes.begin();
+                                   it != gvc[i].indexes.end(); ++it)
+        coc[sc].add_item(mol_supercell.GetAtom(*it + 1));
+      coc[sc].max_dis_within_group = gvc[i].max_dist;
+    }
+    coc[sc].positions.push_back(avg_dist);
+    coc[sc].max_dis_within_group = max(coc[sc].max_dis_within_group, gvc[i].max_dist);
+  }
+  
+  //Check that groups are single
+  vector<string> vc;
+  for(cc::const_iterator it  = coc.begin();
+                         it != coc.end(); ++it)
+    std::copy(it->first.begin(), it->first.end(), std::back_inserter(vc));
+  
+  array_common::delete_singles(vc);
+  
+  if(vc.size() > 0)
+  {
+    for(int i = 0; i < vc.size(); i++)
+      cerr << "ERROR: Label " << vc[i] << " belong to 2 or more groups." << endl;
+    return false;
+  }
+
+  occup_groups.clear();
+  for(cc::const_iterator it  = coc.begin();
+                         it != coc.end(); ++it)
+    occup_groups.push_back(it->second);
+  
+  return true;
+}
+ 
+/*
 bool d2o_main_class::create_occup_groups()
 {
   OBUnitCell *unitcell = (OBUnitCell *)mol_supercell.GetData(OBGenericDataType::UnitCell);
@@ -1106,7 +1231,7 @@ bool d2o_main_class::create_occup_groups()
   
   return true;
 }
-
+*/
 
 bool d2o_main_class::show_groups_information()
 {
@@ -1116,7 +1241,7 @@ bool d2o_main_class::show_groups_information()
   for(int i = 0; i < occup_groups.size(); i++)
   {
     cout << " Group " << i << " has " 
-         << occup_groups[i].number_of_sites 
+         << occup_groups[i].number_of_sites() 
          << " sites:" << endl;
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
@@ -1128,7 +1253,7 @@ bool d2o_main_class::show_groups_information()
         cout << " stored with occupancy " << 
                 boost::format("%.3f") %
                 ( double(occup_groups[i].items[j].num_of_atoms_sc) /
-                  double(occup_groups[i].number_of_sites) );
+                  double(occup_groups[i].number_of_sites() ) );
       else
         cout << " has now " << occup_groups[i].items[j].num_of_atoms_sc << " sites.";
       
@@ -1145,7 +1270,7 @@ bool d2o_main_class::show_groups_information()
     else
       cout << "  The atom position within the group are set unambiguously" << endl;
     
-    if( (occup_groups[i].get_total_num_occup_sites() < occup_groups[i].number_of_sites) &&
+    if( (occup_groups[i].get_total_num_occup_sites() < occup_groups[i].number_of_sites() ) &&
         (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol) )
     {        
       cout << "  WARN: Vacancy introduced to fully occupied state." << endl;
@@ -1349,7 +1474,15 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     cerr << "ERROR: Number of total combinations is too high to work with." << endl;
     return false;
   }
-    
+  
+  if( merge_confs )
+  {  
+    if(!create_symmetry_operations_groups())
+    {
+      cerr << "ERROR: Symmetry operation creation failed." << endl;
+      return false;
+    }
+  }  
   
   if(!write_files(output_base_name, n_store, dry_run, merge_confs))
   {
@@ -1364,4 +1497,3 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
 d2o_main_class::~d2o_main_class()
 {
 }
-

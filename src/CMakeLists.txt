@@ -13,8 +13,8 @@ set(sc_sources ${WRAP_MEMCPY_SRC} ${sc_sources} ${core_sources})
 
 set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string_utils.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp
-                             ${CMAKE_SOURCE_DIR}/libs/common_utils/obabel/obabel_utils.cpp
-                             ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/cryst_tools.cpp)
+                             ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/cryst_tools.cpp
+                             ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/comb_points.cpp)
 
 #set_common_libraries
 add_library(openbabel UNKNOWN IMPORTED)

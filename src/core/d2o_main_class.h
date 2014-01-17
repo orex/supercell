@@ -17,6 +17,11 @@
 
 #include "boost/utility.hpp"
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
+#include "obabel/obabel_utils.h"
+
 struct c_occup_item
 {
   std::string label;
@@ -25,9 +30,8 @@ struct c_occup_item
   double charge;
   OpenBabel::OBAtom * obp;
   
-  c_occup_item()
-  { obp = new OpenBabel::OBAtom(); }
-  
+  c_occup_item(OpenBabel::OBAtom *ob);
+
   c_occup_item(const c_occup_item &orig)
   { 
     label = orig.label;
@@ -46,6 +50,7 @@ struct c_occup_item
   { return ( label < r.label ); }
 };
 
+typedef std::vector<int> symm_set;
 
 class c_occup_group
 {
@@ -53,6 +58,8 @@ protected:
   bool _fixed;  
 public:
   std::vector<c_occup_item> items;
+  std::vector<OpenBabel::vector3> positions;  //Cartesian
+  std::vector<symm_set> symms_sets;
   double get_total_occup_input() const;
   int    get_total_num_occup_sites() const;
   int64_t get_number_of_combinations() const;
@@ -61,7 +68,9 @@ public:
   bool is_fixed() const 
   { return _fixed || (get_number_of_combinations() == 1); }
   double max_dis_within_group;
-  int number_of_sites;
+  int number_of_sites() const
+  { return positions.size(); };
+  void add_item(OpenBabel::OBAtom * oba);
 };
 
 struct site_charges
@@ -70,53 +79,6 @@ struct site_charges
   double curr_charge;
   double occup;
   double cif_mult;
-};        
-
-class lbl_order
-{
-public:
-  std::string lbl1;
-  std::string lbl2;
-
-  double tolerance;
-  int64_t mult2;
- 
-  lbl_order(std::string l1, std::string l2, double tol, int64_t m2) : 
-            tolerance(tol), mult2(m2)
-  {
-    lbl1 = min(l1, l2);
-    lbl2 = max(l1, l2);
-  };
-
-  bool operator < ( const lbl_order &r ) const
-  { return ( mult2 < r.mult2 ); }
-};
-
-class map_comp_item : private boost::noncopyable
-{
-protected:
-  static int compare_distances(const std::vector<float> &f1, const std::vector<float> &f2, float tol);  
-protected:
-  OpenBabel::OBUnitCell * uc;
-  OpenBabel::OBUnitCell * unitcell();
-  
-  std::vector<lbl_order> * labels_order;
-  std::map<std::string, std::vector<float> > * dsts;
-  //output is sorted
-  std::vector<float> get_lengths_by_labels(const lbl_order &lbl);
-  int mult;
-public:  
-  map_comp_item(std::vector<lbl_order> &lbl);
-  OpenBabel::OBMol *mol;
-  
-  void inc_mult()
-  { mult++; };
-  
-  int get_mult()
-  { return mult; };
-  
-  static int comp( map_comp_item &r1, map_comp_item &r2 );
-  ~map_comp_item() { delete dsts; delete mol; };
 };
 
 class d2o_main_class 
@@ -128,11 +90,13 @@ protected:
     int curr_value, min_value, max_value;
   };
   
+  typedef std::vector< std::vector<int> > t_vec_comb;
+  
 protected:
   int verbose_level;
   
   OpenBabel::OBMol mol_initial;
-  OpenBabel::OBMol mol_supercell;  
+  OpenBabel::OBMol mol_supercell;
   
   c_man_atom_prop * manual_properties;
 
@@ -154,23 +118,28 @@ protected:
 
   int64_t total_combinations();
   
-  bool add_to_list(std::list<map_comp_item *> &mpis, map_comp_item * mpi);  
   std::vector< rangi > get_rangi_array(const double x2);
-  std::vector<lbl_order> set_lbl_order();
   bool get_atoms_population();
   bool create_super_cell(int a, int b, int c);
   bool create_occup_groups();
   bool show_groups_information();
   bool process_charges(charge_balance cb, bool verbose = false);
+  bool create_symmetry_operations_groups();
+  std::vector<int> index_symmetries( OpenBabel::OBUnitCell * uc, 
+                                     const Eigen::Affine3d &af, 
+                                     const std::vector<OpenBabel::vector3> &pos);
   bool write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs);
+  bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
+  bool create_comb(const symm_set &sc, std::vector<int> &cmb);
   bool init_atom_change_mol(OpenBabel::OBMol *cmol);
-  bool add_confs_to_mol(OpenBabel::OBMol *cmol, const std::map<int, std::vector<int> > &ppc);
+  bool add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &ppc);
   std::string get_formula(OpenBabel::OBMol &mol);
   std::string get_formula_by_groups();
   bool set_labels_to_manual();
 public:
   static const double charge_tol = 1E-1;
   static const double occup_tol = 2E-3;
+  static const double symm_tol = 1E-2;
 public:
   d2o_main_class();
   void set_verbosity(int vb)
