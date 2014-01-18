@@ -36,7 +36,7 @@ d2o_main_class::d2o_main_class()
 {
 }
 
-c_occup_item::c_occup_item(OpenBabel::OBAtom *ob)
+c_occup_item::c_occup_item(OpenBabel::OBAtom *ob, double charge_v)
 { 
   obp = new OpenBabel::OBAtom(); 
   obp->Duplicate(ob);
@@ -44,6 +44,7 @@ c_occup_item::c_occup_item(OpenBabel::OBAtom *ob)
   label = obp->GetData("original_label")->GetValue();
   occup_target = dynamic_cast<OBPairFloatingPoint *> (obp->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
   
+  charge = charge_v;
 }
 
 double c_occup_group::get_total_occup_input() const
@@ -93,9 +94,9 @@ int64_t c_occup_group::get_number_of_combinations() const
   return result;
 }
 
-void c_occup_group::add_item(OpenBabel::OBAtom * oba)
+void c_occup_group::add_item(OpenBabel::OBAtom * oba, double charge)
 {
-  c_occup_item item(oba);
+  c_occup_item item(oba, charge);
   items.push_back(item);
 }
 
@@ -212,6 +213,95 @@ bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &
   cmol->EndModify();
 
   return true;
+}
+
+bool d2o_main_class::calculate_q_matrix()
+{
+  using namespace Eigen;
+  OBUnitCell * uc = static_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell));
+  Matrix3d cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
+  
+  cryst_tools::min_dist md;
+  md.set_cell(cell);
+  
+  vector<Vector3d> all_pos;
+  for(int i = 0; i < occup_groups.size(); i++)
+  {
+    for(int j = 0; j < occup_groups[i].positions.size(); j++)
+      all_pos.push_back(b2e_vector<double>(occup_groups[i].positions[j]));
+  }
+  q_energy.resize(all_pos.size(), all_pos.size());
+  q_energy.setZero();
+  
+  if(verbose_level >= 2)
+    cout << "Start Coloumb matrix (" << q_energy.cols() << "x" << q_energy.rows() << ") calculation." << endl;
+
+  
+  for(int i = 0; i < all_pos.size(); i++)
+  {
+    for(int j = i; j < all_pos.size(); j++)
+    {
+      vector<Vector3d> vq = 
+      md.get_img_dist(all_pos[i] - all_pos[j], Vector3i(9, 9, 9));
+      for(int k = 0; k < vq.size(); k++)
+      {  
+        double d = vq[k].norm();
+        if(d > symm_tol)
+        {  
+          q_energy(i, j) += 1.0/d;
+          if(i != j)
+            q_energy(j, i) += 1.0/d;
+        }  
+      }
+    }
+  }
+  
+  if(verbose_level >= 2)
+    cout << "Coloumb matrix calculation finished." << endl;
+  
+  return true;
+}
+
+double d2o_main_class::calculate_q_energy(const t_vec_comb &mc)
+{
+  using namespace Eigen;
+  
+  VectorXd q_v;
+  q_v.resize(q_energy.cols());
+  q_v.setZero();
+  
+  int q_v_pos = 0;
+  
+  for(int i = 0; i < occup_groups.size(); i++)
+  {
+    c_occup_group &curr_group = occup_groups[i];
+    bool fixed_group = curr_group.is_fixed();
+    for(int j = 0; j < curr_group.positions.size(); j++)
+    {
+      double charge = 0;
+      for(int k = 0; k < curr_group.items.size(); k++)
+      {
+        double occup_value = 0;
+        if( fixed_group || (k == mc[i][j]) )
+        {  
+          if( fixed_group )
+            occup_value = double(curr_group.items[k].num_of_atoms_sc) / 
+                          double(curr_group.number_of_sites());
+          else
+            occup_value = 1.0;
+        }
+        charge += occup_value * curr_group.items[k].charge;
+      }
+      q_v[q_v_pos] = charge;
+      q_v_pos++;
+    }  
+  }
+
+  assert(q_v_pos == q_energy.cols());
+  
+  //0.5 not to count twice pairs
+  //11.4 - to eV
+  return 0.5 * 14.4 * q_v.transpose() * q_energy * q_v;
 }
 
 bool d2o_main_class::create_symmetry_operations_groups()
@@ -415,7 +505,8 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
     if( (verbose_level >= 2) && (rc == 0) )
       cout << "Output files was deleted successfully" << endl;
   }
-    
+  
+  int combination_left = total_combinations();
   int total_index = 0;
   int index = 0;
   bool done;
@@ -435,10 +526,14 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
       if( merge_confs )
         u_comb = check_comb_unique(cur_combs, merged_conf_num);
       else
+      {  
         u_comb = true;
+        merged_conf_num = 1;
+      }
     
       if( u_comb )
       {  
+        combination_left -= merged_conf_num;
         if(!dry_run)
         {
           init_atom_change_mol(&cmol);
@@ -453,13 +548,16 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
 
           obc.SetOutFormat("cif");
           obc.WriteFile(&cmol, fname_str + ".cif");
+          if(calc_q_energy)
+            f_q_calc << boost::format("%1%\t%2$.3f eV\n") %
+            fname_str % calculate_q_energy(cur_combs);
         }
         index++;
       }
     
-      if( (index % 500 == 0) && (index != 0) && (verbose_level >= 2))
-        cout << "Stored " << index << " configurations. " << endl;
-    
+      if( (total_index % 500 == 0) && (total_index != 0) && (verbose_level >= 2))
+        cout << "Stored " << index << " configurations. Left " << combination_left << endl;
+      
       //Next combination
       done = true;    
       for(t_vec_comb::iterator it  = cur_combs.begin(); 
@@ -473,12 +571,15 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
       }
     }  
     total_index++;
-  }while(!done);
+  }while(!done && (combination_left > 0));
   
   if(merge_confs && (verbose_level >= 1) )
     cout << "Combinations after merge: " << index << endl;
   
-  return true;
+  if(combination_left != 0)
+    cerr << "ERROR: Combination left " << combination_left << " != 0 " << endl;
+  
+  return combination_left == 0;
 }
 
 void d2o_main_class::correct_rms_range(const int total_sites, 
@@ -983,7 +1084,10 @@ bool d2o_main_class::create_occup_groups()
     {
       for(set<int>::const_iterator it  = gvc[i].indexes.begin();
                                    it != gvc[i].indexes.end(); ++it)
-        coc[sc].add_item(mol_supercell.GetAtom(*it + 1));
+      {  
+        string label = mol_supercell.GetAtom(*it + 1)->GetData("original_label")->GetValue();
+        coc[sc].add_item(mol_supercell.GetAtom(*it + 1), scs[label].curr_charge);
+      }  
       coc[sc].max_dis_within_group = gvc[i].max_dist;
     }
     coc[sc].positions.push_back(avg_dist);
@@ -1413,7 +1517,7 @@ bool d2o_main_class::set_labels_to_manual()
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              const std::vector<int> scs,
                              charge_balance cb, double tolerance_v,
-                             bool merge_confs,
+                             bool merge_confs, bool calc_q_energy_v,
                              c_man_atom_prop &manual_properties_v,
                              double n_store,
                              std::string output_base_name)
@@ -1422,6 +1526,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   
   r_tolerance = max(tolerance_v, 1.0E-6);
   manual_properties = &manual_properties_v;  
+  calc_q_energy = calc_q_energy_v;
           
   if(!read_molecule(input_file_name))
   {
@@ -1480,6 +1585,22 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     if(!create_symmetry_operations_groups())
     {
       cerr << "ERROR: Symmetry operation creation failed." << endl;
+      return false;
+    }
+  }
+
+  if( calc_q_energy )  
+  {
+    if(!calculate_q_matrix())
+    {
+      cerr << "ERROR: Coloumb energy is not calculated." << endl;
+      return false;
+    }
+    string f_name = output_base_name + "_coloumb_energy.txt";
+    f_q_calc.open(f_name.c_str(), fstream::out);
+    if(!f_q_calc.is_open())
+    {
+      cerr << "ERROR: File \"" << f_name << "\" is not open." << endl;
       return false;
     }
   }  

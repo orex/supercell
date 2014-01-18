@@ -45,6 +45,7 @@ int main(int argc, char** argv)
     string output_file;
     bool dry_run = false;
     bool merge_confs = false;
+    bool calc_q = false;
     //double memory_limit;
     int verb_level;
     string cell_size_str;
@@ -81,9 +82,10 @@ int main(int argc, char** argv)
                             "For detail description see manual.").c_str())
       ("tolerance,t", po::value<double>(&pos_tol)->default_value(0.75), 
                       "Skip structures with atoms closer than arg Angstrom.")
-      ("merge-by-distance,m", "Merge output structures with equivalent distances between all atoms.")
+      ("merge-symmetric,m", "Merge output equivalent (by symmetry) structures.")
       ("store-structures,n", po::value<double>(&store_structures)->default_value(-1),
                        "Set average number structures to write. Default write all")
+      ("coloumb-energy,q", "Calculate Coloumb energy of output structures.")
 //      ("include-only,e", po::value<vector<string> >(&included_atoms),
   //                     "Include only specified atom labels to configuration loop. Default include all")
       ("output,o", po::value<std::string>(&output_file)->default_value("supercell"), 
@@ -131,8 +133,8 @@ int main(int argc, char** argv)
     }  
     
     dry_run = vm.count("dry-run") > 0;
-    
-    merge_confs = vm.count("merge-by-distance") > 0;
+    merge_confs = vm.count("merge-symmetric") > 0;
+    calc_q = vm.count("coloumb-energy");
     
     if(!parse_d2o_input::get_supercell_size(cell_size_str, supercell_mult))
     {
@@ -164,7 +166,7 @@ int main(int argc, char** argv)
     
     bool processed = 
     mc.process(input_file, dry_run, supercell_mult, cb, 
-               pos_tol, merge_confs, m_prop,
+               pos_tol, merge_confs, calc_q, m_prop,
                store_structures, output_file);
     
     if(!processed)

@@ -30,7 +30,7 @@ struct c_occup_item
   double charge;
   OpenBabel::OBAtom * obp;
   
-  c_occup_item(OpenBabel::OBAtom *ob);
+  c_occup_item(OpenBabel::OBAtom *ob, double charge_v);
 
   c_occup_item(const c_occup_item &orig)
   { 
@@ -70,7 +70,7 @@ public:
   double max_dis_within_group;
   int number_of_sites() const
   { return positions.size(); };
-  void add_item(OpenBabel::OBAtom * oba);
+  void add_item(OpenBabel::OBAtom * oba, double charge);
 };
 
 struct site_charges
@@ -106,6 +106,10 @@ protected:
   double min_dist_between_groups;
 
   std::map<std::string, site_charges> scs;
+  
+  bool calc_q_energy;
+  Eigen::MatrixXd q_energy;
+  std::ofstream f_q_calc;
 
   bool fix_groups();
   
@@ -124,6 +128,8 @@ protected:
   bool create_occup_groups();
   bool show_groups_information();
   bool process_charges(charge_balance cb, bool verbose = false);
+  bool calculate_q_matrix();
+  double calculate_q_energy(const t_vec_comb &mc);
   bool create_symmetry_operations_groups();
   std::vector<int> index_symmetries( OpenBabel::OBUnitCell * uc, 
                                      const Eigen::Affine3d &af, 
@@ -147,9 +153,9 @@ public:
   bool process(std::string input_file_name, bool dry_run,
                const std::vector<int> scs,
                charge_balance cb, double tolerance_v, 
-               bool merge_confs,
+               bool merge_confs, bool calc_q_energy_v,
                c_man_atom_prop &manual_properties,
-               double n_store,                       
+               double n_store, 
                std::string output_base_name);
   virtual ~d2o_main_class();
 };

@@ -69,8 +69,11 @@ _symmetry_equiv_pos_as_xyz
 loop_
 _atom_type_symbol
 _atom_type_oxidation_number
-Fe2.999+	2.999
-O2-	-2
+Fe1	 3
+Fe2	 3
+Fe3	 3
+O1	-2
+O2      -2
 loop_
 _atom_site_label
 _atom_site_type_symbol
