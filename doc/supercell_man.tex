@@ -3,6 +3,7 @@
 \usepackage[latin1]{inputenc}
 \usepackage{babel}
 \usepackage{verbatim}
+%\usepackage[T1]{fontenc}
 
 %% do we have the `hyperref package?
 \IfFileExists{hyperref.sty}
@@ -44,9 +45,9 @@
 \section{Synopsis}
 %%%%%%%%%%%%%%%%%%
 
-\Prog{supercell} \Opt{-h, --help}\\
+\Prog{supercell} \Opt{-h, -$ $-help}\\
 \Prog{supercell} \oOpt{OPTIONS} \OptArg{-i }{input-file} \\
-\Prog{supercell} \oOpt{OPTIONS} \OptArg{--input=}{input-file} \\
+\Prog{supercell} \oOpt{OPTIONS} \OptArg{-$ $-input=}{input-file} \\
 
 \section{Description}
 %%%%%%%%%%%%%%%%%%%%%
@@ -56,23 +57,23 @@
 %%%%%%%%%%%%%%%%%
 \begin{Description}
 
-\item[\Opt{-h}, \Opt{--help}]
+\item[\Opt{-h}, \Opt{-$ $-help}]
       Print help message and exit the program.
 
-\item[\OptArg{-v }{level}, \OptArg{--verbose=}{level}] 
+\item[\OptArg{-v }{level}, \OptArg{-$ $-verbose=}{level}] 
       Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
 
-\item[\OptArg{-i }{input-file}, \OptArg{--input=}{input-file}]
+\item[\OptArg{-i }{input-file}, \OptArg{-$ $-input=}{input-file}]
       Required options. Input file with in CIF format. Only one file can be specified.
 
-\item[\Opt{-d}, \Opt{--dry-run}]
+\item[\Opt{-d}, \Opt{-$ $-dry-run}]
       The option is highly recommended for the first run of the program with new input specified. 
-      With the option the program will do everything, but not write file. Be careful, if you switched \Opt{-m}, \Opt{--merge-by-distance} option. With the option dry-run should go through all crystal structures. So, it can take time.
+      With the option the program will do everything, but not write file. Be careful, if you switched \Opt{-m}, \Opt{-$ $-merge-by-distance} option. With the option dry-run should go through all crystal structures. So, it can take time.
 
-\item[\OptArg{-s }{cell-size}, \OptArg{--cell-size=}{cell-size}]
+\item[\OptArg{-s }{cell-size}, \OptArg{-$ $-cell-size=}{cell-size}]
       The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1".
 
-\item[\OptArg{-c }{balance-type}, \OptArg{--charge-balance=}{balance-type}]
+\item[\OptArg{-c }{balance-type}, \OptArg{-$ $-charge-balance=}{balance-type}]
       The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are
       \begin{itemize}
          \item[no]   No charge balancing. The option will set all charges to zero.
@@ -80,7 +81,7 @@
          \item[yes]  Charge balance the system.
       \end{itemize}
 
-\item[\OptArg{-p }{labels-properties}, \OptArg{--property=}{labels-properties}]
+\item[\OptArg{-p }{labels-properties}, \OptArg{-$ $-property=}{labels-properties}]
       The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax.
        \begin{itemize}
          \item Simple: $<$label$>$:$<$property\_name$>$[=$<$property\_value$>$].
@@ -100,13 +101,13 @@
        \end{itemize}
        Some fancy examples you can find below.       
       
-\item[\OptArg{-t }{tolerance}, \OptArg{--tolerance=}{tolerance}]
+\item[\OptArg{-t }{tolerance}, \OptArg{-$ $-tolerance=}{tolerance}]
       An argument of the option specify the maximum distance between sites, which will be treated like equivalent.     Check carefully output of \Prog{supercell} before changing the parameter. Default \OptArg{}{tolerance}=0.75.
 
-\item[\Opt{-m }, \Opt{--merge-by-distance}]
-      The option allows you significantly decrease the number of output structures. Applying the option you will switch on merge algorithm, which will merge structures with the same set of distances between sites with specific label. Be careful, the algorithm requires all unique structures to be stored in memory (usually 10\Circum 4 - 10\Circum 5 unique structures per 1Gb RAM). Also the algorithm can decrease the speed. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher.
+\item[\Opt{-m }, \Opt{-$ $-merge-by-distance}]
+      The options enables symmetry check algorithm for output structures. Structures, which can be transform to each other using crystallographic symmetry operation will be merged and stored as one structure. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher to trace program execution.
 
-\item[\OptArg{-n }{count}, \OptArg{--store-structures=}{count}]
+\item[\OptArg{-n }{count}, \OptArg{-$ $-store-structures=}{count}]
       %@% IF !NFIX %@%
       %@% IF NOTHING %@%
         %workaround to skip macro when do latex2man      
@@ -121,10 +122,13 @@
       %@% END-IF %@%
       %@% IF NOTHING %@%      
       \fi
-      %@% END-IF %@%              
+      %@% END-IF %@%
       
-\item[\OptArg{-o }{output-prefix}, \OptArg{--output=}{output-prefix}]
-      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. For merging run the template will be <output-prefix>\_ind<index>\_w<weight>.cif, where <weight> - number of the structures merged to the structure. Be careful, all existing files with mask "<output-prefix>*.cif" will be deleted during not dry-run.
+\item[\Opt{-q }, \Opt{-$ $-coloumb-energy}] 
+      The option enable Coloumb energy calculations. The result energies for each structures are stored in file $<$output-prefix$>$\_coloumb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. The summation goes only in real space with large cut-off distance (9 period of supercell unit vectors), so it is not so accurate it absolute value, but should give a resonable relative values for low energies configurations. Be careful, in case of charged cell the energy values can be meanless. 
+      
+\item[\OptArg{-o }{output-prefix}, \OptArg{-$ $-output=}{output-prefix}]
+      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, -$ $-output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run.
 
 \end{Description}
 
