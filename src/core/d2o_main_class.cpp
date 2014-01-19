@@ -441,7 +441,8 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
   assert(syms_num > 0);
   
   set< t_vec_comb > st;
-  
+
+  bool not_first = false;
   for(int i = 0; i < syms_num; i++)
   {
     t_vec_comb nc;
@@ -455,13 +456,18 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
       good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], nc[j]);
     }
     if(good_cb)
+    {  
       st.insert(nc);
+      not_first = nc < mc;         
+    }  
+    if(not_first)
+      break;
   }
   merged_comb = st.size();
   
-  assert(*st.begin() <= mc);
+  //assert(*st.begin() <= mc);
   
-  return *st.begin() == mc;
+  return !not_first;
 }
 
 bool d2o_main_class::write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs)
@@ -1574,7 +1580,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   if(verbose_level >= 1)
    show_groups_information();
   
-  if(total_combinations() > 5E8)
+  if(total_combinations() > 7E8)
   {
     cerr << "ERROR: Number of total combinations is too high to work with." << endl;
     return false;
