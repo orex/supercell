@@ -69,7 +69,7 @@ int c_occup_group::get_total_num_occup_sites() const
 
 int64_t c_occup_group::get_number_of_combinations() const
 {
-  int result = 1;
+  int64_t result = 1;
 
   if( !_fixed )
   {
@@ -180,7 +180,11 @@ bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &
     {
       for(int k = 0; k < curr_group.items.size(); k++)
       {
-        if( fixed_group || (k == ppc[i][j]) )
+        bool the_item = false;
+	if(ppc[i].size() > 0)
+	  the_item = (k == ppc[i][j]);
+	
+	if( fixed_group || the_item )
         {  
           OBAtom atm;
           atm.Duplicate( curr_group.items[k].obp );
@@ -218,11 +222,9 @@ bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &
 bool d2o_main_class::calculate_q_matrix()
 {
   using namespace Eigen;
+  using namespace cryst_tools;
   OBUnitCell * uc = static_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell));
   Matrix3d cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
-  
-  cryst_tools::min_dist md;
-  md.set_cell(cell);
   
   vector<Vector3d> all_pos;
   for(int i = 0; i < occup_groups.size(); i++)
@@ -230,37 +232,44 @@ bool d2o_main_class::calculate_q_matrix()
     for(int j = 0; j < occup_groups[i].positions.size(); j++)
       all_pos.push_back(b2e_vector<double>(occup_groups[i].positions[j]));
   }
-  q_energy.resize(all_pos.size(), all_pos.size());
-  q_energy.setZero();
   
   if(verbose_level >= 2)
-    cout << "Start Coloumb matrix (" << q_energy.cols() << "x" << q_energy.rows() << ") calculation." << endl;
+    cout << "Start Coloumb matrix (" << all_pos.size() << "x" << all_pos.size() << ") calculation." << endl;
 
+  ewald_sum es;
   
-  for(int i = 0; i < all_pos.size(); i++)
+  es.set_cell(cell);
+  es.set_precision(all_pos.size(), 1E-7);
+  
+  q_energy = es.potential_matrix(all_pos);
+ 
+  if(verbose_level >= 2)
+    cout << "Coloumb matrix calculation finished." << endl;
+  
+  return true;
+}
+
+/*
+   for(int i = 0; i < all_pos.size(); i++)
   {
-    for(int j = i; j < all_pos.size(); j++)
+    for(int j = 0; j < all_pos.size(); j++)
     {
       vector<Vector3d> vq = 
-      md.get_img_dist(all_pos[i] - all_pos[j], Vector3i(9, 9, 9));
+      md.get_img_dist(all_pos[i] - all_pos[j], Vector3i(45, 45, 15));
       for(int k = 0; k < vq.size(); k++)
       {  
         double d = vq[k].norm();
         if(d > symm_tol)
         {  
           q_energy(i, j) += 1.0/d;
-          if(i != j)
-            q_energy(j, i) += 1.0/d;
+          //if(i != j)
+            //q_energy(j, i) += 1.0/d;
         }  
       }
     }
   }
-  
-  if(verbose_level >= 2)
-    cout << "Coloumb matrix calculation finished." << endl;
-  
-  return true;
-}
+
+ */
 
 double d2o_main_class::calculate_q_energy(const t_vec_comb &mc)
 {
@@ -282,7 +291,12 @@ double d2o_main_class::calculate_q_energy(const t_vec_comb &mc)
       for(int k = 0; k < curr_group.items.size(); k++)
       {
         double occup_value = 0;
-        if( fixed_group || (k == mc[i][j]) )
+
+        bool the_item = false;
+	if(mc[i].size() > 0)
+	  the_item = (k == mc[i][j]);
+        
+        if( fixed_group || the_item )
         {  
           if( fixed_group )
             occup_value = double(curr_group.items[k].num_of_atoms_sc) / 
@@ -301,7 +315,7 @@ double d2o_main_class::calculate_q_energy(const t_vec_comb &mc)
   
   //0.5 not to count twice pairs
   //11.4 - to eV
-  return 0.5 * 14.4 * q_v.transpose() * q_energy * q_v;
+  return 14.4 * q_v.transpose() * q_energy * q_v;
 }
 
 bool d2o_main_class::create_symmetry_operations_groups()
@@ -335,7 +349,7 @@ bool d2o_main_class::create_symmetry_operations_groups()
   
   syms = get_all_symmetries(cell, vc, bc, symm_tol);
   
-  if(verbose_level >= 2)
+  if(verbose_level >= 1)
     cout << syms.size() << " symmetry operation found for supercell." << endl;
   
   bool good_set = true;
@@ -347,7 +361,6 @@ bool d2o_main_class::create_symmetry_operations_groups()
     {  
       occup_groups[i].symms_sets[j] = index_symmetries(uc, syms[j], 
                                       occup_groups[i].positions);
-
       if( occup_groups[i].is_fixed() )
       {  
         good_set = find(occup_groups[i].symms_sets[j].begin(), 
@@ -451,17 +464,20 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
     for(int j = 0; j < mc.size(); j++)
     {
       assert(syms_num == occup_groups[j].symms_sets.size());
-      
       nc[j] = mc[j];
-      good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], nc[j]);
+      
+      if(!occup_groups[j].is_fixed())
+        good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], nc[j]);
     }
     if(good_cb)
     {  
       st.insert(nc);
-      not_first = nc < mc;         
+      if(nc < mc)
+      {
+        not_first = true;
+	break;
+      }
     }  
-    if(not_first)
-      break;
   }
   merged_comb = st.size();
   
@@ -480,15 +496,19 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   cur_combs.resize(occup_groups.size());
   for(int i = 0; i < occup_groups.size(); i++)
   {  
-    map<int, int> mvc;
+    cur_combs[i].clear();
+    if(!occup_groups[i].is_fixed())
+    {  
+      map<int, int> mvc;
 
-    for(int j = 0; j < occup_groups[i].items.size(); j++)
-      mvc[j] = occup_groups[i].items[j].num_of_atoms_sc;
+      for(int j = 0; j < occup_groups[i].items.size(); j++)
+        mvc[j] = occup_groups[i].items[j].num_of_atoms_sc;
     
-    mvc[-1] = occup_groups[i].number_of_sites() - 
-                      occup_groups[i].get_total_num_occup_sites();
+      mvc[-1] = occup_groups[i].number_of_sites() - 
+                        occup_groups[i].get_total_num_occup_sites();
     
-    cur_combs[i] = create_start_combination(mvc);
+      cur_combs[i] = create_start_combination(mvc);
+    }
   }  
   
   double tot_comb = total_combinations();
@@ -561,31 +581,40 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
         index++;
       }
     
-      if( (total_index % 500 == 0) && (total_index != 0) && (verbose_level >= 2))
+      if( (total_index % 2000 == 0) && (total_index != 0) && (verbose_level >= 2))
         cout << "Stored " << index << " configurations. Left " << combination_left << endl;
-      
-      //Next combination
-      done = true;    
-      for(t_vec_comb::iterator it  = cur_combs.begin(); 
-                               it != cur_combs.end(); it++)
+
+    }        
+    //Next combination
+    done = true;    
+    for(t_vec_comb::reverse_iterator rit  = cur_combs.rbegin(); 
+                                     rit != cur_combs.rend(); ++rit)
+    {
+      if( std::next_permutation(rit->begin(), rit->end()) )
       {
-        if( std::next_permutation(it->begin(), it->end()) )
-        {
-          done = false;
-          break;
-        }  
+        done = false;
+        break;
       }
-    }  
+    }
     total_index++;
-  }while(!done && (combination_left > 0));
+  }while(!done);
+
+  if( (n_store <= 0) && (total_index != total_combinations()) )
+  {  
+    cerr << "ERROR: Number of combinations is not equal of total index." << endl;
+    return false;
+  }  
   
   if(merge_confs && (verbose_level >= 1) )
     cout << "Combinations after merge: " << index << endl;
   
   if(combination_left != 0)
+  {  
+    if( (n_store <= 0) || (combination_left < 0 ))
     cerr << "ERROR: Combination left " << combination_left << " != 0 " << endl;
+  }  
   
-  return combination_left == 0;
+  return combination_left == 0 || (n_store > 0);
 }
 
 void d2o_main_class::correct_rms_range(const int total_sites, 
