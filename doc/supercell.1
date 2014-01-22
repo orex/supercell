@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Sat Jan 18 13:31:44 CET 2014
+.\" Manual page created with latex2man on Wed Jan 22 07:54:32 CET 2014
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -144,7 +144,7 @@ this algorithm will run first.
 .PP
 .TP
 \fB\-q \fP, \fB\- \-coloumb\-energy\fP
-The option enable Coloumb energy calculations. The result energies for each structures are stored in file <output\-prefix>_coloumb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. The summation goes only in real space with large cut\-off distance (9 period of supercell unit vectors), so it is not so accurate it absolute value, but should give a resonable relative values for low energies configurations. Be careful, in case of charged cell the energy values can be meanless. 
+The option enable Coloumb energy calculations. The result energies for each structures are stored in file <output\-prefix>_coloumb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. 
 .PP
 .TP
 \fB\-o \fP\fIoutput\-prefix\fP, \fB\- \-output=\fP\fIoutput\-prefix\fP
