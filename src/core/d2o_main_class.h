@@ -134,7 +134,7 @@ protected:
   std::vector<int> index_symmetries( OpenBabel::OBUnitCell * uc, 
                                      const Eigen::Affine3d &af, 
                                      const std::vector<OpenBabel::vector3> &pos);
-  bool write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs);
+  bool write_files(std::string output_base_name, bool dry_run, bool merge_confs);
   bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
   bool create_comb(const symm_set &sc, std::vector<int> &cmb);
   bool init_atom_change_mol(OpenBabel::OBMol *cmol);
@@ -155,7 +155,6 @@ public:
                charge_balance cb, double tolerance_v, 
                bool merge_confs, bool calc_q_energy_v,
                c_man_atom_prop &manual_properties,
-               double n_store, 
                std::string output_base_name);
   virtual ~d2o_main_class();
 };

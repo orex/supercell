@@ -36,6 +36,7 @@
 \setVersion{0.1}
 
 \begin{document}
+\newcommand{\Dd}{-{}-}
 
 \begin{Name}{1}{supercell}{Kirill Okhotnikov, Sylvian Cadars}{Scientific Tools}{supercell\\--\\ A Scientific Tool}
 
@@ -45,9 +46,9 @@
 \section{Synopsis}
 %%%%%%%%%%%%%%%%%%
 
-\Prog{supercell} \Opt{-h, -$ $-help}\\
+\Prog{supercell} \Opt{-h, \Dd help}\\
 \Prog{supercell} \oOpt{OPTIONS} \OptArg{-i }{input-file} \\
-\Prog{supercell} \oOpt{OPTIONS} \OptArg{-$ $-input=}{input-file} \\
+\Prog{supercell} \oOpt{OPTIONS} \OptArg{\Dd input=}{input-file} \\
 
 \section{Description}
 %%%%%%%%%%%%%%%%%%%%%
@@ -57,23 +58,23 @@
 %%%%%%%%%%%%%%%%%
 \begin{Description}
 
-\item[\Opt{-h}, \Opt{-$ $-help}]
+\item[\Opt{-h}, \Opt{\Dd help}]
       Print help message and exit the program.
 
-\item[\OptArg{-v }{level}, \OptArg{-$ $-verbose=}{level}] 
+\item[\OptArg{-v }{level}, \OptArg{\Dd verbose=}{level}] 
       Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
 
-\item[\OptArg{-i }{input-file}, \OptArg{-$ $-input=}{input-file}]
+\item[\OptArg{-i }{input-file}, \OptArg{\Dd input=}{input-file}]
       Required options. Input file with in CIF format. Only one file can be specified.
 
-\item[\Opt{-d}, \Opt{-$ $-dry-run}]
+\item[\Opt{-d}, \Opt{\Dd dry-run}]
       The option is highly recommended for the first run of the program with new input specified. 
-      With the option the program will do everything, but not write file. Be careful, if you switched \Opt{-m}, \Opt{-$ $-merge-by-distance} option. With the option dry-run should go through all crystal structures. So, it can take time.
+      With the option the program will do everything, but not write file. Be careful, if you switched \Opt{-m}, \Opt{\Dd merge-by-distance} option. With the option dry-run should go through all crystal structures. So, it can take time.
 
-\item[\OptArg{-s }{cell-size}, \OptArg{-$ $-cell-size=}{cell-size}]
+\item[\OptArg{-s }{cell-size}, \OptArg{\Dd cell-size=}{cell-size}]
       The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1".
 
-\item[\OptArg{-c }{balance-type}, \OptArg{-$ $-charge-balance=}{balance-type}]
+\item[\OptArg{-c }{balance-type}, \OptArg{\Dd charge-balance=}{balance-type}]
       The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are
       \begin{itemize}
          \item[no]   No charge balancing. The option will set all charges to zero.
@@ -81,7 +82,7 @@
          \item[yes]  Charge balance the system.
       \end{itemize}
 
-\item[\OptArg{-p }{labels-properties}, \OptArg{-$ $-property=}{labels-properties}]
+\item[\OptArg{-p }{labels-properties}, \OptArg{\Dd property=}{labels-properties}]
       The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax.
        \begin{itemize}
          \item Simple: $<$label$>$:$<$property\_name$>$[=$<$property\_value$>$].
@@ -101,34 +102,17 @@
        \end{itemize}
        Some fancy examples you can find below.       
       
-\item[\OptArg{-t }{tolerance}, \OptArg{-$ $-tolerance=}{tolerance}]
+\item[\OptArg{-t }{tolerance}, \OptArg{\Dd tolerance=}{tolerance}]
       An argument of the option specify the maximum distance between sites, which will be treated like equivalent.     Check carefully output of \Prog{supercell} before changing the parameter. Default \OptArg{}{tolerance}=0.75.
 
-\item[\Opt{-m }, \Opt{-$ $-merge-by-distance}]
+\item[\Opt{-m}, \Opt{\Dd merge-by-distance}]
       The options enables symmetry check algorithm for output structures. Structures, which can be transform to each other using crystallographic symmetry operation will be merged and stored as one structure. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher to trace program execution.
 
-\item[\OptArg{-n }{count}, \OptArg{-$ $-store-structures=}{count}]
-      %@% IF !NFIX %@%
-      %@% IF NOTHING %@%
-        %workaround to skip macro when do latex2man      
-        \ifx \NFix \undefined
-      %@% END-IF %@%        
-        The argument of the option is the avarage number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm. On each stage the new structure generated the algorithm will accept the structure with probability p=\OptArg{}{count}/total-number-of-combination. So, the output structures distribution can be described with binomial distribution F(k, p, count). If you are using the algorithm with merge algorithm \OptArg{-m}{} this algorithm will run first. 
-      %@% IF NOTHING %@%        
-      \else
-      %@% END-IF %@%
-      %@% ELSE %@%
-        The argument of the option is the number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm.
-      %@% END-IF %@%
-      %@% IF NOTHING %@%      
-      \fi
-      %@% END-IF %@%
-      
-\item[\Opt{-q }, \Opt{-$ $-coloumb-energy}] 
+\item[\Opt{-q}, \Opt{\Dd coloumb-energy}] 
       The option enable Coloumb energy calculations. The result energies for each structures are stored in file $<$output-prefix$>$\_coloumb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. 
       
-\item[\OptArg{-o }{output-prefix}, \OptArg{-$ $-output=}{output-prefix}]
-      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, -$ $-output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run.
+\item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output=}{output-prefix}]
+      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run.
 
 \end{Description}
 

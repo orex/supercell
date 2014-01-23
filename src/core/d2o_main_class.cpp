@@ -486,7 +486,7 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
   return !not_first;
 }
 
-bool d2o_main_class::write_files(std::string output_base_name, double n_store, bool dry_run, bool merge_confs)
+bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, bool merge_confs)
 {
   if(dry_run && (!merge_confs) )
     return true;
@@ -513,17 +513,6 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   
   double tot_comb = total_combinations();
   
-  #ifdef USE_FIXED_N_RND
-  set<int> rnd_index;
-  if(n_store > 0 )
-  {
-    vector<int> rnd_index_v = get_random_numbers(n_store, tot_comb - 1);
-    rnd_index.insert(rnd_index_v.begin(), rnd_index_v.end());
-  }
-  #else
-  boost::mt19937 rnd_gen = create_rnd_gen();
-  #endif
-
   if(!dry_run)
   {
     string del_command = "rm -f " + output_base_name + "*.cif";
@@ -540,51 +529,47 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
   OBMol cmol;
   do
   {
-    #ifdef USE_FIXED_N_RND
-    if( (n_store <= 0) || (rnd_index.count(total_index) > 0) )    
-    #else
-    if( (n_store <= 0) || get_rnd_value_in_interval(rnd_gen, 0, tot_comb) <= n_store )
-    #endif
-    {
-      bool u_comb;
-      int merged_conf_num;
-    
-      if( merge_confs )
-        u_comb = check_comb_unique(cur_combs, merged_conf_num);
-      else
-      {  
-        u_comb = true;
-        merged_conf_num = 1;
-      }
-    
-      if( u_comb )
-      {  
-        combination_left -= merged_conf_num;
-        if(!dry_run)
-        {
-          init_atom_change_mol(&cmol);
-          add_confs_to_mol(&cmol, cur_combs);
-      
-          OBConversion obc;
-        
-          string index_str = get_index_str(index, tot_comb - 1);
-          string fname_str = output_base_name + "_ind" + index_str;
-          if( merge_confs ) 
-            fname_str += "w_" + boost::lexical_cast<string>(merged_conf_num);
+    bool u_comb;
+    int merged_conf_num;
 
-          obc.SetOutFormat("cif");
-          obc.WriteFile(&cmol, fname_str + ".cif");
-          if(calc_q_energy)
-            f_q_calc << boost::format("%1%\t%2$.3f eV\n") %
-            fname_str % calculate_q_energy(cur_combs);
-        }
-        index++;
-      }
-    
-      if( (total_index % 2000 == 0) && (total_index != 0) && (verbose_level >= 2))
-        cout << "Stored " << index << " configurations. Left " << combination_left << endl;
+    if( merge_confs )
+      u_comb = check_comb_unique(cur_combs, merged_conf_num);
+    else
+    {  
+      u_comb = true;
+      merged_conf_num = 1;
+    }
 
-    }        
+    if( u_comb )
+    {  
+      combination_left -= merged_conf_num;
+      if(!dry_run)
+      {
+        init_atom_change_mol(&cmol);
+        add_confs_to_mol(&cmol, cur_combs);
+
+        OBConversion obc;
+
+        string index_str = get_index_str(index, tot_comb - 1);
+        string fname_str = output_base_name + "_ind" + index_str;
+        if( merge_confs ) 
+          fname_str += "w_" + boost::lexical_cast<string>(merged_conf_num);
+
+        obc.SetOutFormat("cif");
+        obc.WriteFile(&cmol, fname_str + ".cif");
+        if(calc_q_energy)
+          f_q_calc << boost::format("%1%\t%2$.3f eV\n") %
+          fname_str % calculate_q_energy(cur_combs);
+      }
+      index++;
+    }
+
+    if( (total_index % 2000 == 0) && (total_index != 0) && (verbose_level >= 2))
+    {  
+      cout << "Finished " << round(double(total_index) / tot_comb * 100) << "%. " 
+           << "Stored " << index << " configurations. Left " << combination_left << "          \r"<< endl;
+    }  
+
     //Next combination
     done = true;    
     for(t_vec_comb::reverse_iterator rit  = cur_combs.rbegin(); 
@@ -598,8 +583,12 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
     }
     total_index++;
   }while(!done);
+  
+  if( verbose_level >= 2)
+    cout <<  endl;
+  
 
-  if( (n_store <= 0) && (total_index != total_combinations()) )
+  if( total_index != total_combinations() )
   {  
     cerr << "ERROR: Number of combinations is not equal of total index." << endl;
     return false;
@@ -609,12 +598,9 @@ bool d2o_main_class::write_files(std::string output_base_name, double n_store, b
     cout << "Combinations after merge: " << index << endl;
   
   if(combination_left != 0)
-  {  
-    if( (n_store <= 0) || (combination_left < 0 ))
     cerr << "ERROR: Combination left " << combination_left << " != 0 " << endl;
-  }  
   
-  return combination_left == 0 || (n_store > 0);
+  return combination_left == 0;
 }
 
 void d2o_main_class::correct_rms_range(const int total_sites, 
@@ -1554,7 +1540,6 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              charge_balance cb, double tolerance_v,
                              bool merge_confs, bool calc_q_energy_v,
                              c_man_atom_prop &manual_properties_v,
-                             double n_store,
                              std::string output_base_name)
 {
   assert(scs.size() == 3);
@@ -1632,15 +1617,18 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
       return false;
     }
     string f_name = output_base_name + "_coloumb_energy.txt";
-    f_q_calc.open(f_name.c_str(), fstream::out);
-    if(!f_q_calc.is_open())
-    {
-      cerr << "ERROR: File \"" << f_name << "\" is not open." << endl;
-      return false;
+    if(!dry_run)
+    {  
+      f_q_calc.open(f_name.c_str(), fstream::out);
+      if(!f_q_calc.is_open())
+      {
+        cerr << "ERROR: File \"" << f_name << "\" is not open." << endl;
+        return false;
+      }
     }
   }  
   
-  if(!write_files(output_base_name, n_store, dry_run, merge_confs))
+  if(!write_files(output_base_name, dry_run, merge_confs))
   {
     cerr << "Write files error." << endl;
     return false;

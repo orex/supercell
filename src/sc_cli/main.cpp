@@ -52,7 +52,6 @@ int main(int argc, char** argv)
     string charge_balance_str;
     
     double pos_tol;
-    double store_structures;
     
     vector<string> manual_properties;
     vector<int> supercell_mult;
@@ -83,11 +82,7 @@ int main(int argc, char** argv)
       ("tolerance,t", po::value<double>(&pos_tol)->default_value(0.75), 
                       "Skip structures with atoms closer than arg Angstrom.")
       ("merge-symmetric,m", "Merge output equivalent (by symmetry) structures.")
-      ("store-structures,n", po::value<double>(&store_structures)->default_value(-1),
-                       "Set average number structures to write. Default write all")
-      ("coloumb-energy,q", "Calculate Coloumb energy of output structures.")
-//      ("include-only,e", po::value<vector<string> >(&included_atoms),
-  //                     "Include only specified atom labels to configuration loop. Default include all")
+      ("coulomb-energy,q", "Calculate Coulomb energy of output structures.")
       ("output,o", po::value<std::string>(&output_file)->default_value("supercell"), 
                    "Output file name base. The extension will be cif. The multiplicity of structure will be added."); 
  
@@ -165,9 +160,9 @@ int main(int argc, char** argv)
     mc.set_verbosity(verb_level);
     
     bool processed = 
-    mc.process(input_file, dry_run, supercell_mult, cb, 
-               pos_tol, merge_confs, calc_q, m_prop,
-               store_structures, output_file);
+    mc.process(input_file, dry_run, supercell_mult, 
+               cb, pos_tol, merge_confs, calc_q, 
+               m_prop, output_file);
     
     if(!processed)
       return ERROR_PROCESS_EXECUTION;

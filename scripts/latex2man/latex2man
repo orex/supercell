@@ -240,6 +240,9 @@ $manMacro{'SP'}         = '\fB \fP';  # hack hack this works even on
 				      # the beginning of a line
 $manMacro{'SPfirst'}    = $manMacro{'SP'};
 
+#Added by Supercell
+$manMacro{'Dd'}	= '--';
+
 $manMacro{'~'}		= ' ';
 $manMacro{'|'}		= '|';
 $manMacro{'<'}		= '<';
@@ -365,6 +368,10 @@ $htmlMacro{'HTMLbr'}	= '<br>\n';
 $htmlMacro{'medskip'}	= '<br>\n';
 $htmlMacro{'SP'}	= '&nbsp;&nbsp;';
 $htmlMacro{'SPfirst'}    = $htmlMacro{'SP'};
+
+#Added by Supercell
+$htmlMacro{'Dd'}	= '--';
+
 
 $htmlMacro{'~'}		= '&nbsp;';
 $htmlMacro{'|'}		= '|';
@@ -580,6 +587,9 @@ if ($opt_a) {
  } else {
   $texiMacro{'SPfirst'} = '.@ ';
 }
+
+#Added by Supercell
+$texiMacro{'Dd'}	= '--';
 
 $texiMacro{'~'}		= ' ';
 $texiMacro{'|'}		= '|';

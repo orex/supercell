@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Wed Jan 22 07:54:32 CET 2014
+.\" Manual page created with latex2man on Thu Jan 23 13:54:19 CET 2014
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -21,7 +21,7 @@ is a tool to convert a crystallographic structure with partial occupancy and/or 
 
 .PP
 supercell
-\fB\-h, \- \-help\fP
+\fB\-h, --help\fP
 .br
 supercell
 [\fBOPTIONS\fP]
@@ -29,7 +29,7 @@ supercell
 .br
 supercell
 [\fBOPTIONS\fP]
-\fB\- \-input=\fP\fIinput\-file\fP
+\fB--input=\fP\fIinput\-file\fP
 .br
 .PP
 .SH DESCRIPTION
@@ -41,30 +41,30 @@ supercell
 
 .PP
 .TP
-\fB\-h\fP, \fB\- \-help\fP
+\fB\-h\fP, \fB--help\fP
 Print help message and exit the program. 
 .PP
 .TP
-\fB\-v \fP\fIlevel\fP, \fB\- \-verbose=\fP\fIlevel\fP
+\fB\-v \fP\fIlevel\fP, \fB--verbose=\fP\fIlevel\fP
 Change verbosity level from default 1. Level 0 \- quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
 .PP
 .TP
-\fB\-i \fP\fIinput\-file\fP, \fB\- \-input=\fP\fIinput\-file\fP
+\fB\-i \fP\fIinput\-file\fP, \fB--input=\fP\fIinput\-file\fP
 Required options. Input file with in CIF format. Only one file can be specified. 
 .PP
 .TP
-\fB\-d\fP, \fB\- \-dry\-run\fP
+\fB\-d\fP, \fB--dry\-run\fP
 The option is highly recommended for the first run of the program with new input specified. 
 With the option the program will do everything, but not write file. Be careful, if you switched \fB\-m\fP,
-\fB\- \-merge\-by\-distance\fP
+\fB--merge\-by\-distance\fP
 option. With the option dry\-run should go through all crystal structures. So, it can take time. 
 .PP
 .TP
-\fB\-s \fP\fIcell\-size\fP, \fB\- \-cell\-size=\fP\fIcell\-size\fP
+\fB\-s \fP\fIcell\-size\fP, \fB--cell\-size=\fP\fIcell\-size\fP
 The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1". 
 .PP
 .TP
-\fB\-c \fP\fIbalance\-type\fP, \fB\- \-charge\-balance=\fP\fIbalance\-type\fP
+\fB\-c \fP\fIbalance\-type\fP, \fB--charge\-balance=\fP\fIbalance\-type\fP
 The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are 
 .RS
 .TP
@@ -81,7 +81,7 @@ Charge balance the system.
 .PP
 .RE
 .TP
-\fB\-p \fP\fIlabels\-properties\fP, \fB\- \-property=\fP\fIlabels\-properties\fP
+\fB\-p \fP\fIlabels\-properties\fP, \fB--property=\fP\fIlabels\-properties\fP
 The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax. 
 .RS
 .TP
@@ -127,28 +127,22 @@ Some fancy examples you can find below.
 .PP
 .RE
 .TP
-\fB\-t \fP\fItolerance\fP, \fB\- \-tolerance=\fP\fItolerance\fP
+\fB\-t \fP\fItolerance\fP, \fB--tolerance=\fP\fItolerance\fP
 An argument of the option specify the maximum distance between sites, which will be treated like equivalent. Check carefully output of supercell
 before changing the parameter. Default \fB\fP\fItolerance\fP=0.75.
 .PP
 .TP
-\fB\-m \fP, \fB\- \-merge\-by\-distance\fP
+\fB\-m\fP, \fB--merge\-by\-distance\fP
 The options enables symmetry check algorithm for output structures. Structures, which can be transform to each other using crystallographic symmetry operation will be merged and stored as one structure. For cases with more than 10^4 of total combination it is recommended to treat execution of supercell
 using verbosity level 2 or higher to trace program execution. 
 .PP
 .TP
-\fB\-n \fP\fIcount\fP, \fB\- \-store\-structures=\fP\fIcount\fP
-The argument of the option is the avarage number of structures to be stored on disk. If the total number of structures it too high to be stored you can specify the option with a positive argument to switch the random picked algorithm. On each stage the new structure generated the algorithm will accept the structure with probability p=\fB\fP\fIcount\fP/total\-number\-of\-combination.
-So, the output structures distribution can be described with binomial distribution F(k, p, count). If you are using the algorithm with merge algorithm \fB\-m\fP\fI\fP
-this algorithm will run first. 
-.PP
-.TP
-\fB\-q \fP, \fB\- \-coloumb\-energy\fP
+\fB\-q\fP, \fB--coloumb\-energy\fP
 The option enable Coloumb energy calculations. The result energies for each structures are stored in file <output\-prefix>_coloumb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. 
 .PP
 .TP
-\fB\-o \fP\fIoutput\-prefix\fP, \fB\- \-output=\fP\fIoutput\-prefix\fP
-The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \-$ $\-output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output\-prefix>_ind<index>.cif. For merging run the template will be <output\-prefix>_ind<index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. 
+\fB\-o \fP\fIoutput\-prefix\fP, \fB--output=\fP\fIoutput\-prefix\fP
+The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output\-prefix>_ind<index>.cif. For merging run the template will be <output\-prefix>_ind<index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. 
 .PP
 .SH FILES
 
