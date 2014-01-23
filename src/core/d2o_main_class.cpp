@@ -234,7 +234,7 @@ bool d2o_main_class::calculate_q_matrix()
   }
   
   if(verbose_level >= 2)
-    cout << "Start Coloumb matrix (" << all_pos.size() << "x" << all_pos.size() << ") calculation." << endl;
+    cout << "Start Coulomb matrix (" << all_pos.size() << "x" << all_pos.size() << ") calculation." << endl;
 
   ewald_sum es;
   
@@ -244,7 +244,7 @@ bool d2o_main_class::calculate_q_matrix()
   q_energy = es.potential_matrix(all_pos);
  
   if(verbose_level >= 2)
-    cout << "Coloumb matrix calculation finished." << endl;
+    cout << "Coulomb matrix calculation finished." << endl;
   
   return true;
 }
@@ -1093,24 +1093,20 @@ bool d2o_main_class::create_occup_groups()
   {
     vector3 avg_dist = obc.average_vector(gvc[i]);
     set<string> sc;
+    c_occup_group ocg_temp;
+    ocg_temp.max_dis_within_group = 0;
     for(set<int>::const_iterator it  = gvc[i].indexes.begin();
                                  it != gvc[i].indexes.end(); ++it)
     {
       OBAtom * a = mol_supercell.GetAtom(*it + 1);
       string label = a->GetData("original_label")->GetValue();
-      sc.insert(label);
+      if( sc.insert(label).second ) //element inserted
+        ocg_temp.add_item(a, scs[label].curr_charge);
     }
     
     if( coc.count(sc) == 0 )
-    {
-      for(set<int>::const_iterator it  = gvc[i].indexes.begin();
-                                   it != gvc[i].indexes.end(); ++it)
-      {  
-        string label = mol_supercell.GetAtom(*it + 1)->GetData("original_label")->GetValue();
-        coc[sc].add_item(mol_supercell.GetAtom(*it + 1), scs[label].curr_charge);
-      }  
-      coc[sc].max_dis_within_group = gvc[i].max_dist;
-    }
+      coc[sc] = ocg_temp;
+
     coc[sc].positions.push_back(avg_dist);
     coc[sc].max_dis_within_group = max(coc[sc].max_dis_within_group, gvc[i].max_dist);
   }
@@ -1613,10 +1609,10 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   {
     if(!calculate_q_matrix())
     {
-      cerr << "ERROR: Coloumb energy is not calculated." << endl;
+      cerr << "ERROR: Coulomb energy is not calculated." << endl;
       return false;
     }
-    string f_name = output_base_name + "_coloumb_energy.txt";
+    string f_name = output_base_name + "_coulomb_energy.txt";
     if(!dry_run)
     {  
       f_q_calc.open(f_name.c_str(), fstream::out);
