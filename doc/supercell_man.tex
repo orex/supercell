@@ -108,11 +108,11 @@
 \item[\Opt{-m}, \Opt{\Dd merge-by-distance}]
       The options enables symmetry check algorithm for output structures. Structures, which can be transform to each other using crystallographic symmetry operation will be merged and stored as one structure. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher to trace program execution.
 
-\item[\Opt{-q}, \Opt{\Dd coloumb-energy}] 
-      The option enable Coloumb energy calculations. The result energies for each structures are stored in file $<$output-prefix$>$\_coloumb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. 
+\item[\Opt{-q}, \Opt{\Dd coulomb-energy}] 
+      The option enable Coulumb energy calculations. The result energies for each structures are stored in file $<$output-prefix$>$\_coulomb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \Opt{\Dd charge-balance} option.
       
 \item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output=}{output-prefix}]
-      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run.
+      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output-prefix>\_ind<index>.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
 
 \end{Description}
 

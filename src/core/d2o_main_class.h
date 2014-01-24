@@ -121,6 +121,7 @@ protected:
                          int &max_value);
 
   int64_t total_combinations();
+  double ss_charge_by_occup_groups();
   
   std::vector< rangi > get_rangi_array(const double x2);
   bool get_atoms_population();

@@ -567,7 +567,8 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
     if( (total_index % 2000 == 0) && (total_index != 0) && (verbose_level >= 2))
     {  
       cout << "Finished " << round(double(total_index) / tot_comb * 100) << "%. " 
-           << "Stored " << index << " configurations. Left " << combination_left << "          \r"<< endl;
+           << "Stored " << index << " configurations. Left " 
+           << combination_left << "          \r"<< std::flush;
     }  
 
     //Next combination
@@ -694,6 +695,19 @@ int64_t d2o_main_class::total_combinations()
                                             it != occup_groups.end(); it++)
   {
     result *= it->get_number_of_combinations();
+  }
+  
+  return result;  
+}
+
+double d2o_main_class::ss_charge_by_occup_groups()
+{
+  double result = 0;
+  for(vector<c_occup_group>::const_iterator it = occup_groups.begin(); 
+                                            it != occup_groups.end(); it++)
+  {
+    for(int j = 0; j < it->items.size(); j++)
+      result += it->items[j].charge * it->items[j].num_of_atoms_sc;
   }
   
   return result;  
@@ -1134,229 +1148,11 @@ bool d2o_main_class::create_occup_groups()
   return true;
 }
  
-/*
-bool d2o_main_class::create_occup_groups()
-{
-  OBUnitCell *unitcell = (OBUnitCell *)mol_supercell.GetData(OBGenericDataType::UnitCell);
-  
-  set<OBAtom *> to_delete;
-  
-  //delete elements of the same label, which close to each other.  
-  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
-    for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
-    {
-      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);
-      string label_i = atom_i->GetData("original_label")->GetValue();
-      vector3 dist = atom_i->GetVector() - atom_j->GetVector();
-      dist = get_minimal_distance(dist, unitcell);
-      if(dist.length() < r_tolerance)
-      {
-        string label_j = atom_j->GetData("original_label")->GetValue();
-        if((label_i == label_j))
-          to_delete.insert(atom_j);
-      }
-    }
-  }
-  
-  for(set<OBAtom *>::iterator it = to_delete.begin(); it != to_delete.end(); it++)
-    mol_supercell.DeleteAtom(*it, false);
-  
-  
-  vector< vector<c_occup_item> > element_data;
-  vector<int> first_element;
-  
-  element_data.clear();
-  element_data.resize(mol_supercell.NumAtoms());
-  
-  first_element.clear();
-  first_element.resize(mol_supercell.NumAtoms(), 10000000);
-  
-  //Set closest array
-  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
-    for(int j = 0; j < mol_supercell.NumAtoms(); j++)
-    {
-      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);      
-      vector3 dist = atom_i->GetVector() - atom_j->GetVector();
-      dist = get_minimal_distance(dist, unitcell);
-      if(dist.length() < r_tolerance)
-      {  
-        c_occup_item tp;
-        tp.label = atom_j->GetData("original_label")->GetValue();
-        tp.occup_target = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValue();
-        tp.charge = scs[tp.label].curr_charge;
-        tp.obp->Duplicate(atom_j);
-        element_data[i].push_back(tp);
-      }  
-    }  
-  }
-
-  //check uniform occupation. 
-  for(int i = 0; i < element_data.size(); i++)
-  {
-    assert(element_data[i].size() > 0);
-    for(int j = 0; j < element_data.size(); j++)
-    {
-      bool find_all = true;
-      bool find_one = false;
-      
-      for(int k = 0; k < element_data[i].size(); k++)
-      {
-        int find_count = 0;        
-        for(int l = 0; l < element_data[j].size(); l++)
-        {
-          if(element_data[i][k].label == element_data[j][l].label)
-          {  
-            assert(element_data[i][k].occup_target == element_data[j][l].occup_target);
-            find_count++;
-          }  
-        }
-        
-        if(find_count > 1)
-        {
-          cerr << "Multiple definition of label " + element_data[i][k].label << endl;
-          
-          cout << j << endl;          
-          for(int l = 0; l < element_data[j].size(); l++)
-            cout << element_data[j][l].label << endl;
-          
-          return false;
-        }
-        
-        find_all = find_all && (find_count == 1);
-        find_one = find_one || (find_count == 1);
-      }
-      
-      assert((find_all != true) || (find_one != false));
-      
-      if(find_all != find_one)
-      {
-        cerr << "Sites are wrong. Check input file " << endl;
-        return false;
-      }
-      
-      if(find_all && find_one)
-      {
-        int index;
-        
-        index = min(i, j);
-        index = min(index, first_element[i]);
-        index = min(index, first_element[j]);
-        
-        first_element[i] = index;
-        first_element[j] = index;
-      }
-    }
-  }
-  
-  occup_groups.clear();
-  vector<int> elem_group_num;
-  
-  elem_group_num.resize(element_data.size(), -1);
-  
-  //Create set of indexes and delete close sites;
-  for(int i = 0; i < element_data.size(); i++)
-  {  
-    //sort(element_data[i].begin(), element_data[i].end());
-    assert(first_element[i] <= i);
-    if(first_element[i] == i)
-    {  
-      c_occup_group cop;
-      cop.number_of_sites = 0;
-      cop.max_dis_within_group = 0.0;
-      cop.items = element_data[i];
-      occup_groups.push_back(cop);
-      elem_group_num[i] = occup_groups.size() - 1;
-    }
-    else
-      elem_group_num[i] = elem_group_num[first_element[i]];
-  }
-  
-  for(int i = 0; i < elem_group_num.size(); i++)
-    assert((elem_group_num[i] >= 0) && (elem_group_num[i] < occup_groups.size()));
-
-  //Assign group number to atoms 
-  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
-  {
-    OBPairInteger *obo = new OBPairInteger;
-
-    obo->SetAttribute("group_number");
-    obo->SetValue(elem_group_num[i]);
-          
-    mol_supercell.GetAtom(i + 1)->SetData(obo);
-  }
-
-  min_dist_between_groups = 1000.0;  
-  //Delete close atoms and set maximum distance within group
-  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
-    vector<vector3> pos_near;
-    pos_near.push_back(atom_i->GetVector());
-    for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
-    {
-      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);      
-      vector3 dist = atom_i->GetVector() - atom_j->GetVector();
-      dist = get_minimal_distance(dist, unitcell);
-      if(dist.length() < r_tolerance)
-      {  
-        int group_index = dynamic_cast<OBPairInteger *> (atom_i->GetData("group_number"))->GetGenericValue();
-        occup_groups[group_index].max_dis_within_group = max(occup_groups[group_index].max_dis_within_group, dist.length());
-        pos_near.push_back(atom_j->GetVector());
-        mol_supercell.DeleteAtom(atom_j);
-      }
-      else
-        min_dist_between_groups = min(min_dist_between_groups, dist.length());
-    }  
-    atom_i->SetVector(center_mass(pos_near, unitcell, r_tolerance));
-  }
-  
-  //calculate statistic for atoms of the same type
-  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
-    
-    vector<vector3> pos_near;
-    pos_near.push_back(atom_i->GetVector());
-    
-    for(set<OBAtom *>::iterator it = to_delete.begin(); it != to_delete.end(); it++)
-    {  
-      OBAtom * atom_j = *it;      
-      vector3 dist = atom_i->GetVector() - atom_j->GetVector();
-      dist = get_minimal_distance(dist, unitcell);
-      if(dist.length() < r_tolerance)
-      {  
-        int group_index = dynamic_cast<OBPairInteger *> (atom_i->GetData("group_number"))->GetGenericValue();
-        occup_groups[group_index].max_dis_within_group = max(occup_groups[group_index].max_dis_within_group, dist.length());
-        pos_near.push_back(atom_j->GetVector());
-      }
-      else
-        min_dist_between_groups = min(min_dist_between_groups, dist.length());
-    }  
-    atom_i->SetVector(center_mass(pos_near, unitcell, r_tolerance));
-    
-  }
-  for(set<OBAtom *>::iterator it = to_delete.begin(); it != to_delete.end(); it++)
-    delete *it;  
-
-  //Calculate available positions for each group
-  for(OBAtomIterator it = mol_supercell.BeginAtoms(); it != mol_supercell.EndAtoms(); it++)
-  {
-    int group_index = dynamic_cast<OBPairInteger *> ((*it)->GetData("group_number"))->GetGenericValue();
-    assert( (group_index >= 0) && (group_index < occup_groups.size()) );
-    occup_groups[group_index].number_of_sites++;
-  }
-  
-  return true;
-}
-*/
 
 bool d2o_main_class::show_groups_information()
 {
   cout << "Chemical formula of the supercell: " << get_formula_by_groups() << endl;
+  cout << "Total charge of supercell: " << ss_charge_by_occup_groups() << endl;
   cout << "Minimal distance between groups: " << min_dist_between_groups << endl;
   
   for(int i = 0; i < occup_groups.size(); i++)

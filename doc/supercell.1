@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Thu Jan 23 13:54:19 CET 2014
+.\" Manual page created with latex2man on Fri Jan 24 10:55:27 CET 2014
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -137,12 +137,14 @@ The options enables symmetry check algorithm for output structures. Structures, 
 using verbosity level 2 or higher to trace program execution. 
 .PP
 .TP
-\fB\-q\fP, \fB--coloumb\-energy\fP
-The option enable Coloumb energy calculations. The result energies for each structures are stored in file <output\-prefix>_coloumb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. 
+\fB\-q\fP, \fB--coulomb\-energy\fP
+The option enable Coulumb energy calculations. The result energies for each structures are stored in file <output\-prefix>_coulomb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \fB--charge\-balance\fP
+option. 
 .PP
 .TP
 \fB\-o \fP\fIoutput\-prefix\fP, \fB--output=\fP\fIoutput\-prefix\fP
-The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output\-prefix>_ind<index>.cif. For merging run the template will be <output\-prefix>_ind<index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. 
+The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output\-prefix>_ind<index>.cif. For merging run the template will be <output\-prefix>_ind<index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. The <output\-prefix>_coulomb_energy.txt file will be overwritten only in case of \fB--coulomb\-energy\fP
+option enabled. 
 .PP
 .SH FILES
 
