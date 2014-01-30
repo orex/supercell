@@ -36,6 +36,19 @@ _symmetry_equiv_pos_as_xyz
 16 1/2+y,1/2+x,1/2+z
 
 loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Li-1  +1
+Li-2  +1
+Li-3  +1
+Ge-1  +4
+P-1   +5 
+P-2   +5
+S-1   -2
+S-2   -2
+S-3   -2
+
+loop_
 _atom_site_type_symbol
 _atom_site_label
 _atom_site_occupancy
