@@ -36,6 +36,96 @@ d2o_main_class::d2o_main_class()
 {
 }
 
+std::string struct_info::file_name(const std::string &prefix, int tot_comb, 
+                                   const std::string &sampl_type) const
+{
+  std::string result = prefix + "_ind" + sampl_type + get_index_str(index, tot_comb - 1);
+
+  if( weight > 0 ) 
+    result += "w_" + boost::lexical_cast<string>(weight);
+  
+  result += ".cif";
+  
+  return result;
+}
+
+void c_struct_sel_containers::add_structure(const struct_info &si, int str_left)
+{
+  //Random
+  if(str_random_count() > 0)
+  {  
+    if( get_rnd_value_in_interval(rnd, 0, 1) < probability )
+      rnd_container.push_back(si);
+  }
+  
+  //First  
+  if( first_container.size() < str_first_count() )
+    first_container.push_back(si);
+  
+  //Last
+  if( str_left / symm_op < str_last_count() + 1 )
+  {  
+    last_container.push_back(si);
+    while (last_container.size() > str_last_count() )
+      last_container.pop_front();
+  }  
+  
+  //Low
+  if(str_low_count() > 0)
+  {
+    if(low_container.size() < str_low_count() )
+      low_container.insert(si);
+    else if ( si < *(--low_container.end()) )
+    {  
+      low_container.insert(si);
+      low_container.erase(--low_container.end());
+    }  
+  }  
+  
+  //High
+  if(str_high_count() > 0)
+  {
+    if(high_container.size() < str_high_count() )
+      high_container.insert(si);
+    else if ( *(high_container.begin()) < si)
+    {  
+      high_container.insert(si);
+      high_container.erase(high_container.begin());
+    }  
+  }  
+   
+}
+
+void c_struct_sel_containers::prepare_to_store()
+{
+  assert(str_first_count() >= first_container.size());
+  assert(str_last_count()  >= last_container.size());
+  assert(str_high_count()  >= high_container.size());
+  assert(str_low_count()   >= low_container.size());  
+  
+  random_thin_to(rnd_container, str_random_count(), rnd);
+}
+
+
+void c_struct_sel_containers::set_containers_prop(int total_comb, int symm_op_v)
+{
+  rnd = create_rnd_gen();
+  symm_op = symm_op_v;
+  min_comb = max(total_comb / symm_op, 1);
+  
+  probability = 4 * double(str_random_count()) / double(min_comb);
+  
+  rnd_container.clear();
+  first_container.clear();
+  last_container.clear();
+  high_container.clear();
+  low_container.clear();
+  
+  rnd_container.reserve(6 * str_random_count());
+  first_container.reserve(str_first_count());
+
+}
+
 c_occup_item::c_occup_item(OpenBabel::OBAtom *ob, double charge_v)
 { 
   obp = new OpenBabel::OBAtom(); 
@@ -486,6 +576,58 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
   return !not_first;
 }
 
+bool d2o_main_class::write_struct(const struct_info &si, 
+                                  const std::string &prefix, int tot_comb, 
+                                  const std::string &sampl_type)
+{
+  bool result = true;
+  
+  OBMol cmol;
+  
+  init_atom_change_mol(&cmol);
+  add_confs_to_mol(&cmol, si.cmb);
+  
+  OBConversion obc;
+
+  string f_name = si.file_name(prefix, tot_comb, sampl_type);
+  
+  result = obc.SetOutFormat("cif");
+  if(result)
+    result = obc.WriteFile(&cmol, f_name);
+  
+  if( !result )
+    cerr << "An error occurred during storing of \"" << f_name << "\" file." << endl;
+
+  return result;
+}
+
+bool d2o_main_class::store_samling(std::string output_base_name, int tot_comb)
+{
+  ss_p.prepare_to_store();
+  
+  store_cont_cif(ss_p.first_container.begin(),
+                 ss_p.first_container.end(),
+                 output_base_name, tot_comb, "f");
+
+  store_cont_cif(ss_p.last_container.begin(),
+                 ss_p.last_container.end(),
+                 output_base_name, tot_comb, "a");
+
+  store_cont_cif(ss_p.low_container.begin(),
+                 ss_p.low_container.end(),
+                 output_base_name, tot_comb, "l");
+
+  store_cont_cif(ss_p.high_container.begin(),
+                 ss_p.high_container.end(),
+                 output_base_name, tot_comb, "h");
+
+  store_cont_cif(ss_p.rnd_container.begin(),
+                 ss_p.rnd_container.end(),
+                 output_base_name, tot_comb, "r");
+    
+  return true;
+}
+
 bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, bool merge_confs)
 {
   if(dry_run && (!merge_confs) )
@@ -511,7 +653,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
     }
   }  
   
-  double tot_comb = total_combinations();
+  int tot_comb = total_combinations();
   
   if(!dry_run)
   {
@@ -526,6 +668,9 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   int index = 0;
   bool done;
   
+  int syms_num = max(int(occup_groups[0].symms_sets.size()), 1);
+  ss_p.set_containers_prop(tot_comb, syms_num);
+  
   OBMol cmol;
   do
   {
@@ -539,34 +684,40 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
       u_comb = true;
       merged_conf_num = 1;
     }
-
-    if( u_comb )
-    {  
-      combination_left -= merged_conf_num;
-      if(!dry_run)
-      {
-        init_atom_change_mol(&cmol);
-        add_confs_to_mol(&cmol, cur_combs);
-
-        OBConversion obc;
-
-        string index_str = get_index_str(index, tot_comb - 1);
-        string fname_str = output_base_name + "_ind" + index_str;
-        if( merge_confs ) 
-          fname_str += "w_" + boost::lexical_cast<string>(merged_conf_num);
-
-        obc.SetOutFormat("cif");
-        obc.WriteFile(&cmol, fname_str + ".cif");
-        if(calc_q_energy)
-          f_q_calc << boost::format("%1%\t%2$.3f eV\n") %
-          fname_str % calculate_q_energy(cur_combs);
+    
+    if( u_comb && (!dry_run) )
+    { 
+      //Constructor will zero all variables;
+      struct_info curr_struct;
+      
+      curr_struct.index = index;
+      curr_struct.cmb = cur_combs;
+      if( merge_confs )
+        curr_struct.weight = merged_conf_num;
+  
+      if( calc_q_energy )
+      {  
+        curr_struct.energy = calculate_q_energy(cur_combs);
+        string fname_str = curr_struct.file_name(output_base_name, tot_comb);
+        f_q_calc << boost::format("%1%\t%2$.3f eV\n") %
+          fname_str % curr_struct.energy;
       }
-      index++;
+      
+      if(ss_p.sampling_active())
+        ss_p.add_structure(curr_struct, combination_left);
+      else
+        write_struct(curr_struct, output_base_name, tot_comb);
     }
+    
+    if( u_comb )
+    {
+      combination_left -= merged_conf_num;
+      index++;
+    }  
 
     if( (total_index % 2000 == 0) && (total_index != 0) && (verbose_level >= 2))
     {  
-      cout << "Finished " << round(double(total_index) / tot_comb * 100) << "%. " 
+      cout << "Finished " << round(double(total_index) / double(tot_comb) * 1000) / 10.0 << "%. " 
            << "Stored " << index << " configurations. Left " 
            << combination_left << "          \r"<< std::flush;
     }  
@@ -588,7 +739,6 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   if( verbose_level >= 2)
     cout <<  endl;
   
-
   if( total_index != total_combinations() )
   {  
     cerr << "ERROR: Number of combinations is not equal of total index." << endl;
@@ -600,6 +750,9 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   
   if(combination_left != 0)
     cerr << "ERROR: Combination left " << combination_left << " != 0 " << endl;
+  
+  if( ss_p.sampling_active() && (!dry_run) )
+    store_samling(output_base_name, tot_comb);
   
   return combination_left == 0;
 }
@@ -1332,12 +1485,14 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              charge_balance cb, double tolerance_v,
                              bool merge_confs, bool calc_q_energy_v,
                              c_man_atom_prop &manual_properties_v,
+                             const c_struct_sel &ss_p_v,        
                              std::string output_base_name)
 {
   assert(scs.size() == 3);
   
   r_tolerance = max(tolerance_v, 1.0E-6);
-  manual_properties = &manual_properties_v;  
+  manual_properties = &manual_properties_v;
+  ss_p.assign_base(ss_p_v);
   calc_q_energy = calc_q_energy_v;
           
   if(!read_molecule(input_file_name))
@@ -1418,7 +1573,13 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
         return false;
       }
     }
-  }  
+  }
+  
+  if( (!calc_q_energy) && ( (ss_p.str_high_count() > 0) || (ss_p.str_low_count() > 0) ) )
+  {
+    cerr << "Energy sampling (h or l) impossible without Coulomb calculation enabled." << endl;
+    return false;
+  }
   
   if(!write_files(output_base_name, dry_run, merge_confs))
   {

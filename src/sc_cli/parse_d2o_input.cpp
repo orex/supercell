@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include <scanf_pp/base.hpp>
+
 using namespace std;
 using namespace boost;  
 
@@ -334,4 +336,32 @@ bool parse_d2o_input::get_charge_balance(std::string cb_str, charge_balance &cb)
   bool result = cb_names::get_cb(cb_str, cb);
 
   return result;
+}
+
+
+bool c_struct_sel_cli::parse_input(const std::vector<std::string>& inp, std::string& param_error)
+{
+  bool result = true;
+  param_error = "";
+ 
+  scanf_pp::regex_scanf rp("^([farlh])([0-9]+)$");  
+  
+  for(int i = 0; i < inp.size(); i++)
+  {
+    if( rp.regex_match(inp[i]) )
+    {
+      string s;
+      int cnt;
+      rp >> s >> cnt;
+      sp[s] = cnt;
+    }  
+    else
+    {
+      result = false;
+      param_error = inp[i];
+      break;
+    }  
+  }
+
+  return result;  
 }

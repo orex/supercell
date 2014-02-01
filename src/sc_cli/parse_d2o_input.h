@@ -59,5 +59,11 @@ public:
   static bool get_charge_balance(std::string cb_str, charge_balance &cb);
 };
 
+class c_struct_sel_cli : public c_struct_sel
+{
+public:
+  bool parse_input(const std::vector<std::string> &inp, std::string &param_error);
+};
+
 #endif	/* PARSE_D2O_INPUT_H */
 

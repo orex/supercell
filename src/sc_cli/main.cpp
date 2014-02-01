@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     double pos_tol;
     
     vector<string> manual_properties;
+    vector<string> structure_sampling;
     vector<int> supercell_mult;
     supercell_mult.resize(3);
     
@@ -83,6 +84,8 @@ int main(int argc, char** argv)
                       "Skip structures with atoms closer than arg Angstrom.")
       ("merge-symmetric,m", "Merge output equivalent (by symmetry) structures.")
       ("coulomb-energy,q", "Calculate Coulomb energy of output structures.")
+      ("store-structures,n", po::value<vector<string> >(&structure_sampling),
+                             "Store structures selectively. See manual for details.")
       ("output,o", po::value<std::string>(&output_file)->default_value("supercell"), 
                    "Output file name base. The extension will be cif. The multiplicity of structure will be added."); 
  
@@ -143,9 +146,17 @@ int main(int argc, char** argv)
     
     if(!m_prop.parse_input(manual_properties, param_error))
     {
-      cerr << "Error in input parameter " << param_error << endl;
+      cerr << "Error in manual property input parameter " << param_error << endl;
       return false;
-    }  
+    }
+    
+    c_struct_sel_cli sampl_prop;
+
+    if(!sampl_prop.parse_input(structure_sampling, param_error))
+    {
+      cerr << "Error in sampling input parameter " << param_error << endl;
+      return false;
+    }
     
     charge_balance cb;
     
@@ -162,7 +173,7 @@ int main(int argc, char** argv)
     bool processed = 
     mc.process(input_file, dry_run, supercell_mult, 
                cb, pos_tol, merge_confs, calc_q, 
-               m_prop, output_file);
+               m_prop, sampl_prop, output_file);
     
     if(!processed)
       return ERROR_PROCESS_EXECUTION;

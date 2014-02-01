@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Fri Jan 24 10:55:27 CET 2014
+.\" Manual page created with latex2man on Sat Feb  1 13:56:17 CET 2014
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -137,13 +137,42 @@ The options enables symmetry check algorithm for output structures. Structures, 
 using verbosity level 2 or higher to trace program execution. 
 .PP
 .TP
+\fB\-n \fP\fIselection\fP, \fB--store\-structures=\fP\fIselection\fP
+The option allows you to selectively store structures. The option is very useful when number of combinations is quite significant (more than 10^5\&.The argument of the option has special structure <sampling type><count>\&. The <count> is integer positive value or zero. <sampling type> is a letter which set sapling type 
+.RS
+.TP
+r
+: select <count> random structures. 
+.TP
+f
+: select <count> first structures. 
+.TP
+a
+: select <count> last structures. 
+.TP
+l
+: select <count> low energy structures (\fB--coulomb\-energy\fP
+option required). 
+.TP
+h
+: select <count> high energy structures (\fB--coulomb\-energy\fP
+option required). 
+.RE
+.RS
+.PP
+Example: l100 will store first 100 structures with low Coulomb energy. 
+.PP
+Multiple declaration of the option is allowed. If the option is enabled, an extra prefix (the letter <sampling type> will be added to output file name. Be careful, enabling the option required an extra memory, proportionally to the number of structures to store. 
+.PP
+.RE
+.TP
 \fB\-q\fP, \fB--coulomb\-energy\fP
 The option enable Coulumb energy calculations. The result energies for each structures are stored in file <output\-prefix>_coulomb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \fB--charge\-balance\fP
 option. 
 .PP
 .TP
 \fB\-o \fP\fIoutput\-prefix\fP, \fB--output=\fP\fIoutput\-prefix\fP
-The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. Fon non merging run the template will be <output\-prefix>_ind<index>.cif. For merging run the template will be <output\-prefix>_ind<index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. The <output\-prefix>_coulomb_energy.txt file will be overwritten only in case of \fB--coulomb\-energy\fP
+The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be <output\-prefix>_ind<sampling type><index>\&.cif. For merging run the template will be <output\-prefix>_ind<sampling type><index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. The <output\-prefix>_coulomb_energy.txt file will be overwritten only in case of \fB--coulomb\-energy\fP
 option enabled. 
 .PP
 .SH FILES

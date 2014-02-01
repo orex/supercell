@@ -69,5 +69,34 @@ public:
   ~c_man_atom_prop();
 };        
 
+class c_struct_sel
+{
+protected:
+  typedef std::map<std::string, int> sel_prop;
+  sel_prop sp;
+  int str_count(const std::string &st) const
+  {
+    if(sp.count(st) > 0)
+      return sp.at(st);
+    return 0;        
+  };
+public:
+  bool save_all() const 
+  { return sp.empty(); };
+  int str_first_count() const 
+  { return str_count("f"); };
+  int str_last_count() const 
+  { return str_count("a"); };
+  int str_low_count() const 
+  { return str_count("l"); };
+  int str_high_count() const 
+  { return str_count("h"); };
+  int str_random_count() const 
+  { return str_count("r"); };
+  void assign_base(const c_struct_sel &orig)
+  { sp = orig.sp; };
+};        
+
+
 #endif	/* COMMON_TYPES_H */
 

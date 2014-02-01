@@ -15,7 +15,8 @@
 
 #include "common_types.h"
 
-#include "boost/utility.hpp"
+#include <boost/utility.hpp>
+#include <boost/random.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -81,6 +82,53 @@ struct site_charges
   double cif_mult;
 };
 
+typedef std::vector< std::vector<int> > t_vec_comb;
+
+class struct_info
+{
+public:
+  t_vec_comb cmb;
+  double energy;
+  int index;
+  //weight should be equal 0 for non-merge run.
+  int weight;
+  
+  struct_info(): energy(0), index(0), weight(0) {};
+
+  std::string file_name(const std::string &prefix, int tot_comb, 
+                        const std::string &sampl_type = "") const;
+  
+  bool operator < (const struct_info &second ) const
+  {
+    return (energy < second.energy) || ( (energy == second.energy) && (index < second.index) );
+  }
+};
+
+class c_struct_sel_containers : public c_struct_sel
+{
+protected:  
+  boost::mt19937 rnd;
+  int min_comb;
+  int symm_op;
+  double probability;
+public:
+  std::vector<struct_info> rnd_container;
+  
+  std::set<struct_info> low_container;
+  std::set<struct_info> high_container;
+
+  std::vector<struct_info> first_container;
+  std::list<struct_info> last_container;
+  
+public:  
+  //symm_op 1 for non-merging
+  bool sampling_active() const
+  { return !save_all();  };
+  void set_containers_prop(int total_comb, int symm_op_v);  
+  void add_structure(const struct_info &si, int str_left);
+  void prepare_to_store();
+};
+
 class d2o_main_class 
 {
 protected:
@@ -90,8 +138,6 @@ protected:
     int curr_value, min_value, max_value;
   };
   
-  typedef std::vector< std::vector<int> > t_vec_comb;
-  
 protected:
   int verbose_level;
   
@@ -99,6 +145,7 @@ protected:
   OpenBabel::OBMol mol_supercell;
   
   c_man_atom_prop * manual_properties;
+  c_struct_sel_containers ss_p;
 
   std::vector<c_occup_group> occup_groups;
 
@@ -135,6 +182,21 @@ protected:
   std::vector<int> index_symmetries( OpenBabel::OBUnitCell * uc, 
                                      const Eigen::Affine3d &af, 
                                      const std::vector<OpenBabel::vector3> &pos);
+  template<class ConstIterator>
+  void store_cont_cif(const ConstIterator& begin, 
+                       const ConstIterator& end,
+                       const std::string &prefix, int tot_comb, 
+                       const std::string &sampl_type = "")
+  {
+    for(ConstIterator it = begin; it != end; it++)
+      write_struct(*it, prefix, tot_comb, sampl_type);
+  }
+  
+  bool write_struct(const struct_info &si,
+                     const std::string &prefix, int tot_comb, 
+                     const std::string &sampl_type = "");
+  
+  bool store_samling(std::string output_base_name, int tot_comb);
   bool write_files(std::string output_base_name, bool dry_run, bool merge_confs);
   bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
   bool create_comb(const symm_set &sc, std::vector<int> &cmb);
@@ -156,6 +218,7 @@ public:
                charge_balance cb, double tolerance_v, 
                bool merge_confs, bool calc_q_energy_v,
                c_man_atom_prop &manual_properties,
+               const c_struct_sel &ss_p,
                std::string output_base_name);
   virtual ~d2o_main_class();
 };
