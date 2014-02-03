@@ -112,7 +112,7 @@ protected:
   int symm_op;
   double probability;
 public:
-  std::vector<struct_info> rnd_container;
+  std::list<struct_info> rnd_container;
   
   std::set<struct_info> low_container;
   std::set<struct_info> high_container;

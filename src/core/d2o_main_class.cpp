@@ -121,9 +121,7 @@ void c_struct_sel_containers::set_containers_prop(int total_comb, int symm_op_v)
   high_container.clear();
   low_container.clear();
   
-  rnd_container.reserve(6 * str_random_count());
   first_container.reserve(str_first_count());
-
 }
 
 c_occup_item::c_occup_item(OpenBabel::OBAtom *ob, double charge_v)
@@ -1352,7 +1350,16 @@ bool d2o_main_class::show_groups_information()
     cout << endl;
   }
   
-  cout << "Total combinations is " << total_combinations() << endl;
+  int64_t t_comb = total_combinations();
+  string t_comb_approx = "";
+  if(t_comb > 1E5)
+  {  
+    boost::format fmt("(~%1$2.1e)");
+    fmt % double(t_comb);
+    t_comb_approx = fmt.str();
+  }  
+  cout << "Total combinations is " << t_comb 
+       << t_comb_approx << endl;
   
   return true;
 }
