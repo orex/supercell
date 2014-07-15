@@ -274,9 +274,6 @@ bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &
 	
 	if( fixed_group || the_item )
         {  
-          OBAtom atm;
-          atm.Duplicate( curr_group.items[k].obp );
-          
           double occup_value;
           
           if( fixed_group )
@@ -284,19 +281,25 @@ bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &
                           double(curr_group.number_of_sites());
           else
             occup_value = 1.0;
-
-          if( atm.HasData("_atom_site_occupancy") )
-            dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(occup_value);
-          else
-          {
-            OBPairFloatingPoint * obo = new OBPairFloatingPoint();
-            obo->SetAttribute("_atom_site_occupancy");
-            obo->SetValue(occup_value);
-            atm.SetData(obo);
-          }  
-  
-          atm.SetVector(curr_group.positions[j]);
-          cmol->AddAtom(atm, true);
+	  
+          OBAtom atm;
+          atm.Duplicate( curr_group.items[k].obp );
+	  
+	  if(occup_value > 0)
+	  {  
+            if( atm.HasData("_atom_site_occupancy") )
+              dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(occup_value);
+            else
+            {
+              OBPairFloatingPoint * obo = new OBPairFloatingPoint();
+              obo->SetAttribute("_atom_site_occupancy");
+              obo->SetValue(occup_value);
+              atm.SetData(obo);
+            }  
+    
+            atm.SetVector(curr_group.positions[j]);
+            cmol->AddAtom(atm, true);
+	  }
         }
       }
     }  
