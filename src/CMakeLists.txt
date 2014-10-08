@@ -1,7 +1,9 @@
 #set common includes
 set(sc_includes ${sc_includes} ${CMAKE_CURRENT_SOURCE_DIR}/core)
 
-set(sc_includes ${sc_includes} /usr/local/include/openbabel-2.0/)
+find_package(OpenBabel2 REQUIRED)
+
+set(sc_includes ${sc_includes} ${OpenBabel2_INCLUDE_DIRS})
 set(sc_includes ${sc_includes} ${CMAKE_SOURCE_DIR}/libs/common_utils/)
 
 find_package(Eigen3 REQUIRED)
@@ -15,10 +17,6 @@ set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/cryst_tools.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/comb_points.cpp)
-
-#set_common_libraries
-add_library(openbabel UNKNOWN IMPORTED)
-set_property(TARGET openbabel PROPERTY IMPORTED_LOCATION "${OB_LIB}")
 
 set(sc_libraries ${sc_libraries} openbabel)
 

@@ -1,8 +1,6 @@
 cmake_minimum_required (VERSION 2.8)
 
 project(supercell)
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/libs/common_utils/cmake/modules)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -Wall -Wno-sign-compare -Wextra " )
 
@@ -21,9 +19,11 @@ if(GLIBC_24_COMPATIBLE AND UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--wrap=memcpy")  
 endif()
 
-if( ${CMAKE_COMPILER_IS_GNUCXX} AND ${LINK_STATIC_LIBS} )
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wl,-no-gnu-unique")
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+if( ${CMAKE_COMPILER_IS_GNUCXX} )
+  if( ${LINK_STATIC_LIBS} )
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wl,-no-gnu-unique")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+  endif()
 endif()
 
 
