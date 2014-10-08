@@ -38,6 +38,16 @@ y,-x,-z
 -y,x,-z
 1/2+x,1/2-y,-z
 loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+  Ca1  +2
+  AlT1 +3
+  AlT  +3
+  SiT  +4
+  O1   -2
+  O2   -2
+  O3   -2
+loop_
 _atom_site_label
 _atom_site_fract_x
 _atom_site_fract_y
