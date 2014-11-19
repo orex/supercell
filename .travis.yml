@@ -2,13 +2,18 @@ language: cpp
 
 compiler:
  - gcc
- - clang
 
 before_install:
  - sudo apt-get update -qq
 
 install:
- - sudo apt-get install -qq  libeigen3-dev libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev openbabel
+ - sudo apt-get install -qq libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev openbabel texlive-extra-utils python
+ - git clone https://github.com/openbabel/openbabel.git
+ - cd openbabel && mkdir build && cd build
+ - cmake ../ && make && sudo make install
+ - hg clone https://bitbucket.org/eigen/eigen
+ - cd eigen && mkdir build && cd build
+ - cmake ../ && make && sudo make install
 
 before_script:
  - mkdir build
