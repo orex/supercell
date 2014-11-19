@@ -8,7 +8,7 @@ before_install:
  - sudo apt-get update -qq
 
 install:
- - sudo apt-get install -qq  libeigen3-dev libboost-program-options-dev libboost-regex-dev 
+ - sudo apt-get install -qq  libeigen3-dev libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev openbabel
 
 before_script:
  - mkdir build
