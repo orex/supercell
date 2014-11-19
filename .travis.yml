@@ -12,7 +12,7 @@ install:
  - cd ~ 
  - git clone https://github.com/openbabel/openbabel.git
  - cd openbabel && mkdir build && cd build
- - cmake ../ DBUILD_GUI=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DWITH_INCHI=OFF && make && sudo make install
+ - cmake ../ -DBUILD_GUI=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DWITH_INCHI=OFF && make && sudo make install
  - sudo rm -rf /usr/local/lib/openbabel/*/mmcifformat.so
  - cd ~
  - hg clone https://bitbucket.org/eigen/eigen
