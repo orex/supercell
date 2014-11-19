@@ -24,7 +24,7 @@ before_script:
  - cd ${c_path}
  - mkdir build
  - cd build
- - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON. 
+ - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON
 
 script:
  - make
