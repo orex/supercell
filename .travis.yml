@@ -27,5 +27,5 @@ before_script:
  - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON
 
 script:
- - make
+ - make supercell
  
