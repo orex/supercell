@@ -14,7 +14,7 @@ install:
  - sudo rm -rf /usr/local/lib/openbabel/*/mmcifformat.so
  - hg clone https://bitbucket.org/eigen/eigen
  - cd eigen && mkdir build && cd build
- - cmake ../ && make && sudo make install
+ - cmake ../ && sudo make install
 
 before_script:
  - mkdir build
