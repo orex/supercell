@@ -205,7 +205,7 @@ protected:
   bool store_samling(std::string output_base_name, int tot_comb);
   bool write_files(std::string output_base_name, bool dry_run, bool merge_confs);
   bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
-  bool create_comb(const symm_set &sc, std::vector<int> &cmb);
+  bool create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out);
   bool init_atom_change_mol(OpenBabel::OBMol *cmol);
   bool add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &ppc);
   std::string get_formula(OpenBabel::OBMol &mol);
