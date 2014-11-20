@@ -517,22 +517,19 @@ std::vector<int> d2o_main_class::index_symmetries(OpenBabel::OBUnitCell * uc,
   return result;
 }
 
-bool d2o_main_class::create_comb(const symm_set &sc, std::vector<int> &cmb)
+bool d2o_main_class::create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out)
 {
-  assert(sc.size() == cmb.size());
-  std::vector<int> cb;
+  assert(sc.size() == cmb_in.size());
   
-  cb.resize(cmb.size());
+  cmb_out.resize(cmb_in.size());
   bool result = true;
-  for(int i = 0; i < cb.size(); i++)
+  for(int i = 0; i < cmb_in.size(); i++)
   {  
     if(sc[i] >= 0)
-      cb[sc[i]] = cmb[i];
+      cmb_out[sc[i]] = cmb_in[i];
     else
-      result = result && (cmb[i] < 0);
+      result = result && (cmb_out[i] < 0);
   }  
-    
-  cmb = cb;
   
   return result;
 }
@@ -545,20 +542,20 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
   assert(syms_num > 0);
   
   set< t_vec_comb > st;
+  t_vec_comb nc;
+  nc.resize(mc.size());
+  nc = mc;  
 
   bool not_first = false;
   for(int i = 0; i < syms_num; i++)
   {
-    t_vec_comb nc;
-    nc.resize(mc.size());
     bool good_cb = true;
     for(int j = 0; j < mc.size(); j++)
     {
       assert(syms_num == occup_groups[j].symms_sets.size());
-      nc[j] = mc[j];
       
       if(!occup_groups[j].is_fixed_fast())
-        good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], nc[j]);
+        good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], mc[j], nc[j]);
     }
     if(good_cb)
     {  
