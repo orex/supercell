@@ -17,6 +17,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/random.hpp>
+#include <boost/format.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>

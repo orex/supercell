@@ -10,7 +10,6 @@
 #include <openbabel/obconversion.h>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
-#include <boost/format.hpp>
 #include <algorithm>
 #include <cmath>
 
