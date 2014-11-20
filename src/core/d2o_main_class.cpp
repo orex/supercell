@@ -188,13 +188,15 @@ void c_occup_group::add_item(OpenBabel::OBAtom * oba, double charge)
   items.push_back(item);
 }
 
-bool d2o_main_class::init_atom_change_mol(OpenBabel::OBMol *cmol)
+bool d2o_main_class::init_atom_change_mol(OpenBabel::OBMol *cmol, const struct_info &si)
 {
   cmol->Clear();
   
   OBUnitCell *uc = new OBUnitCell(*dynamic_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell)));
   assert(!cmol->HasData(OBGenericDataType::UnitCell));
   cmol->SetData(uc);
+  string title = boost::lexical_cast<string>("Supercell generated structure. E_col = ") + boost::lexical_cast<string>(si.energy);
+  cmol->SetTitle( title );
   
   return true;
 }
@@ -582,7 +584,7 @@ bool d2o_main_class::write_struct(const struct_info &si,
   
   OBMol cmol;
   
-  init_atom_change_mol(&cmol);
+  init_atom_change_mol(&cmol, si);
   add_confs_to_mol(&cmol, si.cmb);
   
   OBConversion obc;
@@ -622,6 +624,29 @@ bool d2o_main_class::store_samling(std::string output_base_name, int tot_comb)
   store_cont_cif(ss_p.rnd_container.begin(),
                  ss_p.rnd_container.end(),
                  output_base_name, tot_comb, "r");
+  
+  if( calc_q_energy )
+  {
+    store_cont_eng(ss_p.first_container.begin(),
+                   ss_p.first_container.end(),
+                   output_base_name, tot_comb, "f");
+
+    store_cont_eng(ss_p.last_container.begin(),
+                   ss_p.last_container.end(),
+                   output_base_name, tot_comb, "a");
+
+    store_cont_eng(ss_p.low_container.begin(),
+                   ss_p.low_container.end(),
+                   output_base_name, tot_comb, "l");
+
+    store_cont_eng(ss_p.high_container.begin(),
+                   ss_p.high_container.end(),
+                   output_base_name, tot_comb, "h");
+
+    store_cont_eng(ss_p.rnd_container.begin(),
+                   ss_p.rnd_container.end(),
+                   output_base_name, tot_comb, "r");
+  }  
     
   return true;
 }
@@ -1489,6 +1514,18 @@ bool d2o_main_class::set_labels_to_manual()
   return true;
 }
 
+bool d2o_main_class::open_q_file(std::ofstream &file, const std::string &output_base_name, const std::string &suffix)
+{
+  string f_name = output_base_name + "_coulomb_energy" + ( suffix.empty() ? string("") : string("_") ) + suffix + ".txt";
+  file.open(f_name.c_str(), fstream::out);
+  if(!f_q_calc.is_open())
+  {
+    cerr << "ERROR: File \"" << f_name << "\" is not open." << endl;
+    return false;
+  }
+  return true;  
+}
+
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              const std::vector<int> scs,
                              charge_balance cb, double tolerance_v,
@@ -1572,16 +1609,8 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
       cerr << "ERROR: Coulomb energy is not calculated." << endl;
       return false;
     }
-    string f_name = output_base_name + "_coulomb_energy.txt";
-    if(!dry_run)
-    {  
-      f_q_calc.open(f_name.c_str(), fstream::out);
-      if(!f_q_calc.is_open())
-      {
-        cerr << "ERROR: File \"" << f_name << "\" is not open." << endl;
-        return false;
-      }
-    }
+    if( !dry_run )
+      open_q_file(f_q_calc, output_base_name, "");
   }
   
   if( (!calc_q_energy) && ( (ss_p.str_high_count() > 0) || (ss_p.str_low_count() > 0) ) )

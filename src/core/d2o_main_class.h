@@ -197,6 +197,25 @@ protected:
     for(ConstIterator it = begin; it != end; it++)
       write_struct(*it, prefix, tot_comb, sampl_type);
   }
+
+  template<class ConstIterator>
+  void store_cont_eng(const ConstIterator& begin, 
+                      const ConstIterator& end,
+                      const std::string &prefix, int tot_comb, 
+                      const std::string &sampl_type = "")
+  {
+    if(begin == end)
+      return;
+    
+    std::ofstream fq;
+    open_q_file(fq, prefix, sampl_type);
+    for(ConstIterator it = begin; it != end; it++)
+    {  
+      std::string fname_str = it->file_name(prefix, tot_comb, sampl_type);
+      fq << boost::format("%1%\t%2$.3f eV\n") % fname_str % it->energy;
+    }  
+    fq.close();
+  }
   
   bool write_struct(const struct_info &si,
                      const std::string &prefix, int tot_comb, 
@@ -206,11 +225,12 @@ protected:
   bool write_files(std::string output_base_name, bool dry_run, bool merge_confs);
   bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
   bool create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out);
-  bool init_atom_change_mol(OpenBabel::OBMol *cmol);
+  bool init_atom_change_mol(OpenBabel::OBMol *cmol, const struct_info &si);
   bool add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &ppc);
   std::string get_formula(OpenBabel::OBMol &mol);
   std::string get_formula_by_groups();
   bool set_labels_to_manual();
+  bool open_q_file(std::ofstream &file, const std::string &output_base_name, const std::string &suffix);
 public:
   static const double charge_tol = 1E-1;
   static const double occup_tol = 2E-3;
