@@ -557,7 +557,7 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
       assert(syms_num == occup_groups[j].symms_sets.size());
       nc[j] = mc[j];
       
-      if(!occup_groups[j].is_fixed())
+      if(!occup_groups[j].is_fixed_fast())
         good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], nc[j]);
     }
     if(good_cb)
@@ -652,6 +652,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
     
       cur_combs[i] = create_start_combination(mvc);
     }
+    occup_groups[i].set_fixed_fast();
   }  
   
   int tot_comb = total_combinations();
@@ -671,6 +672,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   
   int syms_num = max(int(occup_groups[0].symms_sets.size()), 1);
   ss_p.set_containers_prop(tot_comb, syms_num);
+     
   
   OBMol cmol;
   do

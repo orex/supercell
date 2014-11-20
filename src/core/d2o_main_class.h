@@ -57,6 +57,8 @@ class c_occup_group
 {
 protected:
   bool _fixed;  
+  bool _fixed_fast;
+  
 public:
   std::vector<c_occup_item> items;
   std::vector<OpenBabel::vector3> positions;  //Cartesian
@@ -68,6 +70,10 @@ public:
   { _fixed = fix; };
   bool is_fixed() const 
   { return _fixed || (get_number_of_combinations() == 1); }
+  bool is_fixed_fast() const 
+  { return _fixed_fast; }
+  void set_fixed_fast()
+  { _fixed_fast = is_fixed(); }
   double max_dis_within_group;
   int number_of_sites() const
   { return positions.size(); };
