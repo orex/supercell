@@ -126,6 +126,9 @@
       
 \item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output=}{output-prefix}]
       The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be $<$output-prefix$>$\_ind$<$sampling type$><$index$>$.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$sampling type$><$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
+      
+\item[\OptArg{-a }{archive-file}, \OptArg{\Dd archive=}{archive-file}]
+      The option specify a target archive file for the all output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required \Prog{libarchive} to be available in the system. Otherwise the option will be disabled. Check the status by \Opt{-h} option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''.
 
 \end{Description}
 

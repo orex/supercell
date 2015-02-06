@@ -43,6 +43,7 @@ int main(int argc, char** argv)
 
     string input_file;
     string output_file;
+    string output_tar_file;
     bool dry_run = false;
     bool merge_confs = false;
     bool calc_q = false;
@@ -86,6 +87,14 @@ int main(int argc, char** argv)
       ("coulomb-energy,q", "Calculate Coulomb energy of output structures.")
       ("store-structures,n", po::value<vector<string> >(&structure_sampling),
                              "Store structures selectively. See manual for details.")
+      ("archive,a", po::value<std::string>(&output_tar_file)->default_value(""), 
+                   (string("A target archive file for the all output files. If empty (default) no packing will be performed. ") +
+#ifdef LIBARCHIVE_ENABLED
+                           "The option is enabled."   
+#else
+                           "The option is disabled." 
+#endif    
+                     ).c_str() )
       ("output,o", po::value<std::string>(&output_file)->default_value("supercell"), 
                    "Output file name base. The extension will be cif. The multiplicity of structure will be added."); 
  
@@ -139,6 +148,14 @@ int main(int argc, char** argv)
       cerr << "Wrong supercell format input." << endl;
       return ERROR_IN_COMMAND_LINE;
     }
+    
+    #ifndef LIBARCHIVE_ENABLED
+    if( ! output_tar_file.empty() )
+    {
+      cerr << "Cannot pack output. LibArchive is not enabled." << endl;
+      return ERROR_IN_COMMAND_LINE;
+    }  
+    #endif
 
     c_man_atom_prop_cli m_prop;
     m_prop.set_verbose(verb_level);
@@ -173,7 +190,8 @@ int main(int argc, char** argv)
     bool processed = 
     mc.process(input_file, dry_run, supercell_mult, 
                cb, pos_tol, merge_confs, calc_q, 
-               m_prop, sampl_prop, output_file);
+               m_prop, sampl_prop, output_file, 
+               output_tar_file);
     
     if(!processed)
       return ERROR_PROCESS_EXECUTION;

@@ -1,6 +1,7 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.6)
 
 project(supercell)
+include(FeatureSummary)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -Wall -Wno-sign-compare -Wextra " )
 
@@ -25,7 +26,6 @@ if( ${CMAKE_COMPILER_IS_GNUCXX} )
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   endif()
 endif()
-
 
 find_library(OB_LIB openbabel NAMES ${OB_LIB_NAMES})
 

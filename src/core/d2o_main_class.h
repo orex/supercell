@@ -10,6 +10,8 @@
 
 #include <string>
 #include <map>
+#include <iostream>
+#include <sstream>
 
 #include <openbabel/mol.h>
 
@@ -23,6 +25,11 @@
 #include <Eigen/Geometry>
 
 #include "obabel/obabel_utils.h"
+
+#ifdef LIBARCHIVE_ENABLED
+#include <archive.h>
+#endif    
+
 
 struct c_occup_item
 {
@@ -164,6 +171,14 @@ protected:
   bool calc_q_energy;
   Eigen::MatrixXd q_energy;
   std::ofstream f_q_calc;
+  
+  #ifdef LIBARCHIVE_ENABLED
+  archive *tar_container;
+  #endif    
+  
+  bool create_tar_container(const std::string &tar_fname);
+  bool add_file_to_tar(const std::string &fname, const std::stringstream &strm);
+  bool close_tar_container();
 
   bool fix_groups();
   
@@ -208,14 +223,14 @@ protected:
     if(begin == end)
       return;
     
-    std::ofstream fq;
-    open_q_file(fq, prefix, sampl_type);
+    std::stringstream fq;
+    std::string qfname = get_q_file_name(prefix, sampl_type);
     for(ConstIterator it = begin; it != end; it++)
     {  
       std::string fname_str = it->file_name(prefix, tot_comb, sampl_type);
       fq << boost::format("%1%\t%2$.3f eV\n") % fname_str % it->energy;
     }  
-    fq.close();
+    add_file_to_tar(qfname, fq);
   }
   
   bool write_struct(const struct_info &si,
@@ -231,7 +246,7 @@ protected:
   std::string get_formula(OpenBabel::OBMol &mol);
   std::string get_formula_by_groups();
   bool set_labels_to_manual();
-  bool open_q_file(std::ofstream &file, const std::string &output_base_name, const std::string &suffix);
+  std::string get_q_file_name(const std::string &output_base_name, const std::string &suffix);
 public:
   static const double charge_tol = 1E-1;
   static const double occup_tol = 2E-3;
@@ -246,7 +261,8 @@ public:
                bool merge_confs, bool calc_q_energy_v,
                c_man_atom_prop &manual_properties,
                const c_struct_sel &ss_p,
-               std::string output_base_name);
+               std::string output_base_name,
+               std::string output_tar_name);
   virtual ~d2o_main_class();
 };
 

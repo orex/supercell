@@ -12,7 +12,7 @@
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 #include <cmath>
-
+ 
 #include <openbabel/chargemodel.h>
 
 #include "science/combinatorics.h"
@@ -27,6 +27,9 @@
 
 #include <Eigen/Dense>
 
+#ifdef LIBARCHIVE_ENABLED
+#include <archive_entry.h>
+#endif
 
 using namespace OpenBabel;
 using namespace std;
@@ -34,6 +37,66 @@ using namespace std;
 d2o_main_class::d2o_main_class()
 {
 }
+
+#if defined(LIBARCHIVE_ENABLED) && (!defined(LIBARCHIVE_PATCH_DISABLE))
+#include "archive_extent_patch.h"
+#endif
+
+bool d2o_main_class::create_tar_container(const std::string &fname)
+{
+  bool result = true;
+  #ifdef LIBARCHIVE_ENABLED
+  if( ! fname.empty() )
+  {  
+    tar_container = archive_write_new();
+    result = archive_write_set_format_filter_by_ext(tar_container, fname.c_str()) == ARCHIVE_OK;
+    if( result )
+      result = archive_write_open_filename(tar_container, fname.c_str()) == ARCHIVE_OK;
+  }
+  else
+    tar_container = NULL;
+  #endif
+  return result;
+}
+
+bool d2o_main_class::add_file_to_tar(const std::string &fname, const std::stringstream &strm)
+{
+  #ifdef LIBARCHIVE_ENABLED    
+  if( tar_container != NULL )
+  {  
+    archive_entry *entry = archive_entry_new();
+    archive_entry_set_pathname(entry, fname.c_str());
+    archive_entry_set_size(entry, strm.str().size());
+    archive_entry_set_filetype(entry, AE_IFREG);
+    archive_entry_set_perm(entry, 0644);
+    archive_write_header(tar_container, entry);
+    archive_write_data(tar_container, strm.str().c_str(), strm.str().size());
+    archive_entry_free(entry);
+  }
+  else
+  {
+  #endif  
+    std::ofstream out_file( fname.c_str() );
+    out_file << strm.rdbuf();
+    out_file.close();
+  #ifdef LIBARCHIVE_ENABLED    
+  }  
+  #endif
+  return true;
+}
+
+bool d2o_main_class::close_tar_container()
+{
+  #ifdef LIBARCHIVE_ENABLED
+  bool b1, b2;
+  b1 = archive_write_close(tar_container) == ARCHIVE_OK;
+  b2 = archive_write_free(tar_container) == ARCHIVE_OK;
+  return b1 && b2;
+  #else
+  return true;
+  #endif
+}
+
 
 std::string struct_info::file_name(const std::string &prefix, int tot_comb, 
                                    const std::string &sampl_type) const
@@ -592,7 +655,14 @@ bool d2o_main_class::write_struct(const struct_info &si,
   
   result = obc.SetOutFormat("cif");
   if(result)
-    result = obc.WriteFile(&cmol, f_name);
+  {  
+    //result = obc.WriteFile(&cmol, f_name);
+    stringstream ss;
+    result = obc.Write(&cmol, &ss);
+    if( result )
+      add_file_to_tar(f_name, ss);
+  }  
+  
   
   if( !result )
     cerr << "An error occurred during storing of \"" << f_name << "\" file." << endl;
@@ -1513,16 +1583,9 @@ bool d2o_main_class::set_labels_to_manual()
   return true;
 }
 
-bool d2o_main_class::open_q_file(std::ofstream &file, const std::string &output_base_name, const std::string &suffix)
+std::string d2o_main_class::get_q_file_name(const std::string &output_base_name, const std::string &suffix)
 {
-  string f_name = output_base_name + "_coulomb_energy" + ( suffix.empty() ? string("") : string("_") ) + suffix + ".txt";
-  file.open(f_name.c_str(), fstream::out);
-  if(!f_q_calc.is_open())
-  {
-    cerr << "ERROR: File \"" << f_name << "\" is not open." << endl;
-    return false;
-  }
-  return true;  
+  return output_base_name + "_coulomb_energy" + ( suffix.empty() ? string("") : string("_") ) + suffix + ".txt";
 }
 
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
@@ -1531,7 +1594,8 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              bool merge_confs, bool calc_q_energy_v,
                              c_man_atom_prop &manual_properties_v,
                              const c_struct_sel &ss_p_v,        
-                             std::string output_base_name)
+                             std::string output_base_name,
+                             std::string output_tar_name)
 {
   assert(scs.size() == 3);
   
@@ -1608,8 +1672,17 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
       cerr << "ERROR: Coulomb energy is not calculated." << endl;
       return false;
     }
+    
     if( !dry_run )
-      open_q_file(f_q_calc, output_base_name, "");
+    {  
+      string fq_name = get_q_file_name(output_base_name, "");
+      f_q_calc.open(fq_name.c_str(), fstream::out);
+      if(!f_q_calc.is_open())
+      {
+        cerr << "ERROR: File \"" << fq_name << "\" is not open." << endl;
+        return false;
+      }
+    }
   }
   
   if( (!calc_q_energy) && ( (ss_p.str_high_count() > 0) || (ss_p.str_low_count() > 0) ) )
@@ -1618,11 +1691,17 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     return false;
   }
   
+  if(!dry_run)
+    create_tar_container(output_tar_name);
+   
   if(!write_files(output_base_name, dry_run, merge_confs))
   {
     cerr << "Write files error." << endl;
     return false;
   }
+  
+  if(!dry_run)
+    close_tar_container();
   
   return true;
 }
