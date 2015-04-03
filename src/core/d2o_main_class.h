@@ -178,6 +178,7 @@ protected:
   
   bool create_tar_container(const std::string &tar_fname);
   bool add_file_to_tar(const std::string &fname, const std::stringstream &strm);
+  bool tar_enabled();
   bool close_tar_container();
 
   bool fix_groups();

@@ -85,6 +85,15 @@ bool d2o_main_class::add_file_to_tar(const std::string &fname, const std::string
   return true;
 }
 
+bool d2o_main_class::tar_enabled()
+{
+  #ifdef LIBARCHIVE_ENABLED
+  return tar_container != NULL;
+  #else
+  return false;
+  #endif 
+}
+
 bool d2o_main_class::close_tar_container()
 {
   #ifdef LIBARCHIVE_ENABLED
@@ -753,7 +762,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   
   int tot_comb = total_combinations();
   
-  if(!dry_run && (tar_container == NULL))
+  if(!dry_run && !tar_enabled() )
   {
     string del_command = "rm -f " + output_base_name + "*.cif";
     int rc = system(del_command.c_str());
