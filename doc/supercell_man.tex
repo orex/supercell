@@ -31,7 +31,7 @@
   }
 }
 
-\setDate{2013/09/01}    %%%% must be manually set, if rcsinfo is not present
+\setDate{2015/04/03}    %%%% must be manually set, if rcsinfo is not present
 \setVersionWord{Version:}  %%% that's the default, no need to set it.
 \setVersion{0.1}
 
@@ -65,17 +65,17 @@
       Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
 
 \item[\OptArg{-i }{input-file}, \OptArg{\Dd input=}{input-file}]
-      Required options. Input file with in CIF format. Only one file can be specified.
+      Required option. Input file in CIF format. Only one file can be specified.
 
 \item[\Opt{-d}, \Opt{\Dd dry-run}]
       The option is highly recommended for the first run of the program with new input specified. 
-      With the option the program will do everything, but not write file. Be careful, if you switched \Opt{-m}, \Opt{\Dd merge-by-distance} option. With the option dry-run should go through all crystal structures. So, it can take time.
+      With the option the program will do everything but write the files. Be careful if you switched \Opt{-m}, \Opt{\Dd merge-by-distance} option: the program will go through all crystal structures, so even the dry-run mode can take time.
 
 \item[\OptArg{-s }{cell-size}, \OptArg{\Dd cell-size=}{cell-size}]
-      The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1".
+      The option specifies the size of the supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c unit cell vectors of input system. Default is "1x1x1".
 
 \item[\OptArg{-c }{balance-type}, \OptArg{\Dd charge-balance=}{balance-type}]
-      The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are
+      The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program.  Charges (i.e. oxydation states) may be specified with the \Opt{-p}, \Opt{\Dd labels-properties} option (see below) or directly in the CIF file ("\_atom\_type\_oxidation\_number"). The possible arguments are:
       \begin{itemize}
          \item[no]   No charge balancing. The option will set all charges to zero.
          \item[try]  Default. Try to charge balance system, if initial system is not charged.
@@ -83,33 +83,33 @@
       \end{itemize}
 
 \item[\OptArg{-p }{labels-properties}, \OptArg{\Dd property=}{labels-properties}]
-      The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax.
+      The option will allow you to manually specify some properties of atoms with specific labels. You may use the simple or the extended syntax.
        \begin{itemize}
          \item Simple: $<$label$>$:$<$property\_name$>$[=$<$property\_value$>$].
-         \item Extended: "$<$OPT$>$($<$labels$>$):{$<$properties$>$}". DONT forget to put extended syntax in quotes.
+         \item Extended: "$<$OPT$>$($<$labels$>$):{$<$properties$>$}" (Do not forget to put extended syntax in quotes).
        \end{itemize}
-       Where $<$label$>$ is a label of atom, which property you want to change, $<$labels$>$ set of space separate labels. $<$OPT$>$ is type of string processing you want to set for labels. The possible values of $<$OPT$>$ are
+       Where $<$label$>$ is the label of the crystallographic site, the properties of which you want to change, $<$labels$>$ set of space-separated labels. $<$OPT$>$ is the type of string-pprocessing you want use to set the labels. The possible values of $<$OPT$>$ are:
        \begin{itemize}
          \item[p] Treat the labels in parenthesis like a plain string. 
-         \item[w, ""] Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * - any numbers of any symbol and ? - any symbol (exactly one).
-         \item[r] Treat the labels in parenthesis like a Perl Regex. Syntax description you can find at \URL{http://en.wikipedia.org/wiki/Regular\_expression}.
+         \item[w, ""] Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * (any numbers of any symbol) and ? (any symbol: exactly one).
+         \item[r] Treat the labels in parenthesis like a Perl Regex. Syntax description can be found at \URL{http://en.wikipedia.org/wiki/Regular\_expression}.
        \end{itemize}
-       The $<$property\_name$>$ is a name of the property you want to set for all specified atoms. Some properties can have values, which you should set using equal symbol. The properties can be
+       The $<$property\_name$>$ is the name of the property you want to set for all specified crystallographic sites. Some properties can have values, which you should set using equal symbol. The properties can be:
        \begin{itemize}
-         \item[c\Lbr charge\Rbr] Set charge of atoms with specified label(s). Floaing-point value in elementary charge units.
+         \item[c\Lbr charge\Rbr] Set the charge of atoms with specified label(s). Floating-point value in elementary charge units.
          \item[p\Lbr opulation\Rbr] Number of atoms with specific label(s) in output supercell structure.
-         \item[\Lbr not\Rbr fixed] Exclude atoms from combinations. The output file will contain partial occupancy sites.
+         \item[\Lbr not\Rbr fixed] Exclude crystallographic sites from the combinatorial analysis. The output supercell file will contain partial occupancies for the corresponding sites (if there were partial occupancies in the original structures).
        \end{itemize}
-       Some fancy examples you can find below.       
+       Some fancy examples can be found below.      
       
 \item[\OptArg{-t }{tolerance}, \OptArg{\Dd tolerance=}{tolerance}]
-      An argument of the option specify the maximum distance between sites, which will be treated like equivalent.     Check carefully output of \Prog{supercell} before changing the parameter. Default \OptArg{}{tolerance}=0.75.
+      The argument of the option specifies the maximum distance (in Angstroms) between sites that should be contained within the same group (meaning that the corresponding positions in the supercell cannot be occupied simultaneously). Check carefully the minimal distance between 2 atoms assigned to different groups, which is written in the output of \Prog{supercell} before changing this parameter. Default \OptArg{}{tolerance}=0.75 A.
 
 \item[\Opt{-m}, \Opt{\Dd merge-by-distance}]
-      The options enables symmetry check algorithm for output structures. Structures, which can be transform to each other using crystallographic symmetry operation will be merged and stored as one structure. For cases with more than 10\Circum 4 of  total combination it is recommended to treat execution of \Prog{supercell} using verbosity level 2 or higher to trace program execution.
+      The options enables the symmetry-check algorithm on output structures. Structures that can be transform to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than 10\Circum 4 total combinations it is recommended to use verbosity level 2 or higher to trace program execution.
       
 \item[\OptArg{-n }{selection}, \OptArg{\Dd store-structures=}{selection}]
-      The option allows you to selectively store structures. The option is very useful when number of combinations is quite significant (more than $10^5$.The argument of the option has special structure $<$sampling type$><$count$>$. The $<$count$>$ is integer positive value or zero. $<$sampling type$>$ is a letter which set sapling type
+      The option allows you to generate subsets of structures (rather than all) according to certain criteria (listed below). The option is very useful to both save disk space and facilitate navigation among files for large numbers combinations (typically more than $10^5$).The argument of the option has special structure $<$sampling type$><$count$>$. The $<$count$>$ is a positive integer value or zero. $<$sampling type$>$ is a letter which sets the sampling (selection) mode:
       \begin{itemize}
         \item[r]: select $<$count$>$ random structures.
         \item[f]: select $<$count$>$ first structures.

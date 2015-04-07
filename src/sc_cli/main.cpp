@@ -70,9 +70,9 @@ int main(int argc, char** argv)
                   "output data with verbosity level. Default is 1. Suggested for regular users.") 
       ("input,i", po::value<std::string>(&input_file)->required(), 
                   "Input structure")
-      ("dry-run,d", "Show information, but not generate structures")
+      ("dry-run,d", "Shows information, but does not generate structures. Always use when trying a new system.")
       ("cell-size,s", po::value<std::string>(&cell_size_str)->default_value("1x1x1"), 
-                  "Supercell size. Example: -s 2x2x5")
+                  "Supercell size. Example: -s 2x2x5. Default is 1x1x1.")
       ("charge-balance,c", po::value<std::string>(&charge_balance_str)->default_value("try"), 
                            (cb_names::get_name(cb_no)     + " - no charge balancing.\n" +
                             cb_names::get_name(cb_try)    + " - Try to charge balance system, " +
@@ -80,15 +80,15 @@ int main(int argc, char** argv)
                             cb_names::get_name(cb_input)  + " - Charge balance the system. ").c_str())
       ("property,p", po::value<vector<string> >(&manual_properties), 
                     (string("Set properties of atoms by labels. ") +
-                            "For detail description see manual.").c_str())
+                            "For detailled description see manual.").c_str())
       ("tolerance,t", po::value<double>(&pos_tol)->default_value(0.75), 
-                      "Skip structures with atoms closer than arg Angstrom.")
-      ("merge-symmetric,m", "Merge output equivalent (by symmetry) structures.")
-      ("coulomb-energy,q", "Calculate Coulomb energy of output structures.")
+                      "Skip structures with atoms closer than <arg> Angstrom.")
+      ("merge-symmetric,m", "Merge output structures that are equivalent by symmetry.")
+      ("coulomb-energy,q", "Calculate Coulomb energies of output structures.")
       ("store-structures,n", po::value<vector<string> >(&structure_sampling),
-                             "Store structures selectively. See manual for details.")
+                            "Generate structures according to certain criteria. See manual for details.")
       ("archive,a", po::value<std::string>(&output_tar_file)->default_value(""), 
-                   (string("A target archive file for the all output files. If empty (default) no packing will be performed. ") +
+                   (string("A target archive file for all output files. If empty (default) no packing will be performed. ") +
 #ifdef LIBARCHIVE_ENABLED
                            "The option is enabled."   
 #else
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 #endif    
                      ).c_str() )
       ("output,o", po::value<std::string>(&output_file)->default_value("supercell"), 
-                   "Output file name base. The extension will be cif. The multiplicity of structure will be added."); 
+                   "Output file base name. The extension will be cif. The structure multiplicity will be added."); 
  
     po::variables_map vm; 
  
@@ -109,7 +109,11 @@ int main(int argc, char** argv)
        */ 
       if ( vm.count("help")  ) 
       { 
-        std::cout << "Disordered cell to ordered supercell program." << endl;
+	std::cout << "----------------------------------------------------" << endl;
+        std::cout << "Program generating supercells from crystal structures" << endl;
+        std::cout << "with partial occupancies and/or mixed-composition sites." << endl;
+        std::cout << "----------------------------------------------------" << endl;
+	std::cout << "supercell -i <INPUT_FILE> <OPTIONS>" << endl;
         std::cout << "The values in parenthesis are default values." << endl;
         std::cout << desc << endl;
         
@@ -134,9 +138,15 @@ int main(int argc, char** argv)
     //Title
     if(verb_level > 0)
     {  
-      cout << "-------------------------------" << endl;
-      cout << "-----------Title---------------" << endl;
-      cout << "-------------------------------" << endl;
+      cout << "----------------------------------------------------" << endl;
+      cout << "-               Supercell program                  -" << endl;
+      cout << "----------------------------------------------------" << endl;
+      cout << "-      Authors:	* Kirill Okhotnikov               -" << endl;
+      cout << "-		(kirill.okhotnikov@gmail.com)     -" << endl;
+      cout << "-		* Sylvian Cadars                  -" << endl;
+      cout << "-		(sylvian.cadars@cnrs-orleans.fr)  -" << endl;
+      cout << "----------------------------------------------------" << endl;
+      cout << endl;
     }  
     
     dry_run = vm.count("dry-run") > 0;

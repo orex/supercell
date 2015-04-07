@@ -1193,8 +1193,11 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
     cout << "Total charge oxydation state (cif):  " << total_input_charge << endl;
     cout << "Total charge used:   " << total_used_charge << endl << endl;
 
+    cout << "----------------------------------------------------------------" << endl;
     cout << "| Atom Label\t| \tcharge  \t| mult\t| occup x mult" << endl;
     cout << "| \t\t| Ox. state\t| Used\t| (cif)\t|\t\t " << endl;
+    cout << "----------------------------------------------------------------" << endl;
+
     for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
     {
 
@@ -1204,6 +1207,7 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
                     << (*it).second.cif_mult      << "\t|  "              
                     << (*it).second.occup  << endl;
     }
+    cout << "----------------------------------------------------------------" << endl;
     cout << endl;
   }
   
@@ -1414,52 +1418,68 @@ bool d2o_main_class::show_groups_information()
 {
   cout << "Chemical formula of the supercell: " << get_formula_by_groups() << endl;
   cout << "Total charge of supercell: " << ss_charge_by_occup_groups() << endl;
-  cout << "Minimal distance between groups: " << min_dist_between_groups << endl;
+  cout << endl ;
+  cout << "----------------------------------------------------" << endl ;
+  cout << " Identification of groups of crystallographic sites " << endl ;
+  cout << "----------------------------------------------------" << endl ;
   
   for(int i = 0; i < occup_groups.size(); i++)
   {
-    cout << " Group " << i << " has " 
+    cout << endl;
+    cout << " Group " << i + 1 << " (" 
          << occup_groups[i].number_of_sites() 
-         << " sites:" << endl;
+         << " atomic positions in supercell):" << endl;
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
-      cout << "   Atom #" << j + 1 << " - "
-           << occup_groups[i].items[j].label << "(occup: " 
+      cout << "  * Site #" << j + 1 << ": "
+           << occup_groups[i].items[j].label << " (occ. " 
            << occup_groups[i].items[j].occup_target << ")";
       
       if( occup_groups[i].is_fixed() )
-        cout << " stored with occupancy " << 
+        cout << " -> FIXED with occupancy " << 
                 boost::format("%.3f") %
                 ( double(occup_groups[i].items[j].num_of_atoms_sc) /
-                  double(occup_groups[i].number_of_sites() ) );
+                  double(occup_groups[i].number_of_sites() ) ) << "." << endl;
       else
-        cout << " has now " << occup_groups[i].items[j].num_of_atoms_sc << " sites.";
+        cout << " -> distributed over " << occup_groups[i].items[j].num_of_atoms_sc << 
+		" positions out of " << occup_groups[i].number_of_sites() << " (actual occ.: "
+		<< boost::format("%.3f") %
+		( double(occup_groups[i].items[j].num_of_atoms_sc) /
+                  double(occup_groups[i].number_of_sites() ) ) << ")." << endl;;
       
       cout << endl;
     }
 
     if( occup_groups[i].max_dis_within_group > 1E-3)
-      cout << "  Maximum distance within the group is " << occup_groups[i].max_dis_within_group << endl;
+    {
+      cout << "  Crystallographic sites with different positions found for this group." << endl;
+      cout << "  Maximum distance within the group: " << occup_groups[i].max_dis_within_group << " A." << endl;
+    }
     else
-      cout << "  All atoms occupied the same site." << endl;
+      ;
+      // cout << "  All atoms occupied the same site." << endl;
     
     if(occup_groups[i].get_number_of_combinations() != 1)
       cout << "  Number of combinations for the group is " << occup_groups[i].get_number_of_combinations() << endl;
     else
-      cout << "  The atom position within the group are set unambiguously" << endl;
+      ;
+      // cout << "  The atom position within the group are set unambiguously" << endl;
     
     if( (occup_groups[i].get_total_num_occup_sites() < occup_groups[i].number_of_sites() ) &&
         (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol) )
     {        
-      cout << "  WARN: Vacancy introduced to fully occupied state." << endl;
+      cout << "  WARNING: Vacancy introduced in a crystallographic site taht was originally fully-occupied." << endl;
     }
     
-    if(occup_groups[i].is_fixed())    
-      cout << "  FIXED: No combinations will be applied." << endl;
-    
-    cout << endl;
+    /* if(occup_groups[i].is_fixed())
+       cout << "  FIXED: No combinations will be applied." << endl;
+    */
+
   }
-  
+
+  cout << endl;
+  cout << "Minimal distance between atoms of two distinct groups: " << min_dist_between_groups << " A." << endl;
+
   int64_t t_comb = total_combinations();
   string t_comb_approx = "";
   if(t_comb > 1E5)
@@ -1468,8 +1488,12 @@ bool d2o_main_class::show_groups_information()
     fmt % double(t_comb);
     t_comb_approx = fmt.str();
   }  
-  cout << "Total combinations is " << t_comb 
+  
+  cout << endl ;
+  cout << "-------------------------------------------------" << endl ;
+  cout << "The total number of combinations is " << t_comb 
        << t_comb_approx << endl;
+  cout << "-------------------------------------------------" << endl ;
   
   return true;
 }
