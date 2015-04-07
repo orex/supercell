@@ -46,13 +46,19 @@
 \section{Synopsis}
 %%%%%%%%%%%%%%%%%%
 
-\Prog{supercell} \Opt{-h, \Dd help}\\
-\Prog{supercell} \oOpt{OPTIONS} \OptArg{-i }{input-file} \\
-\Prog{supercell} \oOpt{OPTIONS} \OptArg{\Dd input=}{input-file} \\
+\begin{Description}\setlength{\itemsep}{0cm}
+\item[]
+\Prog{supercell} \Opt{-h, \Dd help}
+\item[]
+\Prog{supercell} \oOpt{OPTIONS} \OptArg{-i }{input-file} 
+\item[]
+\Prog{supercell} \oOpt{OPTIONS} \OptArg{\Dd input=}{input-file}
+
+\end{Description}
 
 \section{Description}
 %%%%%%%%%%%%%%%%%%%%%
-\Prog{supercell} ... Some description here ...
+Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties required ideal periodicity. In opposite of many reported research, which implies periodicity to disordered system ``by hand'' and ad-hoc the program \Prog{supercell} allows to apply the approximation systematically with all-in-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program is fast-algorithms implementation and availability under GPL license. 
 
 \section{Options}
 %%%%%%%%%%%%%%%%%
@@ -72,10 +78,10 @@
       With the option the program will do everything but write the files. Be careful if you switched \Opt{-m}, \Opt{\Dd merge-by-distance} option: the program will go through all crystal structures, so even the dry-run mode can take time.
 
 \item[\OptArg{-s }{cell-size}, \OptArg{\Dd cell-size=}{cell-size}]
-      The option specifies the size of the supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c unit cell vectors of input system. Default is "1x1x1".
+      The option specifies the size of the supercell. The format is AxBxC, where A, B, C are positive integer multipliers of \textbf{a}, \textbf{b} and \textbf{c} unit cell vectors of input system. Default is "1x1x1".
 
 \item[\OptArg{-c }{balance-type}, \OptArg{\Dd charge-balance=}{balance-type}]
-      The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program.  Charges (i.e. oxydation states) may be specified with the \Opt{-p}, \Opt{\Dd labels-properties} option (see below) or directly in the CIF file ("\_atom\_type\_oxidation\_number"). The possible arguments are:
+      The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it even can freeze the program.  Charges (i.e. oxydation states) may be specified with the \Opt{-p}, \Opt{\Dd labels-properties} option (see below) or directly in the CIF file ("\_atom\_type\_oxidation\_number"). The possible arguments are:
       \begin{itemize}
          \item[no]   No charge balancing. The option will set all charges to zero.
          \item[try]  Default. Try to charge balance system, if initial system is not charged.
@@ -96,7 +102,7 @@
        \end{itemize}
        The $<$property\_name$>$ is the name of the property you want to set for all specified crystallographic sites. Some properties can have values, which you should set using equal symbol. The properties can be:
        \begin{itemize}
-         \item[c\Lbr charge\Rbr] Set the charge of atoms with specified label(s). Floating-point value in elementary charge units.
+         \item[c\Lbr harge\Rbr] Set the charge of atoms with specified label(s). Floating-point value in elementary charge units.
          \item[p\Lbr opulation\Rbr] Number of atoms with specific label(s) in output supercell structure.
          \item[\Lbr not\Rbr fixed] Exclude crystallographic sites from the combinatorial analysis. The output supercell file will contain partial occupancies for the corresponding sites (if there were partial occupancies in the original structures).
        \end{itemize}
@@ -106,7 +112,7 @@
       The argument of the option specifies the maximum distance (in Angstroms) between sites that should be contained within the same group (meaning that the corresponding positions in the supercell cannot be occupied simultaneously). Check carefully the minimal distance between 2 atoms assigned to different groups, which is written in the output of \Prog{supercell} before changing this parameter. Default \OptArg{}{tolerance}=0.75 A.
 
 \item[\Opt{-m}, \Opt{\Dd merge-by-distance}]
-      The options enables the symmetry-check algorithm on output structures. Structures that can be transform to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than 10\Circum 4 total combinations it is recommended to use verbosity level 2 or higher to trace program execution.
+      The options enables the symmetry-check algorithm on output structures. Structures that can be transform to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than $10^4$ total combinations it is recommended to use verbosity level 2 or higher to trace program execution.
       
 \item[\OptArg{-n }{selection}, \OptArg{\Dd store-structures=}{selection}]
       The option allows you to generate subsets of structures (rather than all) according to certain criteria (listed below). The option is very useful to both save disk space and facilitate navigation among files for large numbers combinations (typically more than $10^5$).The argument of the option has special structure $<$sampling type$><$count$>$. The $<$count$>$ is a positive integer value or zero. $<$sampling type$>$ is a letter which sets the sampling (selection) mode:
@@ -128,17 +134,15 @@
       The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be $<$output-prefix$>$\_ind$<$sampling type$><$index$>$.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$sampling type$><$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
       
 \item[\OptArg{-a }{archive-file}, \OptArg{\Dd archive=}{archive-file}]
-      The option specify a target archive file for the all output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required \Prog{libarchive} to be available in the system. Otherwise the option will be disabled. Check the status by \Opt{-h} option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''.
+      The option specify a target archive file for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required \Prog{libarchive} \URL{http://www.libarchive.org/} to be available in the system. Otherwise the option will be disabled. Check the status by \Opt{-h} option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''.
 
 \end{Description}
 
 \section{Files}
 %%%%%%%%%%%%%%%
 
-\begin{Description}\setlength{\itemsep}{0cm}
-\item[\File{somthing}] The \LaTeX\ file containing this Man-page.
-\item[\URL{1.pdf}] The PDF version of this document.
-\end{Description}
+%\begin{Description}\setlength{\itemsep}{0cm}
+%\end{Description}
 
 \section{Examples}
 %%%%%%%%%%%%%%%
@@ -148,14 +152,14 @@
 %%%%%%%%%%%%%%%%%%%%%%
 
 \begin{description}\setlength{\itemsep}{0cm}
-\item[openbabel] Need.
+\item[openbabel] Needed.
+\item[libarchive] Optional. 
 \end{description}
 
-\section{Bugs}
+\section{Bugs and limitations}
 
 \begin{description}\setlength{\itemsep}{0cm}
-\item In case of huge (more than 10\Circum 9) number of total combaintions \Prog{supercell} can work quite slow or even freeze. The situation most of the time appears with large supresses. Always try small cells first.
-\item If you are merging significant number of combinations ( more than 10\Circum 5) the program can make get all available physical memory and freeze your system. Control \Prog{supercell} with \Prog{top} etc.
+\item In case of huge (more than $10^9$) number of total combaintions \Prog{supercell} can work quite slow or even freeze. The situation most of the time appears with large supresses. Always try small cells first.
 
 \end{description}
 
