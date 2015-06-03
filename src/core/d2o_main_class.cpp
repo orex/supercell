@@ -1439,13 +1439,13 @@ bool d2o_main_class::show_groups_information()
         cout << " -> FIXED with occupancy " << 
                 boost::format("%.3f") %
                 ( double(occup_groups[i].items[j].num_of_atoms_sc) /
-                  double(occup_groups[i].number_of_sites() ) ) << "." << endl;
+                  double(occup_groups[i].number_of_sites() ) ) << ".";
       else
         cout << " -> distributed over " << occup_groups[i].items[j].num_of_atoms_sc << 
 		" positions out of " << occup_groups[i].number_of_sites() << " (actual occ.: "
 		<< boost::format("%.3f") %
 		( double(occup_groups[i].items[j].num_of_atoms_sc) /
-                  double(occup_groups[i].number_of_sites() ) ) << ")." << endl;;
+                  double(occup_groups[i].number_of_sites() ) ) << ").";
       
       cout << endl;
     }
@@ -1468,7 +1468,7 @@ bool d2o_main_class::show_groups_information()
     if( (occup_groups[i].get_total_num_occup_sites() < occup_groups[i].number_of_sites() ) &&
         (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol) )
     {        
-      cout << "  WARNING: Vacancy introduced in a crystallographic site taht was originally fully-occupied." << endl;
+      cout << "  WARNING: Vacancy introduced in a crystallographic site, which was originally fully-occupied." << endl;
     }
     
     /* if(occup_groups[i].is_fixed())
@@ -1688,7 +1688,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   if(verbose_level >= 1)
    show_groups_information();
   
-  if(total_combinations() > 7E8)
+  if(total_combinations() > 8E8)
   {
     cerr << "ERROR: Number of total combinations is too high to work with." << endl;
     return false;

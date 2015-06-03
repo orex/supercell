@@ -1,0 +1,77 @@
+#------------------------------------------------------------------------------
+#$Date: 2014-07-12 08:06:43 +0000 (Sat, 12 Jul 2014) $
+#$Revision: 120115 $
+#$URL: file:///home/coder/svn-repositories/cod/cif/9/00/47/9004745.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/. The original data for this entry
+# were provided the American Mineralogist Crystal Structure Database,
+# http://rruff.geo.arizona.edu/AMS/amcsd.php
+#
+# The file may be used within the scientific community so long as
+# proper attribution is given to the journal article from which the
+# data were obtained.
+#
+data_9004745
+loop_
+_publ_author_name
+'Bonazzi, P.'
+'Bindi, L.'
+'Bernardini, G. P.'
+'Menchetti, S.'
+_publ_section_title
+;
+ A model for the mechanism of incorporation of Cu, Fe and Zn in the
+ stannite - kesterite series, Cu2FeSnS4 - Cu2ZnSnS4
+ Sample: Fe100
+;
+_journal_name_full               'The Canadian Mineralogist'
+_journal_page_first              639
+_journal_page_last               647
+_journal_volume                  41
+_journal_year                    2003
+_chemical_formula_sum            'Cu2 Fe S4 Sn'
+_chemical_name_mineral           Stannite
+_space_group_IT_number           121
+_symmetry_space_group_name_Hall  'I -4 2'
+_symmetry_space_group_name_H-M   'I -4 2 m'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                90
+_cell_length_a                   5.4495
+_cell_length_b                   5.4495
+_cell_length_c                   10.726
+_cell_volume                     318.531
+_exptl_crystal_density_diffrn    4.482
+_[local]_cod_chemical_formula_sum_orig 'Cu2 Fe Sn S4'
+_cod_database_code               9004745
+loop_
+_symmetry_equiv_pos_as_xyz
+x,y,z
+1/2+x,1/2+y,1/2+z
+-y,-x,z
+1/2-y,1/2-x,1/2+z
+y,-x,-z
+1/2+y,1/2-x,1/2-z
+-x,y,-z
+1/2-x,1/2+y,1/2-z
+-x,-y,z
+1/2-x,1/2-y,1/2+z
+y,x,z
+1/2+y,1/2+x,1/2+z
+-y,x,-z
+1/2-y,1/2+x,1/2-z
+x,-y,-z
+1/2+x,1/2-y,1/2-z
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+Cu 0.00000 0.50000 0.25000 1.0
+Fe 0.00000 0.00000 0.00000 1.0
+Sn 0.00000 0.00000 0.50000 1.0
+S 0.75581 0.75581 0.87012 0.5
+Se 0.75581 0.75581 0.87012 0.5

@@ -1,0 +1,63 @@
+----------------------------------------------------
+-               Supercell program                  -
+----------------------------------------------------
+-      Authors:	* Kirill Okhotnikov               -
+-		(kirill.okhotnikov@gmail.com)     -
+-		* Sylvian Cadars                  -
+-		(sylvian.cadars@cnrs-orleans.fr)  -
+----------------------------------------------------
+
+Manual properties
+Label	|fixed	|charge	|popul	|
+S	|N/A	|N/A	|3	|
+Se	|N/A	|N/A	|5	|
+
+Initial system:
+  Chemical Formula: Cu4 Fe2 S4 Se4 Sn2
+
+Supercell system (1x1x1):
+  Size a=5.4495, b=5.4495, c=10.726
+
+Current charge balance option is "try"
+Total charge oxydation state (cif):  nan
+Total charge used:   0
+
+----------------------------------------------------------------
+| Atom Label	| 	charge  	| mult	| occup x mult
+| 		| Ox. state	| Used	| (cif)	|		 
+----------------------------------------------------------------
+|  Cu		|  nan		|  0	|  4	|  4
+|  Fe		|  nan		|  0	|  2	|  2
+|  S		|  nan		|  0	|  8	|  4
+|  Se		|  nan		|  0	|  8	|  4
+|  Sn		|  nan		|  0	|  2	|  2
+----------------------------------------------------------------
+
+Chemical formula of the supercell: Cu4 Fe2 S3 Se5 Sn2
+Total charge of supercell: 0
+
+----------------------------------------------------
+ Identification of groups of crystallographic sites 
+----------------------------------------------------
+
+ Group 1 (4 atomic positions in supercell):
+  * Site #1: Cu (occ. 1) -> FIXED with occupancy 1.000.
+
+ Group 2 (2 atomic positions in supercell):
+  * Site #1: Fe (occ. 1) -> FIXED with occupancy 1.000.
+
+ Group 3 (8 atomic positions in supercell):
+  * Site #1: S (occ. 0.5) -> distributed over 3 positions out of 8 (actual occ.: 0.375).
+  * Site #2: Se (occ. 0.5) -> distributed over 5 positions out of 8 (actual occ.: 0.625).
+  Number of combinations for the group is 56
+
+ Group 4 (2 atomic positions in supercell):
+  * Site #1: Sn (occ. 1) -> FIXED with occupancy 1.000.
+
+Minimal distance between atoms of two distinct groups: 2.31822 A.
+
+-------------------------------------------------
+The total number of combinations is 56
+-------------------------------------------------
+16 symmetry operation found for supercell.
+Combinations after merge: 5

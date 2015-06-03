@@ -1,0 +1,9 @@
+The example generates Table VII in 
+
+Dun, C., Holzwarth, N. a W., Li, Y., Huang, W., & Carroll, D. L. (2014). 
+Cu2ZnSnSxO4-x and Cu2ZnSnSxSe4-x: First principles simulations of optimal 
+alloy configurations and their energies. 
+Journal of Applied Physics, 115(19). 
+doi:10.1063/1.4876447
+
+Supercell should be installed. Run script df_cfg.bash The order of table rows will be different.

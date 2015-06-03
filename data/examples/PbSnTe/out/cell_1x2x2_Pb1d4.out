@@ -1,0 +1,57 @@
+----------------------------------------------------
+-               Supercell program                  -
+----------------------------------------------------
+-      Authors:	* Kirill Okhotnikov               -
+-		(kirill.okhotnikov@gmail.com)     -
+-		* Sylvian Cadars                  -
+-		(sylvian.cadars@cnrs-orleans.fr)  -
+----------------------------------------------------
+
+Manual properties
+Label	|fixed	|charge	|popul	|
+Pb1	|N/A	|N/A	|4	|
+Sn1	|N/A	|N/A	|12	|
+
+Initial system:
+  Chemical Formula: Pb2 Sn2 Te4
+
+Supercell system (1x2x2):
+  Size a=6.39, b=12.78, c=12.78
+
+Current charge balance option is "try"
+Total charge oxydation state (cif):  nan
+Total charge used:   0
+
+----------------------------------------------------------------
+| Atom Label	| 	charge  	| mult	| occup x mult
+| 		| Ox. state	| Used	| (cif)	|		 
+----------------------------------------------------------------
+|  Pb1		|  nan		|  0	|  4	|  2
+|  Sn1		|  nan		|  0	|  4	|  2
+|  Te1		|  nan		|  0	|  4	|  4
+----------------------------------------------------------------
+
+Chemical formula of the supercell: Pb4 Sn12 Te16
+Total charge of supercell: 0
+
+----------------------------------------------------
+ Identification of groups of crystallographic sites 
+----------------------------------------------------
+
+ Group 1 (16 atomic positions in supercell):
+  * Site #1: Pb1 (occ. 0.5) -> distributed over 4 positions out of 16 (actual occ.: 0.250).
+  * Site #2: Sn1 (occ. 0.5) -> distributed over 12 positions out of 16 (actual occ.: 0.750).
+  Number of combinations for the group is 1820
+
+ Group 2 (16 atomic positions in supercell):
+  * Site #1: Te1 (occ. 1) -> FIXED with occupancy 1.000.
+
+Minimal distance between atoms of two distinct groups: 3.195 A.
+
+-------------------------------------------------
+The total number of combinations is 1820
+-------------------------------------------------
+256 symmetry operation found for supercell.
+Symmetries operation assigned to groups.
+
+Combinations after merge: 33

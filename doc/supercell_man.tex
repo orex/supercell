@@ -146,22 +146,48 @@ Disordered compounds are very important now for fundamental science and industri
 
 \section{Examples}
 %%%%%%%%%%%%%%%
+The examples are based on file \File{\$\{SUPERCELL\_SRC\_DIR\}/data/examples/Ca2Al2SiO7.cif}.  
 
+\begin{itemize}\setlength{\itemsep}{0.4cm}
+\item Dry run. Obtain information about the structure: group assignment, cell size, etc. It is good practice to start a new structure processing with tis command. This run doesn't produce any output files.
+
+\begin{description}
+ \item \SP \SP \SP \SP \SP \SP \textbf{supercell -d -i Ca2Al2SiO7.cif}
+\end{description}
+
+\item Dry run. Obtain information about the structure.
+
+\begin{description}
+ \item \SP \SP \SP \SP \SP \SP \textbf{supercell -d -i Ca2Al2SiO7.cif -s 1x1x2}
+\end{description}
+
+\item Dry run. Obtain information about the structure.
+
+\SP \SP \SP \SP\textbf{supercell -d -i Ca2Al2SiO7.cif -s 1x1x2}
+% 
+
+\end{itemize}
+
+Some advances examples, with \Prog{supercell} embedded to bash scripts you can find in data/examples folder.
 
 \section{Requirements}
 %%%%%%%%%%%%%%%%%%%%%%
 
 \begin{description}\setlength{\itemsep}{0cm}
-\item[openbabel] Needed.
+\item[openbabel] Required.
+\item[libeigen] Required.
 \item[libarchive] Optional. 
 \end{description}
 
 \section{Bugs and limitations}
 
-\begin{description}\setlength{\itemsep}{0cm}
-\item In case of huge (more than $10^9$) number of total combaintions \Prog{supercell} can work quite slow or even freeze. The situation most of the time appears with large supresses. Always try small cells first.
+\begin{Description}\setlength{\itemsep}{0cm}
+\item[Supercell size limitation.]
+The maximum number of permutations should not exceed limit of 800 million. If more, the program will return a error. If the number of permutations within the groups is less than the limit, but total number of combinations is above the limit, the pro gram can be executed step-by-step with some groups excluded from permutation. Due to rapid increasing of number of combination with changing cell size the program can crash with arithmetic overflow at large cell, when number of combination more than $2^{63}$ (around $10^{18}$) due to finite size integer variables in the program.
+\item[Filesystem limitation.]
+Although, \Prog{supercell} can produce millions of files, most of the filesystems can't manage more than one thousand files in one folder with acceptable performance. Be careful, if you need to process a lot of combination, sample them or use \Opt{-a} option.
 
-\end{description}
+\end{Description}
 
 \section{See Also}
 %%%%%%%%%%%%%%%%%%
@@ -182,7 +208,7 @@ Version: \Version\ of \Date.
      All rights to the program belongs to authors.
 
 \item[License] This program can be redistributed and/or modified under the
-     terms of the GNU GNU GENERAL PUBLIC LICENSE Version 2.
+     terms of the GNU GENERAL PUBLIC LICENSE Version 2.
 
 \item[Misc]
      The actual version of  \Prog{supercell} may be found on my homepage\\

@@ -1,1 +1,11 @@
-TODO
+              IMPORTANT!!!
+A new version of openbabel change default cif file plugin to mmcifformat.o. This plugin is not compatible with supercell program. To run supercell program you should delete the 
+file mmcifformat.o from location, where openbabel is installed.
+
+Superquick installation.
+
+  git clone --recursive https://github.com/orex/supercell.git && cd supercell && \
+  mkdir build && cd build && cmake ../ && make && sudo make install
+
+Dependencies: C++ compiler and linker, Boost 1.46 or higher, CMAKE 2.6 or higher, OpenBabel, Eigen 3.x, LibArchive (optionally). Perl and \LaTeX\ are needed to compile manual.
+It is good idea to check .travis.yml file, if you are working on Ubuntu/Debian.

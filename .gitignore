@@ -1,6 +1,7 @@
 build/
 nbproject/
 tmp/
+obsolete/
 
 # Compiled Object files
 *.slo
