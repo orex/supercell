@@ -18,7 +18,6 @@ install:
  - git clone https://github.com/openbabel/openbabel.git
  - cd openbabel && mkdir build && cd build
  - cmake ../ -DBUILD_GUI=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-O0" -DWITH_INCHI=OFF && make && sudo make install
- - sudo rm -rf /usr/local/lib/openbabel/*/mmcifformat.so
  - cd ~
 
 before_script:
