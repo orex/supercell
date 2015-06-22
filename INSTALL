@@ -1,6 +1,4 @@
-              IMPORTANT!!!
-A new version of openbabel change default cif file plugin to mmcifformat.o. This plugin is not compatible with supercell program. To run supercell program you should delete the 
-file mmcifformat.o from location, where openbabel is installed.
+IMPORTANT!!! Please note, that not all version of OpenBabel support partial occupancies. Please, use the version form https://github.com/openbabel/openbabel
 
 Superquick installation.
 
