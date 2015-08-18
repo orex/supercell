@@ -32,3 +32,16 @@ data/examples/beta-Li3PS4/Li3PS4_Li2_?
 data/examples/Cu2ZnSnSxSe4-x/cell111
 data/examples/PbSnTe/out
 data/examples/FeSbO4/out
+
+data/examples/PbSnTe-SQS/SQS-1x1x2
+data/examples/PbSnTe-SQS/SQS-1x2x2
+data/examples/PbSnTe-SQS/cell_1x1x2/
+data/examples/PbSnTe-SQS/cell_1x2x2/
+data/examples/ice-Ih-adv/ice-Ih-cfgs-l1/
+data/examples/ice-Ih-adv/ice-Ih-cfgs-l2/
+data/examples/ice-Ih-adv/ice-Ih-cfgs-ready/
+data/examples/ice-Ih/ice-Ih-cfgs.anlz
+data/examples/ice-Ih/ice-Ih-cfgs/
+
+#GULP
+gulp

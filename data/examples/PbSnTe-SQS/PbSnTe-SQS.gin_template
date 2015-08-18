@@ -1,0 +1,15 @@
+distance
+
+cutd 6.40
+
+name @NAME@
+cell
+@CELLABC@    90.0 90.0 90.0
+frac
+@FRAC@
+space
+1
+lennard 0 0
+Pb  Sn    -1.0        0.0    @RMIN@  @RMAX@
+Pb  Pb    +1.0        0.0    @RMIN@  @RMAX@
+Sn  Sn    +1.0        0.0    @RMIN@  @RMAX@

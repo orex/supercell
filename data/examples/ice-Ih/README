@@ -1,0 +1,8 @@
+The example generates and analyzed configuration for ice-Ih cell 1x1x1 (direct approach). 
+Supercell should be installed. GULP should be in the path or variable PRG_GULP should be set
+before run script df_cfg.bash
+
+export PRG_GULP=<full path to gulp program>
+
+The result file ice-Ih-cfgs.anlz shows, which configurations fulfill conditions of all oxygen atoms 2 coordinated (CNO) and no close contacts of hydrogen (H-H).
+

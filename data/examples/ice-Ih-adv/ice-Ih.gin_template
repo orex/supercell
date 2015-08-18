@@ -1,0 +1,11 @@
+distance 
+
+cutd 1.0
+
+name @NAME@
+cell
+4.497479 4.497479 7.322382   90.00 90.00 120.0
+frac
+@FRAC@
+space
+1

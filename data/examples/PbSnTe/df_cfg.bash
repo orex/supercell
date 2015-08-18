@@ -12,9 +12,9 @@ do
   do
     P=`echo "$M $j" | awk '{print $1/$2}'`
     if [[ -z `echo $P | grep "\." ` ]]; then
-      supercell -d -i PbSnTe2.cif -s $i -m -p "Pb1:p=$P" -p "Sn1:p=$(($M-$P))" -v 2  > out/cell_${i}_Pb1d${j}.out 2>&1 &
+      /usr/bin/time -f "%e" -o out/cell_${i}_Pb1d${j}.time supercell -d -i PbSnTe2.cif -s $i -m -p "Pb1:p=$P" -p "Sn1:p=$(($M-$P))" -v 2  > out/cell_${i}_Pb1d${j}.out 2>&1 &
     fi
-  done  
+  done
 done
 
 echo "The process is long, please wait"

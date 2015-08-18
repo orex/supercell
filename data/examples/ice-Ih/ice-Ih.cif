@@ -1,0 +1,100 @@
+#------------------------------------------------------------------------------
+#$Date: 2014-07-12 08:06:43 +0000 (Sat, 12 Jul 2014) $
+#$Revision: 120115 $
+#$URL: file:///home/coder/svn-repositories/cod/cif/9/01/52/9015208.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/. The original data for this entry
+# were provided the American Mineralogist Crystal Structure Database,
+# http://rruff.geo.arizona.edu/AMS/amcsd.php
+#
+# The file may be used within the scientific community so long as
+# proper attribution is given to the journal article from which the
+# data were obtained.
+#
+data_9015208
+loop_
+_publ_author_name
+'Fortes, A. D.'
+'Wood, I. G.'
+'Grigoriev, D.'
+'Alfredsson, M.'
+'Kipfstuhl, S.'
+'Knight, K. S.'
+'Smith, R. I.'
+_publ_section_title
+;
+ No evidence for large-scale proton ordering in Antarctic ice from powder neutron diffraction
+ Note: T = 100 K
+ Note: known as ice-IH
+;
+_journal_name_full               'Journal of Chemical Physics'
+_journal_page_first              11376
+_journal_page_last               11379
+_journal_volume                  120
+_journal_year                    2004
+_chemical_compound_source        'Kohen Station, Antarctica'
+_chemical_formula_sum            'H2 O'
+_chemical_name_mineral           Ice
+_space_group_IT_number           194
+_symmetry_space_group_name_Hall  '-P 6c 2c'
+_symmetry_space_group_name_H-M   'P 63/m m c'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                120
+_cell_length_a                   4.497479
+_cell_length_b                   4.497479
+_cell_length_c                   7.322382
+_cell_volume                     128.269
+_database_code_amcsd             0018366
+_exptl_crystal_density_diffrn    0.933
+_[local]_cod_chemical_formula_sum_orig 'O H2'
+_cod_database_code               9015208
+loop_
+_space_group_symop_operation_xyz
+x,y,z
+-x,-x+y,1/2+z
+x,x-y,1/2-z
+-x+y,-x,1/2-z
+x-y,x,1/2+z
+-y,-x,z
+y,x,-z
+y,-x+y,-z
+-y,x-y,z
+x-y,-y,1/2+z
+-x+y,y,1/2-z
+x,y,1/2-z
+-x,-y,1/2+z
+x,x-y,z
+-x,-x+y,-z
+x-y,x,-z
+-x+y,-x,z
+y,x,1/2+z
+-y,-x,1/2-z
+-y,x-y,1/2-z
+y,-x+y,1/2+z
+-x+y,y,z
+x-y,-y,-z
+-x,-y,-z
+loop_
+_atom_site_aniso_label
+_atom_site_aniso_U_11
+_atom_site_aniso_U_22
+_atom_site_aniso_U_33
+_atom_site_aniso_U_12
+_atom_site_aniso_U_13
+_atom_site_aniso_U_23
+O 0.00790 0.00790 0.00600 0.00400 0.00000 0.00000
+H1 0.02110 0.02110 0.00820 0.01060 0.00000 0.00000
+H2 0.01690 0.01240 0.01740 0.00620 0.00370 0.00750
+loop_
+_atom_site_label
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+O 0.33333 0.66667 0.06140 1.00000
+H1 0.33333 0.66667 0.19640 0.50000
+H2 0.45100 0.90190 0.01790 0.50000
+_journal_paper_doi 10.1063/1.1765099
