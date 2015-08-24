@@ -6,6 +6,8 @@ do
   supercell -i stannite.cif -s 1x1x1 -p "S:p=$i" -p "Se:p=$((8-$i))" -m -o cell111/S$i/stannite-S$i > cell111/S$i/log.out &
 done
 
+wait
+
 echo -e "x\tg_i"
 for i in {0..8}
 do
