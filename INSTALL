@@ -1,8 +1,10 @@
-IMPORTANT!!! Please note, that not all version of OpenBabel support partial occupancies. Please, use the version form https://github.com/openbabel/openbabel
+IMPORTANT!!! Please note, that not all version of OpenBabel support partial occupancies. Please, use the version from https://github.com/openbabel/openbabel
 
 Superquick installation.
 
-  git clone --recursive https://github.com/orex/supercell.git && cd supercell && \
+  1) Install openbabel from official site. https://github.com/openbabel/openbabel
+
+  2) git clone --recursive https://github.com/orex/supercell.git && cd supercell && \
   mkdir build && cd build && cmake ../ && make && sudo make install
 
 Dependencies: C++ compiler and linker, Boost 1.46 or higher, CMAKE 2.6 or higher, OpenBabel, Eigen 3.x, LibArchive (optionally). Perl and \LaTeX\ are needed to compile manual.

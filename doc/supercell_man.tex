@@ -186,6 +186,8 @@ Some advances examples, with \Prog{supercell} embedded to bash scripts you can f
 The maximum number of permutations should not exceed limit of 800 million. If more, the program will return a error. If the number of permutations within the groups is less than the limit, but total number of combinations is above the limit, the pro gram can be executed step-by-step with some groups excluded from permutation. Due to rapid increasing of number of combination with changing cell size the program can crash with arithmetic overflow at large cell, when number of combination more than $2^{63}$ (around $10^{18}$) due to finite size integer variables in the program.
 \item[Filesystem limitation.]
 Although, \Prog{supercell} can produce millions of files, most of the filesystems can't manage more than one thousand files in one folder with acceptable performance. Be careful, if you need to process a lot of combination, sample them or use \Opt{-a} option.
+\item[Symmetry information handling in input file.]
+The \Prog{supercell} program used \Prog{openbabel} libraries to handle symmetry operations in input file. The algorithm, implemented there, gives wrong result for some structures. The problem can be fully solved by converting input file to P1 structure with any other software. In most of the cases, the problem can be solved by removing "\_space\_group\_IT\_number" tag from input cif file.
 
 \end{Description}
 
