@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Sat Feb  1 13:56:17 CET 2014
+.\" Manual page created with latex2man on Fri Aug 28 15:13:37 CEST 2015
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -10,7 +10,7 @@
 
 .fi
 ..
-.TH "SUPERCELL" "1" "2013/09/01" "Scientific Tools " "Scientific Tools "
+.TH "SUPERCELL" "1" "2015/04/03" "Scientific Tools " "Scientific Tools "
 .SH NAME
 
 .PP
@@ -20,22 +20,22 @@ is a tool to convert a crystallographic structure with partial occupancy and/or 
 .SH SYNOPSIS
 
 .PP
+.TP
 supercell
 \fB\-h, --help\fP
-.br
+.TP
 supercell
 [\fBOPTIONS\fP]
 \fB\-i \fP\fIinput\-file\fP
-.br
+.TP
 supercell
 [\fBOPTIONS\fP]
 \fB--input=\fP\fIinput\-file\fP
-.br
 .PP
 .SH DESCRIPTION
 
-supercell
-\&.\&.\&. Some description here \&.\&.\&. 
+Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties required ideal periodicity. In opposite of many reported research, which implies periodicity to disordered system ``by hand\&'' and ad\-hoc the program supercell
+allows to apply the approximation systematically with all\-in\-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge\-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program is fast\-algorithms implementation and availability under GPL license. 
 .PP
 .SH OPTIONS
 
@@ -50,22 +50,27 @@ Change verbosity level from default 1. Level 0 \- quiet mode, only error output.
 .PP
 .TP
 \fB\-i \fP\fIinput\-file\fP, \fB--input=\fP\fIinput\-file\fP
-Required options. Input file with in CIF format. Only one file can be specified. 
+Required option. Input file in CIF format. Only one file can be specified. 
 .PP
 .TP
 \fB\-d\fP, \fB--dry\-run\fP
 The option is highly recommended for the first run of the program with new input specified. 
-With the option the program will do everything, but not write file. Be careful, if you switched \fB\-m\fP,
+With the option the program will do everything but write the files. Be careful if you switched \fB\-m\fP,
 \fB--merge\-by\-distance\fP
-option. With the option dry\-run should go through all crystal structures. So, it can take time. 
+option: the program will go through all crystal structures, so even the dry\-run mode can take time. 
 .PP
 .TP
 \fB\-s \fP\fIcell\-size\fP, \fB--cell\-size=\fP\fIcell\-size\fP
-The option specifies the size of supercell. The format is AxBxC, where A, B, C are positive integer multipliers of a, b and c vectors of input sell. Default is "1x1x1". 
+The option specifies the size of the supercell. The format is AxBxC, where A, B, C are positive integer multipliers of \fBa\fP,
+\fBb\fP
+and \fBc\fP
+unit cell vectors of input system. Default is "1x1x1". 
 .PP
 .TP
 \fB\-c \fP\fIbalance\-type\fP, \fB--charge\-balance=\fP\fIbalance\-type\fP
-The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can freeze the program. The possible arguments are 
+The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it even can freeze the program. Charges (i.e. oxydation states) may be specified with the \fB\-p\fP,
+\fB--labels\-properties\fP
+option (see below) or directly in the CIF file ("_atom_type_oxidation_number"). The possible arguments are: 
 .RS
 .TP
 no
@@ -82,18 +87,18 @@ Charge balance the system.
 .RE
 .TP
 \fB\-p \fP\fIlabels\-properties\fP, \fB--property=\fP\fIlabels\-properties\fP
-The option will allow you to specify some properties of atoms with specific label manually. The option allows you to use simple of extended syntax. 
+The option will allow you to manually specify some properties of atoms with specific labels. You may use the simple or the extended syntax. 
 .RS
 .TP
 .B *
 Simple: <label>:<property_name>[=<property_value>]. 
 .TP
 .B *
-Extended: "<OPT>(<labels>):{<properties>}". DONT forget to put extended syntax in quotes. 
+Extended: "<OPT>(<labels>):{<properties>}" (Do not forget to put extended syntax in quotes). 
 .RE
 .RS
 .PP
-Where <label> is a label of atom, which property you want to change, <labels> set of space separate labels. <OPT> is type of string processing you want to set for labels. The possible values of <OPT> are 
+Where <label> is the label of the crystallographic site, the properties of which you want to change, <labels> set of space\-separated labels. <OPT> is the type of string\-pprocessing you want use to set the labels. The possible values of <OPT> are: 
 .RS
 .RE
 .TP
@@ -101,44 +106,44 @@ p
 Treat the labels in parenthesis like a plain string. 
 .TP
 w, ""
-Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * \- any numbers of any symbol and ? \- any symbol (exactly one). 
+Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * (any numbers of any symbol) and ? (any symbol: exactly one). 
 .TP
 r
-Treat the labels in parenthesis like a Perl Regex. Syntax description you can find at \fBhttp://en.wikipedia.org/wiki/Regular_expression\fP\&.
+Treat the labels in parenthesis like a Perl Regex. Syntax description can be found at \fBhttp://en.wikipedia.org/wiki/Regular_expression\fP\&.
 .RE
 .RS
 .PP
-The <property_name> is a name of the property you want to set for all specified atoms. Some properties can have values, which you should set using equal symbol. The properties can be 
+The <property_name> is the name of the property you want to set for all specified crystallographic sites. Some properties can have values, which you should set using equal symbol. The properties can be: 
 .RS
 .RE
 .TP
-c[charge]
-Set charge of atoms with specified label(s). Floaing\-point value in elementary charge units. 
+c[harge]
+Set the charge of atoms with specified label(s). Floating\-point value in elementary charge units. 
 .TP
 p[opulation]
 Number of atoms with specific label(s) in output supercell structure. 
 .TP
 [not]fixed
-Exclude atoms from combinations. The output file will contain partial occupancy sites. 
+Exclude crystallographic sites from the combinatorial analysis. The output supercell file will contain partial occupancies for the corresponding sites (if there were partial occupancies in the original structures). 
 .RE
 .RS
 .PP
-Some fancy examples you can find below. 
+Some fancy examples can be found below. 
 .PP
 .RE
 .TP
 \fB\-t \fP\fItolerance\fP, \fB--tolerance=\fP\fItolerance\fP
-An argument of the option specify the maximum distance between sites, which will be treated like equivalent. Check carefully output of supercell
-before changing the parameter. Default \fB\fP\fItolerance\fP=0.75.
+The argument of the option specifies the maximum distance (in Angstroms) between sites that should be contained within the same group (meaning that the corresponding positions in the supercell cannot be occupied simultaneously). Check carefully the minimal distance between 2 atoms assigned to different groups, which is written in the output of supercell
+before changing this parameter. Default \fB\fP\fItolerance\fP=0.75
+A. 
 .PP
 .TP
 \fB\-m\fP, \fB--merge\-by\-distance\fP
-The options enables symmetry check algorithm for output structures. Structures, which can be transform to each other using crystallographic symmetry operation will be merged and stored as one structure. For cases with more than 10^4 of total combination it is recommended to treat execution of supercell
-using verbosity level 2 or higher to trace program execution. 
+The options enables the symmetry\-check algorithm on output structures. Structures that can be transform to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than 10^4 total combinations it is recommended to use verbosity level 2 or higher to trace program execution. 
 .PP
 .TP
 \fB\-n \fP\fIselection\fP, \fB--store\-structures=\fP\fIselection\fP
-The option allows you to selectively store structures. The option is very useful when number of combinations is quite significant (more than 10^5\&.The argument of the option has special structure <sampling type><count>\&. The <count> is integer positive value or zero. <sampling type> is a letter which set sapling type 
+The option allows you to generate subsets of structures (rather than all) according to certain criteria (listed below). The option is very useful to both save disk space and facilitate navigation among files for large numbers combinations (typically more than 10^5).The argument of the option has special structure <sampling type><count>\&. The <count> is a positive integer value or zero. <sampling type> is a letter which sets the sampling (selection) mode: 
 .RS
 .TP
 r
@@ -171,37 +176,84 @@ The option enable Coulumb energy calculations. The result energies for each stru
 option. 
 .PP
 .TP
-\fB\-o \fP\fIoutput\-prefix\fP, \fB--output=\fP\fIoutput\-prefix\fP
-The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be <output\-prefix>_ind<sampling type><index>\&.cif. For merging run the template will be <output\-prefix>_ind<sampling type><index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. The <output\-prefix>_coulomb_energy.txt file will be overwritten only in case of \fB--coulomb\-energy\fP
+\fB\-o \fP\fIoutput\-prefix\fP, \fB--output\-prefix=\fP\fIoutput\-prefix\fP
+The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output\-prefix=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be <output\-prefix>_i<sampling type><index>\&.cif. For merging run the template will be <output\-prefix>_i<sampling type><index>_w<weight>\&.cif, where <weight> \- number of the structures merged to the structure. Be careful, all existing files with mask "<output\-prefix>*.cif" will be deleted during not dry\-run. The <output\-prefix>_coulomb_energy.txt file will be overwritten only in case of \fB--coulomb\-energy\fP
 option enabled. 
+.PP
+.TP
+\fB\-a \fP\fIarchive\-file\fP, \fB--archive=\fP\fIarchive\-file\fP
+The option specify a target archive file for the output files, except energy file for all permuted configurations. If archive\-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required libarchive
+\fBhttp://www.libarchive.org/\fP
+to be available in the system. Otherwise the option will be disabled. Check the status by \fB\-h\fP
+option. The extension of the file should be set according to desired archive type: ``.zip\&'', ``.tar\&'', ``.tgz\&'', ``.tar.gz\&'', ``.tar.bz2\&'', ``.tar.xz\&''\&. 
 .PP
 .SH FILES
 
 .PP
-.TP
-somthing
-The LaTeX file containing this Man\-page. 
-.TP
-\fB1.pdf\fP
-The PDF version of this document. 
-.PP
 .SH EXAMPLES
 
+The examples are based on file supercell/data/examples/Ca2Al2SiO7\&.
+.PP
+.TP
+.B *
+Dry run. Obtain information about the structure: group assignment, cell size, etc. It is good practice to start a new structure processing with this command. This run doesn\&'t produce any output files. 
+.PP
+.RS
+.TP
+\fB \fP\fB \fP\fB \fP\fB \fP\fB \fP\fB \fP\fBsupercell \-d \-i Ca2Al2SiO7.cif\fP
+.RE
+.RS
+.PP
+.RE
+.TP
+.B *
+Dry run. Obtain information about the structure. 
+.PP
+.RS
+.TP
+\fB \fP\fB \fP\fB \fP\fB \fP\fB \fP\fB \fP\fBsupercell \-d \-i Ca2Al2SiO7.cif \-s 1x1x2\fP
+.RE
+.RS
+.PP
+.RE
+.TP
+.B *
+Dry run. Obtain information about the structure. 
+.PP
+\fB \fP\fB \fP\fB \fP\fB \fP\fBsupercell \-d \-i Ca2Al2SiO7.cif \-s 1x1x2\fP
+.PP
+Some advances examples, with supercell
+embedded to bash scripts you can find in supercell/data/examples
+folder. 
 .PP
 .SH REQUIREMENTS
 
 .PP
 .TP
 openbabel
-Need. 
+Required. 
+.TP
+libeigen
+Required. 
+.TP
+libarchive
+Optional. 
 .PP
-.SH BUGS
+.SH BUGS AND LIMITATIONS
 
 .PP
 .TP
-In case of huge (more than 10^9) number of total combaintions supercell can work quite slow or even freeze. The situation most of the time appears with large supresses. Always try small cells first.
+Supercell size limitation.
+The maximum number of permutations should not exceed limit of 800 million. If more, the program will return a error. If the number of permutations within the groups is less than the limit, but total number of combinations is above the limit, the pro gram can be executed step\-by\-step with some groups excluded from permutation. Due to rapid increasing of number of combination with changing cell size the program can crash with arithmetic overflow at large cell, when number of combination more than 2^{63} (around 10^{18}) due to finite size integer variables in the program. 
 .TP
-If you are merging significant number of combinations ( more than 10^5) the program can make get all available physical memory and freeze your system. Control supercell with top etc.
+Filesystem limitation.
+Although, supercell
+can produce millions of files, most of the filesystems can\&'t manage more than one thousand files in one folder with acceptable performance. Be careful, if you need to process a lot of combination, sample them or use \fB\-a\fP
+option. 
+.TP
+Symmetry information handling in input file.
+Our program used openbabel
+libraries to handle symmetry operations in input file. The algorithm, implemented there, gives wrong result for some structures. The problem can be fully solved by converting input file to P1 structure with any other software. In most of the cases, the problem can be solved by removing "_space_group_IT_number" tag from input cif file. 
 .PP
 .SH SEE ALSO
 
@@ -211,7 +263,7 @@ If you are merging significant number of combinations ( more than 10^5) the prog
 .SH VERSION
 
 .PP
-Version: 0.1 of 2013/09/01\&.
+Version: 0.1 of 2015/04/03\&.
 .PP
 .SH LICENSE AND COPYRIGHT
 
@@ -223,7 +275,7 @@ All rights to the program belongs to authors.
 .TP
 License
 This program can be redistributed and/or modified under the 
-terms of the GNU GNU GENERAL PUBLIC LICENSE Version 2. 
+terms of the GNU GENERAL PUBLIC LICENSE Version 2. 
 .PP
 .TP
 Misc

@@ -151,7 +151,7 @@ int main(int argc, char** argv)
     
     dry_run = vm.count("dry-run") > 0;
     merge_confs = vm.count("merge-symmetric") > 0;
-    calc_q = vm.count("coulomb-energy");
+    calc_q = vm.count("coulomb-energy") > 0;
     
     if(!parse_d2o_input::get_supercell_size(cell_size_str, supercell_mult))
     {

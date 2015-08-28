@@ -31,7 +31,7 @@ echo ""
 echo -ne "M"
 for i in {0..6}
 do
-  Q=`echo cell112/Si$i/*.cif | sed 's/ *cell[^ ]*w.\([0-9]*\).cif */\1 /g'`
+  Q=`echo cell112/Si$i/*.cif | sed 's/ *cell[^ ]*w\([0-9]*\).cif */\1 /g'`
   echo -ne "\t${Q}" 
 done
 echo ""
@@ -39,7 +39,7 @@ echo ""
 echo -ne "N_ops"
 for i in {0..6}
 do
-  Q=`echo cell112/Si$i/*.cif | sed 's/ *cell[^ ]*w.\([0-9]*\).cif */\1 /g'`
+  Q=`echo cell112/Si$i/*.cif | sed 's/ *cell[^ ]*w\([0-9]*\).cif */\1 /g'`
   unset N_ops
   for j in $Q; do
     N_ops=${N_ops}" "`echo $j | awk '{print 12/$1}'`
@@ -47,11 +47,3 @@ do
   echo -ne "\t${N_ops:1}" 
 done
 echo ""
-
-
-
-
-
-
-
-

@@ -115,10 +115,10 @@ bool d2o_main_class::close_tar_container()
 std::string struct_info::file_name(const std::string &prefix, int tot_comb, 
                                    const std::string &sampl_type) const
 {
-  std::string result = prefix + "_ind" + sampl_type + get_index_str(index, tot_comb - 1);
+  std::string result = prefix + "_i" + sampl_type + get_index_str(index, tot_comb - 1);
 
   if( weight > 0 ) 
-    result += "w_" + boost::lexical_cast<string>(weight);
+    result += "_w" + boost::lexical_cast<string>(weight);
   
   result += ".cif";
   
