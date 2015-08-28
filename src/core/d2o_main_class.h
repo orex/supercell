@@ -196,6 +196,7 @@ protected:
   std::vector< rangi > get_rangi_array(const double x2);
   bool get_atoms_population();
   bool create_super_cell(int a, int b, int c);
+  void FillUnitCell_rmdup(OpenBabel::OBMol * mol);
   bool create_occup_groups();
   bool show_groups_information();
   bool process_charges(charge_balance cb, bool verbose = false);

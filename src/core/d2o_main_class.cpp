@@ -1498,6 +1498,33 @@ bool d2o_main_class::show_groups_information()
   return true;
 }
 
+void d2o_main_class::FillUnitCell_rmdup(OpenBabel::OBMol * mol)
+{
+  OBUnitCell *uc = (OBUnitCell *)mol->GetData(OBGenericDataType::UnitCell);
+  ob_min_dist obm;
+  obm.set_cell(uc->GetCellMatrix());
+  set<OBAtom*> atomsToDelete;
+  for(int i = 0; i < mol->NumAtoms(); i++)
+  {
+    OBAtom * atom_i = mol->GetAtom(i + 1);
+    string label_i = atom_i->GetData("_atom_site_label")->GetValue();
+    vector3 pos_i = atom_i->GetVector();
+    for(int j = i + 1; j < mol->NumAtoms(); j++)
+    {
+      OBAtom * atom_j = mol->GetAtom(j + 1);
+      string label_j = atom_j->GetData("_atom_site_label")->GetValue();
+      vector3 pos_j = atom_j->GetVector();
+      if(label_i == label_j)
+      {
+        if( obm(pos_i - pos_j).length() < 2E-3 )
+          atomsToDelete.insert(atom_j);
+      }
+    }
+  }
+  for(set<OBAtom*>::const_iterator i = atomsToDelete.begin(); i != atomsToDelete.end(); ++i)
+    mol->DeleteAtom(*i);
+}
+
 bool d2o_main_class::create_super_cell(int a, int b, int c)
 {
   OBUnitCell *orig_unitcell = (OBUnitCell *)mol_initial.GetData(OBGenericDataType::UnitCell);
@@ -1509,6 +1536,8 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
   mol_supercell.SetData(super_unitcell);
   
   orig_unitcell->FillUnitCell(&mol_initial);
+  // OpenBabel error workaround.
+  FillUnitCell_rmdup(&mol_initial);
   
   super_unitcell->SetSpaceGroup(1);
   
