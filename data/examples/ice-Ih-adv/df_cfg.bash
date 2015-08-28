@@ -9,8 +9,8 @@ mkdir ice-Ih-cfgs-l1
 rm -rf ice-Ih-cfgs-l2
 mkdir ice-Ih-cfgs-l2
 
-rm -rf ice-Ih-cfgs-ready
-mkdir ice-Ih-cfgs-ready
+rm -rf ice-Ih-cfgs-final
+mkdir ice-Ih-cfgs-final
 
 
 if [[ -z "$PRG_GULP" ]]; then
@@ -81,7 +81,7 @@ do
     #Checking H-H distance. If less than 1.0 Angstrom (see ice-Ih.gin_template file) the configuration is exculded.
     x=`cat g.out | grep -A 40 "Distance calculation :" | grep "   H     core        H     core         1"`
     if [[ -z "$x" ]]; then
-      cp -a ${cur_path}/$pth/$j ${cur_path}/ice-Ih-cfgs-ready/.
+      cp -a ${cur_path}/$pth/$j ${cur_path}/ice-Ih-cfgs-final/.
     fi
     
   done
