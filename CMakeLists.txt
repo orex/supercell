@@ -24,7 +24,7 @@ endif()
 
 if( ${CMAKE_COMPILER_IS_GNUCXX} )
   if( ${LINK_STATIC_LIBS} )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wl,-no-gnu-unique")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -fuse-ld=gold -Wl,--no-gnu-unique")
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   endif()
 endif()
