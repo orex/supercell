@@ -71,6 +71,8 @@ public:
   std::vector<c_occup_item> items;
   std::vector<OpenBabel::vector3> positions;  //Cartesian
   std::vector<symm_set> symms_sets;
+  c_occup_group(): _fixed(false), _fixed_fast(false)
+  { ; };
   double get_total_occup_input() const;
   int    get_total_num_occup_sites() const;
   int64_t get_number_of_combinations() const;
