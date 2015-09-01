@@ -199,7 +199,7 @@ protected:
   void FillUnitCell_rmdup(OpenBabel::OBMol * mol);
   bool create_occup_groups();
   bool show_groups_information();
-  bool process_charges(charge_balance cb, bool verbose = false);
+  bool process_charges(charge_balance cb);
   bool calculate_q_matrix();
   double calculate_q_energy(const t_vec_comb &mc);
   bool create_symmetry_operations_groups();
@@ -258,7 +258,7 @@ public:
   void set_verbosity(int vb)
   { verbose_level = vb; };
   bool process(std::string input_file_name, bool dry_run,
-               const std::vector<int> scs,
+               const std::vector<int> &scs,
                charge_balance cb, double tolerance_v, 
                bool merge_confs, bool calc_q_energy_v,
                c_man_atom_prop &manual_properties,

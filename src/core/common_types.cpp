@@ -31,7 +31,7 @@ bool cb_names::get_cb(const std::string &str, charge_balance &cb)
   bool result = false;
   
   for(std::map<charge_balance, std::string>::const_iterator it  = mp_cb.begin(); 
-                                                            it != mp_cb.end(); it++ )
+                                                            it != mp_cb.end(); ++it )
   {
     result = result || (it->second == str);
     if(result) 

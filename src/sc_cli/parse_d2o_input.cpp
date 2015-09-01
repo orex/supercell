@@ -34,7 +34,7 @@ int c_man_atom_prop_cli::search_count(std::string &str,
     string replaced_str = "";
     
     match.clear();    
-    for(smatch::const_iterator it = r_match.begin(); it != r_match.end(); it++)
+    for(smatch::const_iterator it = r_match.begin(); it != r_match.end(); ++it)
       match.push_back(*it);
     
     replaced_str = str.substr(0, r_match.position()) + " " + 
@@ -289,10 +289,10 @@ bool c_man_atom_prop_cli::parse_input(const std::vector<std::string> &inp, std::
 void c_man_atom_prop_cli::convert_properties(const std::set<std::string> &labels)
 {
   for(set<string>::const_iterator it_lbl =  labels.begin(); 
-                                  it_lbl != labels.end(); it_lbl++)
+                                  it_lbl != labels.end(); ++it_lbl)
   {
     for(vector< c_man_atom_prop_item_cli >::iterator it_p  = vc_raw.begin();
-                                                     it_p != vc_raw.end(); it_p++)
+                                                     it_p != vc_raw.end(); ++it_p)
     {
       bool the_label = false;
       the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltPlain) && 
