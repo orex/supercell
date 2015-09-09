@@ -138,14 +138,14 @@ int main(int argc, char** argv)
     //Title
     if(verb_level > 0)
     {  
-      cout << "----------------------------------------------------" << endl;
-      cout << "-               Supercell program                  -" << endl;
-      cout << "----------------------------------------------------" << endl;
-      cout << "-      Authors:	* Kirill Okhotnikov               -" << endl;
-      cout << "-		(kirill.okhotnikov@gmail.com)     -" << endl;
-      cout << "-		* Sylvian Cadars                  -" << endl;
-      cout << "-		(sylvian.cadars@cnrs-orleans.fr)  -" << endl;
-      cout << "----------------------------------------------------" << endl;
+      cout << "-----------------------------------------------------" << endl;
+      cout << "-               Supercell program                   -" << endl;
+      cout << "-----------------------------------------------------" << endl;
+      cout << "-      Authors:   * Kirill Okhotnikov               -" << endl;
+      cout << "-                  (kirill.okhotnikov@gmail.com)    -" << endl;
+      cout << "-                 * Sylvian Cadars                  -" << endl;
+      cout << "-                  (sylvian.cadars@cnrs-imn.fr)     -" << endl;
+      cout << "-----------------------------------------------------" << endl;
       cout << endl;
     }  
     

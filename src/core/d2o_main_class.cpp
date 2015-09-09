@@ -1190,7 +1190,7 @@ bool d2o_main_class::process_charges(charge_balance cb)
   
   if(verbose_level >= 1)
   {  
-    cout << "Total charge oxydation state (cif):  " << total_input_charge << endl;
+    cout << "Total charge oxidation state (cif):  " << total_input_charge << endl;
     cout << "Total charge used:   " << total_used_charge << endl << endl;
 
     cout << "----------------------------------------------------------------" << endl;
