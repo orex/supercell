@@ -1111,7 +1111,7 @@ bool d2o_main_class::get_atoms_population()
   for(int i = 0; i < rc_min.size(); i++)
     occup_groups[rc_min[i].group_index].items[rc_min[i].atom_index].num_of_atoms_sc = rc_min[i].curr_value;
   
-  return true;
+  return rc_min.size() > 0;
 }
 
 bool d2o_main_class::process_charges(charge_balance cb)
@@ -1710,7 +1710,10 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   
   if( !get_atoms_population() )
   {
-    cerr << "Create population error." << endl;
+    cerr << "Create atoms population error:" << endl <<
+            "  Change supercell size"        << endl <<
+            "  Switch off charge balancing"  << endl <<
+            "  Check manual population settings"  << endl;
     return false;
   }
   
