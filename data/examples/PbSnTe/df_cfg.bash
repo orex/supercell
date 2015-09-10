@@ -19,6 +19,8 @@ done
 
 echo "The process is long, please wait"
 
+sleep 10
+
 while [[ -z `grep "Combinations after merge" out/cell_2x2x2_Pb1d2.out` ]]; do
   sleep 5
   prg=`grep -a "Finished.*Stored .* configurations. Left .*" out/cell_2x2x2_Pb1d2.out | tail -n 1`

@@ -115,10 +115,10 @@ bool d2o_main_class::close_tar_container()
 std::string struct_info::file_name(const std::string &prefix, int tot_comb, 
                                    const std::string &sampl_type) const
 {
-  std::string result = prefix + "_ind" + sampl_type + get_index_str(index, tot_comb - 1);
+  std::string result = prefix + "_i" + sampl_type + get_index_str(index, tot_comb - 1);
 
   if( weight > 0 ) 
-    result += "w_" + boost::lexical_cast<string>(weight);
+    result += "_w" + boost::lexical_cast<string>(weight);
   
   result += ".cif";
   
@@ -215,7 +215,7 @@ double c_occup_group::get_total_occup_input() const
 {
   double result = 0.0;
   
-  for(std::vector<c_occup_item>::const_iterator it = items.begin(); it != items.end(); it++)
+  for(std::vector<c_occup_item>::const_iterator it = items.begin(); it != items.end(); ++it)
     result += (*it).occup_target;
   
   return result;
@@ -225,7 +225,7 @@ int c_occup_group::get_total_num_occup_sites() const
 {
   int result = 0;
   
-  for(std::vector<c_occup_item>::const_iterator it = items.begin(); it != items.end(); it++)
+  for(std::vector<c_occup_item>::const_iterator it = items.begin(); it != items.end(); ++it)
     result += (*it).num_of_atoms_sc;
   
   return result;
@@ -294,7 +294,7 @@ std::string d2o_main_class::get_formula_by_groups()
   string result = "";
   
   for(map<string, int>::iterator it = formula_map.begin();
-                                 it != formula_map.end(); it++)
+                                 it != formula_map.end(); ++it)
   {
     boost::format fmter("%1%%2% ");
     fmter % it->first % it->second;
@@ -323,7 +323,7 @@ std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
   string result = "";
   
   for(map<string, double>::iterator it = formula_map.begin();
-                                    it != formula_map.end(); it++)
+                                    it != formula_map.end(); ++it)
   {
     boost::format fmter("%1%%2% ");
     fmter % it->first % it->second;
@@ -953,7 +953,7 @@ int64_t d2o_main_class::total_combinations()
 {
   int64_t result = 1;
   for(vector<c_occup_group>::const_iterator it = occup_groups.begin(); 
-                                            it != occup_groups.end(); it++)
+                                            it != occup_groups.end(); ++it)
   {
     result *= it->get_number_of_combinations();
   }
@@ -965,7 +965,7 @@ double d2o_main_class::ss_charge_by_occup_groups()
 {
   double result = 0;
   for(vector<c_occup_group>::const_iterator it = occup_groups.begin(); 
-                                            it != occup_groups.end(); it++)
+                                            it != occup_groups.end(); ++it)
   {
     for(int j = 0; j < it->items.size(); j++)
       result += it->items[j].charge * it->items[j].num_of_atoms_sc;
@@ -1111,10 +1111,10 @@ bool d2o_main_class::get_atoms_population()
   for(int i = 0; i < rc_min.size(); i++)
     occup_groups[rc_min[i].group_index].items[rc_min[i].atom_index].num_of_atoms_sc = rc_min[i].curr_value;
   
-  return true;
+  return rc_min.size() > 0;
 }
 
-bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
+bool d2o_main_class::process_charges(charge_balance cb)
 {
   FOR_ATOMS_OF_MOL(a, mol_initial)
   {
@@ -1137,7 +1137,7 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
     }  
   }
   
-  for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
+  for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
   {
     switch(cb)
     {        
@@ -1166,7 +1166,7 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   double total_input_charge = 0;
   double total_used_charge = 0;
     
-  for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
+  for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
   {
     total_input_charge += (*it).second.input_charge * (*it).second.occup;
     total_used_charge  += (*it).second.curr_charge * (*it).second.occup;
@@ -1175,12 +1175,12 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   if( verbose_level >= 1 )
     cout << "Current charge balance option is \"" << cb_names::get_name(cb) << "\"" << endl;
   
-  if((verbose >= 0) && (abs(total_used_charge) > charge_tol) )
+  if(( verbose_level >= 0) && (abs(total_used_charge) > charge_tol) )
     cout << "WARN: Total charge of the system is not zero" << endl;
   
   if( (cb == cb_try ) && (abs(total_used_charge) > charge_tol) )
   {
-    for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
+    for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
       (*it).second.curr_charge = 0;
     if(verbose_level >= 1)
       cout << "Charge balancing is switched off." << endl;
@@ -1190,7 +1190,7 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
   
   if(verbose_level >= 1)
   {  
-    cout << "Total charge oxydation state (cif):  " << total_input_charge << endl;
+    cout << "Total charge oxidation state (cif):  " << total_input_charge << endl;
     cout << "Total charge used:   " << total_used_charge << endl << endl;
 
     cout << "----------------------------------------------------------------" << endl;
@@ -1198,7 +1198,7 @@ bool d2o_main_class::process_charges(charge_balance cb, bool verbose)
     cout << "| \t\t| Ox. state\t| Used\t| (cif)\t|\t\t " << endl;
     cout << "----------------------------------------------------------------" << endl;
 
-    for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); it++)
+    for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
     {
 
       cout << "|  " << (*it).first                << "\t\t|  "
@@ -1219,13 +1219,13 @@ bool d2o_main_class::fix_groups()
   bool result = true;
   
   for(vector< c_occup_group >::iterator itg  = occup_groups.begin();
-                                        itg != occup_groups.end(); itg++)
+                                        itg != occup_groups.end(); ++itg)
   {
     assert(itg->items.size() > 0);
     bool fixed_status = (*manual_properties)[itg->items[0].label].fixed.value_def(false);
     bool wrong_status = false;
     for(vector< c_occup_item >::iterator iti  = itg->items.begin();
-                                         iti != itg->items.end(); iti++)
+                                         iti != itg->items.end(); ++iti)
     {
       wrong_status = fixed_status != (*manual_properties)[iti->label].fixed.value_def(false);
       if(wrong_status)
@@ -1498,6 +1498,33 @@ bool d2o_main_class::show_groups_information()
   return true;
 }
 
+void d2o_main_class::FillUnitCell_rmdup(OpenBabel::OBMol * mol)
+{
+  OBUnitCell *uc = (OBUnitCell *)mol->GetData(OBGenericDataType::UnitCell);
+  ob_min_dist obm;
+  obm.set_cell(uc->GetCellMatrix());
+  set<OBAtom*> atomsToDelete;
+  for(int i = 0; i < mol->NumAtoms(); i++)
+  {
+    OBAtom * atom_i = mol->GetAtom(i + 1);
+    string label_i = atom_i->GetData("_atom_site_label")->GetValue();
+    vector3 pos_i = atom_i->GetVector();
+    for(int j = i + 1; j < mol->NumAtoms(); j++)
+    {
+      OBAtom * atom_j = mol->GetAtom(j + 1);
+      string label_j = atom_j->GetData("_atom_site_label")->GetValue();
+      vector3 pos_j = atom_j->GetVector();
+      if(label_i == label_j)
+      {
+        if( obm(pos_i - pos_j).length() < 2E-3 )
+          atomsToDelete.insert(atom_j);
+      }
+    }
+  }
+  for(set<OBAtom*>::const_iterator i = atomsToDelete.begin(); i != atomsToDelete.end(); ++i)
+    mol->DeleteAtom(*i);
+}
+
 bool d2o_main_class::create_super_cell(int a, int b, int c)
 {
   OBUnitCell *orig_unitcell = (OBUnitCell *)mol_initial.GetData(OBGenericDataType::UnitCell);
@@ -1509,6 +1536,8 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
   mol_supercell.SetData(super_unitcell);
   
   orig_unitcell->FillUnitCell(&mol_initial);
+  // OpenBabel error workaround.
+  FillUnitCell_rmdup(&mol_initial);
   
   super_unitcell->SetSpaceGroup(1);
   
@@ -1608,7 +1637,7 @@ bool d2o_main_class::set_labels_to_manual()
     cout << "Manual properties" << endl;
     cout << "Label\t|fixed\t|charge\t|popul\t|" << endl;
     for(c_man_atom_prop::data_type::const_iterator it  = manual_properties->data().begin();
-                                                   it != manual_properties->data().end(); it++)
+                                                   it != manual_properties->data().end(); ++it)
     {
       cout << it->first << "\t|"
            << it->second.fixed      << "\t|"
@@ -1627,7 +1656,7 @@ std::string d2o_main_class::get_q_file_name(const std::string &output_base_name,
 }
 
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
-                             const std::vector<int> scs,
+                             const std::vector<int> &scs,
                              charge_balance cb, double tolerance_v,
                              bool merge_confs, bool calc_q_energy_v,
                              c_man_atom_prop &manual_properties_v,
@@ -1681,7 +1710,10 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   
   if( !get_atoms_population() )
   {
-    cerr << "Create population error." << endl;
+    cerr << "Create atoms population error:" << endl <<
+            "  Change supercell size"        << endl <<
+            "  Switch off charge balancing"  << endl <<
+            "  Check manual population settings"  << endl;
     return false;
   }
   

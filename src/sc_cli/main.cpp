@@ -138,20 +138,20 @@ int main(int argc, char** argv)
     //Title
     if(verb_level > 0)
     {  
-      cout << "----------------------------------------------------" << endl;
-      cout << "-               Supercell program                  -" << endl;
-      cout << "----------------------------------------------------" << endl;
-      cout << "-      Authors:	* Kirill Okhotnikov               -" << endl;
-      cout << "-		(kirill.okhotnikov@gmail.com)     -" << endl;
-      cout << "-		* Sylvian Cadars                  -" << endl;
-      cout << "-		(sylvian.cadars@cnrs-orleans.fr)  -" << endl;
-      cout << "----------------------------------------------------" << endl;
+      cout << "-----------------------------------------------------" << endl;
+      cout << "-               Supercell program                   -" << endl;
+      cout << "-----------------------------------------------------" << endl;
+      cout << "-      Authors:   * Kirill Okhotnikov               -" << endl;
+      cout << "-                  (kirill.okhotnikov@gmail.com)    -" << endl;
+      cout << "-                 * Sylvian Cadars                  -" << endl;
+      cout << "-                  (sylvian.cadars@cnrs-imn.fr)     -" << endl;
+      cout << "-----------------------------------------------------" << endl;
       cout << endl;
     }  
     
     dry_run = vm.count("dry-run") > 0;
     merge_confs = vm.count("merge-symmetric") > 0;
-    calc_q = vm.count("coulomb-energy");
+    calc_q = vm.count("coulomb-energy") > 0;
     
     if(!parse_d2o_input::get_supercell_size(cell_size_str, supercell_mult))
     {

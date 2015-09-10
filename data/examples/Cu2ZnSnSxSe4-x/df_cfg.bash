@@ -14,7 +14,7 @@ do
   x=`echo $i | awk '{print $i/2}'`
   for j in cell111/S$i/stannite-S$i*.cif
   do 
-    gi=`echo $j | sed 's/ *cell[^ ]*w.\([0-9]*\).cif */\1 /g'`
+    gi=`echo $j | sed 's/ *cell[^ ]*w\([0-9]*\).cif */\1 /g'`
     echo -e "${x}\t${gi}"
   done
 done

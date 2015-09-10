@@ -1,20 +1,4 @@
-data_global
-_chemical_name_mineral           Gehlenite
-loop_
-_publ_author_name
-'Louisnathan S J'
-_journal_name_full               'The Canadian Mineralogist'
-_journal_volume                  10
-_journal_year                    1971
-_journal_page_first              822
-_journal_page_last               837
-_publ_section_title              
-;
- Refinement of the crystal structure of a natural gehlenite, Ca2Al(Al,Si)2O7
-;
-_database_code_amcsd             0005090
-_chemical_formula_sum            'Ca2 Al1.91 Mg.05 Fe.02 Si1.02 O7'
-_chemical_compound_source        'Crestmore, California, USA'
+data_Ca2Al2SiO7
 _cell_length_a                   7.716
 _cell_length_b                   7.716
 _cell_length_c                   5.089
@@ -22,11 +6,8 @@ _cell_angle_alpha                90
 _cell_angle_beta                 90
 _cell_angle_gamma                90
 _cell_volume                     302.982
-_exptl_crystal_density_diffrn    3.011
-_symmetry_cell_setting           tetragonal
 _symmetry_space_group_name_H-M   'P -4 21 m'
 _symmetry_int_tables_number      113
-_chemical_absolute_configuration ?
 loop_
 _space_group_symop_operation_xyz
 x,y,z
@@ -53,10 +34,10 @@ _atom_site_fract_x
 _atom_site_fract_y
 _atom_site_fract_z
 _atom_site_occupancy
-Ca1 0.33750 0.16250 0.51100 1.00000
-AlT1 0.00000 0.00000 0.00000 1.0000
-AlT 0.14310 0.35690 0.95280 0.50000
-SiT 0.14310 0.35690 0.95280 0.50000
-O1 0.50000 0.00000 0.18840 1.00000
-O2 0.14180 0.35820 0.28320 1.00000
-O3 0.08720 0.17060 0.80330 1.00000
+Ca1   0.33750 0.16250 0.51100 1.00000
+AlT1  0.00000 0.00000 0.00000 1.00000
+AlT2  0.14310 0.35690 0.95280 0.50000
+SiT2  0.14310 0.35690 0.95280 0.50000
+O1    0.50000 0.00000 0.18840 1.00000
+O2    0.14180 0.35820 0.28320 1.00000
+O3    0.08720 0.17060 0.80330 1.00000

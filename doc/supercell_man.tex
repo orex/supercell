@@ -5,6 +5,8 @@
 \usepackage{verbatim}
 %\usepackage[T1]{fontenc}
 
+%\overfullrule=1mm
+
 %% do we have the `hyperref package?
 \IfFileExists{hyperref.sty}
 {
@@ -31,9 +33,11 @@
   }
 }
 
-\setDate{2015/04/03}    %%%% must be manually set, if rcsinfo is not present
+\renewcommand{\File}[1]{\path{#1}}
+
+\setDate{2015/09/01}    %%%% must be manually set, if rcsinfo is not present
 \setVersionWord{Version:}  %%% that's the default, no need to set it.
-\setVersion{0.1}
+\setVersion{1.0}
 
 \begin{document}
 \newcommand{\Dd}{-{}-}
@@ -130,8 +134,8 @@ Disordered compounds are very important now for fundamental science and industri
 \item[\Opt{-q}, \Opt{\Dd coulomb-energy}] 
       The option enable Coulumb energy calculations. The result energies for each structures are stored in file $<$output-prefix$>$\_coulomb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \Opt{\Dd charge-balance} option.
       
-\item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output=}{output-prefix}]
-      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be $<$output-prefix$>$\_ind$<$sampling type$><$index$>$.cif. For merging run the template will be $<$output-prefix$>$\_ind$<$sampling type$><$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
+\item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output-prefix=}{output-prefix}]
+      The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output-prefix=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be $<$output-prefix$>$\_i$<$sampling type$><$index$>$.cif. For merging run the template will be $<$output-prefix$>$\_i$<$sampling type$><$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
       
 \item[\OptArg{-a }{archive-file}, \OptArg{\Dd archive=}{archive-file}]
       The option specify a target archive file for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required \Prog{libarchive} \URL{http://www.libarchive.org/} to be available in the system. Otherwise the option will be disabled. Check the status by \Opt{-h} option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''.
@@ -146,10 +150,10 @@ Disordered compounds are very important now for fundamental science and industri
 
 \section{Examples}
 %%%%%%%%%%%%%%%
-The examples are based on file \File{\$\{SUPERCELL\_SRC\_DIR\}/data/examples/Ca2Al2SiO7.cif}.  
+The examples are based on file \File{supercell/data/examples/Ca2Al2SiO7}.  
 
 \begin{itemize}\setlength{\itemsep}{0.4cm}
-\item Dry run. Obtain information about the structure: group assignment, cell size, etc. It is good practice to start a new structure processing with tis command. This run doesn't produce any output files.
+\item Dry run. Obtain information about the structure: group assignment, cell size, etc. It is good practice to start a new structure processing with this command. This run doesn't produce any output files.
 
 \begin{description}
  \item \SP \SP \SP \SP \SP \SP \textbf{supercell -d -i Ca2Al2SiO7.cif}
@@ -168,7 +172,7 @@ The examples are based on file \File{\$\{SUPERCELL\_SRC\_DIR\}/data/examples/Ca2
 
 \end{itemize}
 
-Some advances examples, with \Prog{supercell} embedded to bash scripts you can find in data/examples folder.
+Some advances examples, with \Prog{supercell} embedded to bash scripts you can find in \File{supercell/data/examples} folder.
 
 \section{Requirements}
 %%%%%%%%%%%%%%%%%%%%%%
@@ -187,7 +191,7 @@ The maximum number of permutations should not exceed limit of 800 million. If mo
 \item[Filesystem limitation.]
 Although, \Prog{supercell} can produce millions of files, most of the filesystems can't manage more than one thousand files in one folder with acceptable performance. Be careful, if you need to process a lot of combination, sample them or use \Opt{-a} option.
 \item[Symmetry information handling in input file.]
-The \Prog{supercell} program used \Prog{openbabel} libraries to handle symmetry operations in input file. The algorithm, implemented there, gives wrong result for some structures. The problem can be fully solved by converting input file to P1 structure with any other software. In most of the cases, the problem can be solved by removing "\_space\_group\_IT\_number" tag from input cif file.
+Our program used \Prog{openbabel} libraries to handle symmetry operations in input file. The algorithm, implemented there, gives wrong result for some structures. The problem can be fully solved by converting input file to P1 structure with any other software. In most of the cases, the problem can be solved by removing "\_space\_group\_IT\_number" tag from input cif file.
 
 \end{Description}
 
@@ -220,11 +224,19 @@ Version: \Version\ of \Date.
 
 \section{Author}
 %%%%%%%%%%%%%%%%
-Kirill Okhotnikov, e-mail: \Email{kirill.okhotnikov@gmail.com} \\
-Sylvian Cadars, e-mail: \Email{sylvian.cadars@cnrs-orleans.fr} \\ 
-CEMHTI - UPR3079 CNRS Site Haute Temperature \\
-1D avenue de la Recherche Scientifique \\
-45071 Orleans Cedex 2 France
+\begin{description}
+\item[Kirill Okhotnikov]
+e-mail: \Email{kirill.okhotnikov@gmail.com}
+
+\item[Dr. Sylvian Cadars] 
+e-mail: \Email{sylvian.cadars@cnrs-imn.fr} \\
+Institut des Materiaux Jean Rouxel (IMN) - UMR6502\\
+2 rue de la Houssiniere, BP32229\\
+44322 Nantes cdx3, France\\
+Tel: +33 (0)2 40 37 39 34\\
+Fax: +33 (0)2 40 37 39 95
+\end{description}
+
 \noindent
 
 \LatexManEnd
