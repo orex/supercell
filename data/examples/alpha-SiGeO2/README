@@ -1,8 +1,17 @@
-The example generates Table 2 in 
+**********************************
+alpha-SixGe(1-x)O2 example
+**********************************
 
-El-Kelany, K. E., Erba, a, Carbonnière, P., & Rérat, M. (2014). Piezoelectric, elastic, structural 
-and dielectric properties of the Si(1-x)Ge(x)O(2) solid solution: a theoretical study. 
+Description:
+The example generates Table 2 in :
+El-Kelany, K. E., Erba, a, Carbonnière, P., & Rérat, M. (2014).
+Piezoelectric, elastic, structural and dielectric properties of the Si(1-x)Ge(x)O(2) solid solution: a theoretical study. 
 Journal of Physics. Condensed Matter : An Institute of Physics Journal, 26(20), 205401. 
 doi:10.1088/0953-8984/26/20/205401
 
+Instructions:
 Supercell should be installed. Run script df_cfg.bash
+
+Results:
+The table is directly printed in the terminal.
+

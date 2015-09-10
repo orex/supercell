@@ -1,7 +1,14 @@
-The example generates Table 3 in supercell paper.
+The example generates Table 2 in supercell paper.
 Supercell should be installed. Run script df_cfg.bash.
 
+The supercell command used in this example is in the form:
 
+supercell -d -i PbSnTe2.cif -s 1x1x2 -m -p "Pb1:p=2" -p "Sn1:p=6" -v 2
 
+in which the "-p" option id used to specify the number of mixed (Pb1,Sn1) sites occupied by Pb and Sn atoms in the supercell. This site has multiplicity 4, so the total number of images of this site in the supercell is: N = 4*n1*n2*n3 for a supercell of size (n1 x n2 x n3). The site populations must then obey:
 
+n(Pb1) <= N
+n(Sn1) = N - n(Pb1)
+
+Both pupulations must be defined simultaneously to prevent the program from using the occupancies defined in the original cif file (50% in this case).
 

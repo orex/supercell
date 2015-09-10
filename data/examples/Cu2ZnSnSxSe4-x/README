@@ -1,9 +1,19 @@
-The example generates Table VII in 
-
+The example generates Table VII in:
 Dun, C., Holzwarth, N. a W., Li, Y., Huang, W., & Carroll, D. L. (2014). 
 Cu2ZnSnSxO4-x and Cu2ZnSnSxSe4-x: First principles simulations of optimal 
 alloy configurations and their energies. 
 Journal of Applied Physics, 115(19). 
 doi:10.1063/1.4876447
 
-Supercell should be installed. Run script df_cfg.bash The order of table rows will be different.
+It will list the different configurations and their mutiplicity for different values of x.
+Supercell should be installed. Run script df_cfg.bash The order of table rows will not be the same as in the paper.
+
+The supercell commands used in this work are of the form:
+
+supercell -i stannite.cif -s 1x1x1 -p "S:p=3" -p "Se:p=5" -m -o [OUTPUT DIRECTORY]/stannite
+
+in which the populations of S and Se atoms on crystallographic sites "S" and "Se" (note that "S" and "Se" in the -p option refer to crystallographic labels rather than to atom symbols. More typical labels would be of the form "S1" and "Se1"). The multiplicity of this site in the cell being 8 and the supercell size being 1x1x1, the population values "p" should obey:
+p(S) <= 8
+p(Se) = 8 - p(S)
+
+

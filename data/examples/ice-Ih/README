@@ -1,8 +1,15 @@
-The example generates and analyzed configuration for ice-Ih cell 1x1x1 (direct approach). 
+The example generates and analyzes configuration for ice-Ih cell 1x1x1 in a direct approach (meaning that [TO BE COMPLETED]).
 Supercell should be installed. GULP should be in the path or variable PRG_GULP should be set
 before run script df_cfg.bash
 
 export PRG_GULP=<full path to gulp program>
 
-The result file ice-Ih-cfgs.anlz shows, which configurations fulfill conditions of all oxygen atoms 2 coordinated (CNO) and no close contacts of hydrogen (H-H).
+The result file ice-Ih-cfgs.anlz shows which configurations fulfill the following two conditions: (i) all oxygen atoms 2 coordinated (CNO) and (ii) no close contacts of hydrogen (H-H).
+
+The supercell command used in this example is in the form:
+
+supercell -i ice-Ih.cif -m -q -p "O:c=-2" -p "H*:c=+1" -o [RESULT DIRECTORY]/ice-Ih
+
+in which the "-c" option is used to set the charge of oxygen atoms on site "O" to -2 and the charge of hydrogen atoms on sites H1 and H2 to +1, for the computation of Coulomb energies (-q option). The [RESULT DIRECTORY] should be created before running the command.
+
 

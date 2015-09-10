@@ -1,3 +1,30 @@
-The example generates Table 2 in supercell paper.
+**********************************
+FeSbO4 example
+**********************************
+
+Description:
+The example generates Table 1 in supercell paper.
+
+Instructions:
 Supercell should be installed. Run script df_cfg.bash
+
+Results:
+The table is directly printed in the terminal.
+
+**********************************
+Additional notes:
+The supercell commands used in this example are of the form:
+
+supercell -d -i FeSbO4.cif -s 2x2x1 -m
+
+Note that structures are not generated in this example. To generate structures:
+create an output directory:
+mkdir result_cell2x2x1/
+and run the supercell command without the -d option and with the -o option :
+
+supercell -d -i FeSbO4.cif -s 2x2x1 -o result/FeSbO4 -m
+
+Results will be stored as:
+FeSbO4_ind[STRUCTURE INDEX].cif
+
 

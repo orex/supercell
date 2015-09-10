@@ -1,6 +1,10 @@
+[ENTER EXAMPLE DESCRIPTION HERE]
 Supercell should be installed. GULP should be in PATH. Run script df_cfg.bash.
 
+The command used to generate supercells in this case is:
 
+supercell -i PbSnTe2.cif -s 1x1x2 -m -v 2 -o [OUTPUT DIRECTORY]/PbSnTe_1x1x2 &
 
-
+Note that the [OUTPUT DIRECTORY] should exist when running the command.
+The analysis is then performed with the GULP program.
 

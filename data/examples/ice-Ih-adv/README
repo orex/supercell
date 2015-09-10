@@ -1,8 +1,18 @@
-The example generates and analyzed configuration for ice-Ih cell 1x1x1 (direct approach). 
-Supercell should be installed. GULP should be in the path or variable PRG_GULP should be set
-before run script df_cfg.bash
+ice-Ih-adv example:
+************************************************
+Treatment of proton disorder in the 1x2x1 supercell of ice-Ih
+************************************************
+A detailed description of this example is provided in the Supporting Information
+ of the supercell article. It involves a manipulation of the input CIF file as well as advanced functionalities of the supercell program, which is used in successive steps to reduce the number of combinations to practical numbers.
+
+Requirements:
+Supercell should be installed. GULP should be in the path or variable PRG_GULP should be set before running script df_cfg.bash.
 
 export PRG_GULP=<full path to gulp program>
 
-The result file ice-Ih-cfgs.anlz shows, which configurations fulfill conditions of all oxygen atoms 2 coordinated (CNO) and no close contacts of hydrogen (H-H).
+Result:
+The directory ice-Ih-cfgs-final/ contains all ice-Ih 1x2x1 supercell configurations that fulfill both structure-restriction conditions: all oxygen atoms 2 coordinated (CNO) and no close contacts between H atoms.
+
+A detailed description of this example is provided in the Supporting Information of the supercell article.
+
 
