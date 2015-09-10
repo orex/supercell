@@ -1,0 +1,11 @@
+Disorder in gehlenite Ca2Al2SiO7 compound, based on lterature data 
+
+Florian, P., Veron, E., Green, T. F. G., Yates, J. R., & Massiot, D. (2012). 
+Elucidation of the Al/Si ordering in gehlenite Ca2Al2SiO7 by combined 
+29Si and 27Al NMR spectroscopy/quantum chemical calculations. 
+Chemistry of Materials, 24(21), 4068–4079. doi:10.1021/cm3016935
+
+Ca2Al2SiO7.cif - initial structure.
+Ca2Al2SiO7_abg.cif - modified structure for large supercell permutations calculations.
+
+Supercell should be installed. See Supporting materials for details.

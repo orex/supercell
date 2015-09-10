@@ -43,5 +43,7 @@ data/examples/ice-Ih-adv/ice-Ih-cfgs-final/
 data/examples/ice-Ih/ice-Ih-cfgs.anlz
 data/examples/ice-Ih/ice-Ih-cfgs/
 
+data/examples/gamma-Fe2O3/cell1?3_out/
+
 #GULP
 gulp

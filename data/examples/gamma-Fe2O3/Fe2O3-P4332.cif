@@ -1,6 +1,4 @@
 data_79196-ICSD
-#2012 by Fachinformationszentrum Karlsruhe, and the U.S. Secretary of 
-#Commerce on behalf of the United States.  All rights reserved.
 _database_code_ICSD                79196
 _audit_creation_date               1996/10/14
 _audit_update_record               2010/08/01
@@ -69,10 +67,10 @@ _symmetry_equiv_pos_as_xyz
 loop_
 _atom_type_symbol
 _atom_type_oxidation_number
-Fe1	 3
-Fe2	 3
-Fe3	 3
-O1	-2
+Fe1      3
+Fe2      3
+Fe3      3
+O1      -2
 O2      -2
 loop_
 _atom_site_label
@@ -92,3 +90,5 @@ O1 O2- 8 c 0.861(1) 0.861(1) 0.861(1) 1. 0 0.45
 O2 O2- 24 e 0.372(1) 0.377(1) 0.876(2) 1. 0 0.45 
 
 #End of data_79196-ICSD
+
+
