@@ -23,8 +23,8 @@ _atom_type_symbol
 _atom_type_oxidation_number
   Ca1  +2
   AlT1 +3
-  AlT  +3
-  SiT  +4
+  AlT2 +3
+  SiT2 +4
   O1   -2
   O2   -2
   O3   -2
