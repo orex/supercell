@@ -1,0 +1,82 @@
+#------------------------------------------------------------------------------
+#$Date: 2015-07-07 11:16:37 +0000 (Tue, 07 Jul 2015) $
+#$Revision: 140673 $
+#$URL: file:///home/coder/svn-repositories/cod/cif/1/52/10/1521043.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/
+#
+# All data on this site have been placed in the public domain by the
+# contributors.
+#
+data_1521043
+loop_
+_publ_author_name
+'Frantti, J.'
+'Nishio, S.'
+'Lappalainen, J.'
+'Eriksson, S.'
+'Lantto, V.'
+'Ivanov, S.'
+'Kakihana, M.'
+'Rundlof, H.'
+_publ_section_title
+;
+ Neutron diffraction studies of Pb (Zrx Ti1-x) O3 ceramics
+;
+_journal_name_full               'Japanese Journal of Applied Physics, Part 1'
+_journal_page_first              5697
+_journal_page_last               5703
+_journal_volume                  39
+_journal_year                    2000
+_chemical_formula_sum            'O3 Pb Ti0.5 Zr0.5'
+_chemical_name_systematic        'Pb (Zr0.5 Ti0.5) O3'
+_space_group_IT_number           99
+_symmetry_space_group_name_Hall  'P 4 -2'
+_symmetry_space_group_name_H-M   'P 4 m m'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                90
+_cell_formula_units_Z            1
+_cell_length_a                   4.03034
+_cell_length_b                   4.03034
+_cell_length_c                   4.1449
+_cell_volume                     67.328
+_citation_journal_id_ASTM        JAPNDE
+_cod_data_source_file            Frantti_JAPNDE_2000_1452.cif
+_cod_data_source_block           O3Pb1Ti0.5Zr0.5
+_cod_original_cell_volume        67.32827
+_cod_chemical_formula_sum_orig   'O3 Pb1 Ti0.5 Zr0.5'
+_cod_database_code               1521043
+loop_
+_symmetry_equiv_pos_as_xyz
+x,y,z
+-y,x,z
+-x,-y,z
+y,-x,z
+-x,y,z
+-y,-x,z
+x,-y,z
+y,x,z
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Pb1  +2
+Zr1  +4
+Ti1  +4
+O1   -2
+O2   -2
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+_atom_site_U_iso_or_equiv
+Zr1 Zr 0.5 0.5 0.5649 0.5 0.0
+O1 O 0.5 0.5 0.0921 1 0.0
+O2 O 0.5 0 0.611 1 0.0
+Pb1 Pb 0.024 0.024 0 0.25 0.0
+Ti1 Ti 0.5 0.5 0.5649 0.5 0.0

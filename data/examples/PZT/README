@@ -1,0 +1,26 @@
+**********************************
+PZT ceramics example
+**********************************
+
+Description:
+The example generates FIG 3 (left) in paper
+
+Grinberg, I., Cooper, V. R., & Rappe, A. M. (2004). 
+Oxide chemistry and local structure of PbZrxTi1-xO3 studied by 
+density-functional theory supercell calculations. 
+Physical Review B - Condensed Matter and Materials Physics, 69(14), 1–17. 
+doi:10.1103/PhysRevB.69.144118
+
+Instructions:
+Supercell should be installed. Run script df_cfg.bash
+
+Results:
+The figure is directly printed in the terminal.
+
+**********************************
+Additional notes:
+The supercell commands used in this example are of the form:
+
+supercell  -s 4x2x1 -i PZT-PbZr05Ti05O3.cif -m -o out/PZT421
+
+Note, that the generated and reference table items ordered differently.
