@@ -1306,12 +1306,20 @@ vector3 ob_comb_atoms::average_vector(const cmb_group &cbg)
 bool d2o_main_class::create_occup_groups()
 {
   //Check, that all labels has the same properties
+  //and caluclate total occupation for the labels
+  map<string, double> tot_occ;
   bool same_properties = true;
   for(int i = 0; i < mol_supercell.NumAtoms(); i++)
   {
     OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
     string label_i = atom_i->GetData("original_label")->GetValue();
     double occup_i = dynamic_cast<OBPairFloatingPoint *> (atom_i->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+
+    if ( tot_occ.count(label_i) == 0)
+       tot_occ[label_i] = occup_i;
+    else
+       tot_occ[label_i] += occup_i;
+
     for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
     {
       OBAtom * atom_j = mol_supercell.GetAtom(j + 1);
@@ -1326,7 +1334,7 @@ bool d2o_main_class::create_occup_groups()
                << etab.GetSymbol(atom_i->GetAtomicNum()) << " != "   
                << etab.GetSymbol(atom_j->GetAtomicNum()) << endl;
         }
-        
+       
         double occup_j = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
         if( abs(occup_i - occup_j) > occup_tol )
         {
@@ -1409,7 +1417,15 @@ bool d2o_main_class::create_occup_groups()
   for(cc::const_iterator it  = coc.begin();
                          it != coc.end(); ++it)
     occup_groups.push_back(it->second);
-  
+
+  //Correct occup_target 
+  for(int i = 0; i < occup_groups.size(); i++)
+  {
+    for(int j = 0; j < occup_groups[i].items.size(); j++)
+      occup_groups[i].items[j].occup_target = 
+          tot_occ[occup_groups[i].items[j].label]/double(occup_groups[i].number_of_sites());
+  }
+
   return true;
 }
  
