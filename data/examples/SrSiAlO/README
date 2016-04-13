@@ -1,0 +1,44 @@
+**********************************
+Transparent Ceramics example
+**********************************
+
+Description:
+The example approximate disorder in transparent ceramics.
+
+Al Saghir, K., Chenu, S., Veron, E., Fayon, F., 
+Suchomel, M., Genevois, C., … Allix, M. (2015). 
+Transparency through structural disorder: 
+A new concept for innovative transparent ceramics. 
+Chemistry of Materials, 27(2), 508–514. 
+doi:10.1021/cm5037106
+
+
+Instructions:
+Supercell should be installed. 
+
+Examples:
+
+The supecell approximation for cell 1x2x1 (charge balanced, dry run):
+
+supercell -d -i SrSiAlO.cif -s 1x2x1 -p "Sr*:c=+2" -p "Al*:c=+3" -p "O*:c=-2" -p "Si*:c=+4"
+
+Reference output:
+
+...
+
+ Group 1 (16 atomic positions in supercell):
+  * Site #1: Si1 (occ. 0.4129) -> distributed over 6 positions out of 16 (actual occ.: 0.375).
+  * Site #2: Al1 (occ. 0.587) -> distributed over 10 positions out of 16 (actual occ.: 0.625).
+  Number of combinations for the group is 8008
+
+...
+
+ Group 5 (4 atomic positions in supercell):
+  * Site #1: Sr2 (occ. 0.1741) -> distributed over 1 positions out of 4 (actual occ.: 0.250).
+  Number of combinations for the group is 4
+
+...
+-------------------------------------------------
+The total number of combinations is 32032
+-------------------------------------------------
+
