@@ -6,7 +6,7 @@ compiler:
 
 env:
  - LIBARCHIVE_OFF=TRUE
- - LIBARCHIVE_OFF=FALSE 
+ - LIBARCHIVE_OFF=FALSE
 
 before_install:
  - sudo apt-get update -qq
@@ -24,7 +24,7 @@ before_script:
  - cd ${c_path}
  - mkdir build
  - cd build
- - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF}
+ - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF}
 
 script:
  - make supercell
