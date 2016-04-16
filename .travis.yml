@@ -28,4 +28,4 @@ before_script:
 
 script:
  - make supercell
- 
+ - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif
