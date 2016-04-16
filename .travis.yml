@@ -17,7 +17,7 @@ install:
  - cd ~ 
  - git clone https://github.com/openbabel/openbabel.git
  - cd openbabel && mkdir build && cd build
- - cmake ../ -DBUILD_GUI=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS_DEBUG="-O2" -DWITH_INCHI=OFF && make && sudo make install
+ - cmake ../ -DCMAKE_BUILD_TYPE=Release && make && sudo make install
  - cd ~
 
 before_script:
