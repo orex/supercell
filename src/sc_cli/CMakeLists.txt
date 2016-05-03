@@ -4,6 +4,7 @@ find_package(Boost 1.46 REQUIRED COMPONENTS regex program_options filesystem sys
 
 set(sc_cli_source ${sc_sources} main.cpp parse_d2o_input.cpp)
 set(sc_cli_libraries ${sc_libraries} ${Boost_LIBRARIES} ${LibArchive_LIBRARIES} )
+set(sc_includes ${sc_includes} ${Boost_INCLUDE_DIRS})
 
 include_directories(${sc_includes})
 
