@@ -145,6 +145,12 @@ int main(int argc, char** argv)
       cout << "-                  (kirill.okhotnikov@gmail.com)    -" << endl;
       cout << "-                 * Sylvian Cadars                  -" << endl;
       cout << "-                  (sylvian.cadars@cnrs-imn.fr)     -" << endl;
+      cout << "-                 * Thibault Charpentier            -" << endl;
+      cout << "-                  (Thibault.Charpentier@cea.fr)    -" << endl;
+      cout << "-----------------------------------------------------" << endl;
+      cout << "-  please cite:                                     -" << endl;
+      cout << "-    K. Okhotnikov, T. Charpentier and S. Cadars    -" << endl;
+      cout << "-    J. Cheminform. 8 (2016) 17 – 33.               -" << endl;
       cout << "-----------------------------------------------------" << endl;
       cout << endl;
     }  
