@@ -1,0 +1,29 @@
+**********************************
+MgAl_xFe_{2-x}O4 example
+**********************************
+
+Description:
+
+MgAlFeO4.cif
+Input file for generation spinel derivative structures described in
+
+Instructions:
+To generate derivative structures for x=1.0 (97 SIC, cell 1x1x1) run
+
+mkdir out
+supercell                 `#program name` \
+          -i MgAlFeO4.cif `#Input file name` \
+          -p "MgA:p=8"    `#Set A position occupied fully by Mg`\
+          -p "MgB:p=0"    `#Remove Mg from B position` \
+          -p "AlB:p=8"    `#Al and Fe atoms` \
+          -p "FeB:p=8"    `#occupies position B equaly` \
+          -m              `#Output only SIC structures` \
+          -o out/spd      `#Output structures to out folder with prefix spd` 
+
+Supercell should be installed. 
+
+Results:
+The structures appears in out folder. Totally 97 structures.
+
+**********************************
+

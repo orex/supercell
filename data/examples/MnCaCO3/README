@@ -1,0 +1,29 @@
+**********************************
+Mn_xCa_{1-x}CO3 example
+**********************************
+
+Description:
+
+MnCaCO3_timing.bash:
+The script generates superset of Table 3 data in paper 
+
+Wang, Q., Grau-Crespo, R., & de Leeuw, N. H. (2011). 
+Mixing Thermodynamics of the Calcite-Structured (Mn,Ca)CO3 
+Solid Solution: A Computer Simulation Study. 
+The Journal of Physical Chemistry B, 115(47), 13854–13861. 
+doi:10.1021/jp200378q
+
+with configuration generation timing.
+
+Instructions:
+Supercell should be installed. Run scripts MnCaCO3_timing.bash and MnCaCO3_saturation.bash
+For timing script "ts" should be installed (moreutils package in Debian and Ubuntu).
+
+Results:
+The table is directly printed in the terminal. 
+
+**********************************
+Additional notes:
+The supercell commands used in this example are of the form:
+
+  supercell -d -i MnCaCO3.cif -s <cell_size> -m -p "Mn:p=<Mn_atoms>" -p "Ca:p=<Ca_atoms>"
