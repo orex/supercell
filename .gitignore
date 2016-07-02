@@ -22,9 +22,9 @@ obsolete/
 *.*~
 
 #doc compiled files
-doc/supercell_man.aux
-doc/supercell_man.log
-doc/supercell_man.out
+doc/*/*.aux
+doc/*/*.log
+doc/*/*.out
 
 #examples output
 data/examples/alpha-SiGeO2/cell112
