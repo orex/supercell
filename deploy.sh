@@ -44,6 +44,7 @@ cp ${c_path}/build/src/sc_cli/supercell exe/.
 cd exe
 tar czvf supercell.tar.gz supercell
 rm supercell
+cd ..
 
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
