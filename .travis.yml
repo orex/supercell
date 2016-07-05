@@ -7,6 +7,11 @@ compiler:
 env:
  - LIBARCHIVE_OFF=TRUE
  - LIBARCHIVE_OFF=FALSE
+ 
+ matrix:
+  include:
+    - gcc
+    - env: LIBARCHIVE_OFF=TRUE
 
 before_install:
  - sudo apt-get update -qq
