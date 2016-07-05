@@ -50,7 +50,7 @@ script:
 
 deploy:
   provider: script
-  script: ./deploy.sh
+  script: ${c_path}/deploy.sh
   skip_cleanup: true
   on:
     branch: master
