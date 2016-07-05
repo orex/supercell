@@ -23,7 +23,7 @@ git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
 
 # Clean out existing contents
 #rm -rf out/**/* || exit 1
-find . -maxdepth 1 ! -name '.git' | xargs rm -rf 
+find . -mindepth 1 -maxdepth 1 ! -name '.git' | xargs rm -rf 
 
 # Now let's go have some fun with the cloned repo
 git config user.name "Travis CI"
