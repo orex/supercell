@@ -1,4 +1,9 @@
+sudo: required
+dist: trusty
+
 language: cpp
+
+cache: ccache
 
 matrix:
  include:
@@ -12,7 +17,7 @@ matrix:
      env: LIBARCHIVE_OFF=FALSE
 
    - compiler: gcc
-     env: LIBARCHIVE_OFF=FALSE
+     env: LIBARCHIVE_OFF=TRUE
           DEPLOY_BUILD=TRUE
 
 before_install:
