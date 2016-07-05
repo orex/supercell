@@ -4,10 +4,13 @@ matrix:
  include:
    - compiler: gcc
      env: LIBARCHIVE_OFF=FALSE
+
    - compiler: gcc
      env: LIBARCHIVE_OFF=TRUE
+
    - compiler: clang
      env: LIBARCHIVE_OFF=FALSE
+
    - compiler: gcc
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
@@ -34,4 +37,4 @@ before_script:
 script:
  - make supercell
  - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif 
- - [[ ${DEPLOY_BUILD} == TRUE ]] && make doc_man doc_pdf
+ - echo "Make docs..."; [[ ${DEPLOY_BUILD} == TRUE ]] && make doc_man doc_pdf
