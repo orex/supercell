@@ -32,7 +32,7 @@ git config user.email "$COMMIT_AUTHOR_EMAIL"
 #Main code
 
 #Download index.html
-wget https://raw.githubusercontent.com/orex/supercell/deploy/index.html
+wget -q https://github.com/orex/supercell/raw/deploy/index.html
 
 mkdir -p doc
 
@@ -51,7 +51,8 @@ ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
 ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
 ENCRYPTED_IV=${!ENCRYPTED_IV_VAR}
 
-openssl aes-256-cbc -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV -in ${c_path}/id_rsa_gh-pages.enc -out id_rsa_gh-pages -d
+wget -q https://github.com/orex/supercell/raw/deploy/id_rsa_gh-pages.enc
+openssl aes-256-cbc -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV -in id_rsa_gh-pages.enc -out id_rsa_gh-pages -d
 chmod 600 id_rsa_gh-pages
 eval `ssh-agent -s`
 ssh-add id_rsa_gh-pages
