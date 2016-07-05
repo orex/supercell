@@ -17,7 +17,7 @@ matrix:
 
 before_install:
  - sudo apt-get update -qq
- - sudo apt-get install -qq libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev openbabel texlive-extra-utils python libeigen3-dev libarchive-dev texlive-extra-utils
+ - sudo apt-get install -qq libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev openbabel texlive-extra-utils python libeigen3-dev libarchive-dev texlive-extra-utils liblzma-dev libbz2-dev zlib1g-dev
  - export c_path=${PWD}
 
 install:
@@ -37,4 +37,4 @@ before_script:
 script:
  - make supercell
  - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif 
- - echo "Make docs..."; [[ ${DEPLOY_BUILD} == TRUE ]] && make doc_man doc_pdf
+ - echo "Make docs..."; [[ ${DEPLOY_BUILD} == TRUE ]] && make doc_man doc_pdf || exit 0
