@@ -8,12 +8,20 @@ if(PERL_FOUND)
                              ${CMAKE_SOURCE_DIR}/scripts/latex2man/latex2man)
   add_custom_target(doc_man ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/supercell.1)
   set(man_1 ${CMAKE_CURRENT_BINARY_DIR}/supercell.1)
+
+  add_custom_command(OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/supercell_man.html
+                     COMMAND ${CMAKE_SOURCE_DIR}/scripts/latex2man/latex2man -H -c supercell_man.css
+                             ${CMAKE_CURRENT_SOURCE_DIR}/supercell_man.tex
+                             ${CMAKE_CURRENT_BINARY_DIR}/supercell_man.html
+                     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/supercell_man.tex
+                             ${CMAKE_SOURCE_DIR}/scripts/latex2man/latex2man)
+  add_custom_target(doc_html ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/supercell_man.html)
 else(PERL_FOUND)
   message(WARNING "Perl is not found. Documentation (Unix man) will be not created")
   set(man_1 ${CMAKE_CURRENT_SOURCE_DIR}/supercell.1)
 endif(PERL_FOUND)
 
-find_package(LATEX)
+find_package(LATEX COMPONENTS PDFLATEX)
 if(PDFLATEX_COMPILER)
   add_custom_command(OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/supercell_man.pdf
                      COMMAND ${PDFLATEX_COMPILER} -interaction=batchmode 
@@ -24,6 +32,5 @@ if(PDFLATEX_COMPILER)
 else()
   message(WARNING "LATEX is not found. PDF manual will be not created")
 endif()
-
 
 install(FILES ${man_1} DESTINATION share/man/man1)
