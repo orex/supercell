@@ -11,7 +11,7 @@ env:
  matrix:
   include:
     - gcc
-    - env: LIBARCHIVE_OFF=TRUE
+      env: LIBARCHIVE_OFF=TRUE
 
 before_install:
  - sudo apt-get update -qq
