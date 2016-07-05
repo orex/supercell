@@ -1,17 +1,18 @@
 language: cpp
 
-compiler:
- - gcc
- - clang
-
-env:
- - LIBARCHIVE_OFF=TRUE
- - LIBARCHIVE_OFF=FALSE
- 
- matrix:
-  include:
-    - gcc
-      env: LIBARCHIVE_OFF=TRUE
+matrix:
+ include:
+   - compiler: gcc
+     env: LIBARCHIVE_OFF=TRUE
+          DEPLOY_BUILD=FALSE
+   - compiler: gcc
+     env: LIBARCHIVE_OFF=FALSE
+          DEPLOY_BUILD=FALSE
+   - compiler: clang
+     env: LIBARCHIVE_OFF=TRUE
+   - compiler: gcc
+     env: LIBARCHIVE_OFF=TRUE
+          DEPLOY_BUILD=TRUE
 
 before_install:
  - sudo apt-get update -qq
@@ -22,15 +23,16 @@ install:
  - cd ~ 
  - git clone https://github.com/openbabel/openbabel.git
  - cd openbabel && mkdir build && cd build
- - cmake ../ -DCMAKE_BUILD_TYPE=Release && make && sudo make install
+ - cmake ../ -DCMAKE_BUILD_TYPE=Release `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DGLIBC_24_COMPATIBLE=ON -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"`
+ - make && sudo make install
  - cd ~
 
 before_script:
  - cd ${c_path}
  - mkdir build
  - cd build
- - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF}
+ - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF} `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DCMAKE_BUILD_TYPE=Release -DGLIBC_24_COMPATIBLE=ON -DLINK_STATIC_LIBS=ON" || echo "-DCMAKE_BUILD_TYPE=Debug"
 
 script:
  - make supercell
- - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif
+ - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif 
