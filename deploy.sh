@@ -23,7 +23,7 @@ git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
 
 # Clean out existing contents
 #rm -rf out/**/* || exit 1
-find . -mindepth 1 -maxdepth 1 ! -name '.git' | xargs rm -rf 
+find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name "README" | xargs rm -rf 
 
 # Now let's go have some fun with the cloned repo
 git config user.name "Travis CI"
@@ -51,7 +51,7 @@ ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
 ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
 ENCRYPTED_IV=${!ENCRYPTED_IV_VAR}
 
-openssl aes-256-cbc -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV -in id_rsa_gh-pages.enc -out id_rsa_gh-pages -d
+openssl aes-256-cbc -K $ENCRYPTED_KEY -iv $ENCRYPTED_IV -in ${c_path}/id_rsa_gh-pages.enc -out id_rsa_gh-pages -d
 chmod 600 id_rsa_gh-pages
 eval `ssh-agent -s`
 ssh-add id_rsa_gh-pages
