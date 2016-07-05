@@ -36,8 +36,8 @@ wget https://raw.githubusercontent.com/orex/supercell/deploy/index.html
 
 mkdir -p doc
 
-cp ${c_path}/build/doc/supercell_man.pdf doc/.
-cp ${c_path}/build/doc/supercell_man.html doc/.
+cp ${c_path}/build/doc/man/supercell_man.pdf doc/.
+cp ${c_path}/build/doc/man/supercell_man.html doc/.
 
 
 # Commit the "changes", i.e. the new version.
