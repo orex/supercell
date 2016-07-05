@@ -20,13 +20,12 @@ SHA=`git rev-parse --verify HEAD`
 git clone $REPO out
 cd out
 git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
-cd ..
 
 # Clean out existing contents
-rm -rf out/**/* || exit 0
+#rm -rf out/**/* || exit 1
+find . -maxdepth 1 ! -name '.git' | xargs rm -rf 
 
 # Now let's go have some fun with the cloned repo
-cd out
 git config user.name "Travis CI"
 git config user.email "$COMMIT_AUTHOR_EMAIL"
 
@@ -35,10 +34,10 @@ git config user.email "$COMMIT_AUTHOR_EMAIL"
 #Download index.html
 wget https://raw.githubusercontent.com/orex/supercell/deploy/index.html
 
-mkdir doc
+mkdir -p doc
 
-cp build/doc/supercell_man.pdf doc/.
-cp build/doc/supercell_man.html doc/.
+cp ${c_path}/build/doc/supercell_man.pdf doc/.
+cp ${c_path}/build/doc/supercell_man.html doc/.
 
 
 # Commit the "changes", i.e. the new version.
