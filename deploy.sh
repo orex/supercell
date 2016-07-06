@@ -38,8 +38,12 @@ mkdir -p doc
 mkdir -p exe
 
 cp ${c_path}/build/doc/man/supercell_man.pdf doc/.
+
 cp ${c_path}/build/doc/man/supercell_man.html doc/.
 cp ${c_path}/doc/man/supercell_man.css doc/.
+
+cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf doc/.
+
 cp ${c_path}/build/src/sc_cli/supercell exe/.
 cd exe
 tar czvf supercell.tar.gz supercell
