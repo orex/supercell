@@ -1,0 +1,377 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.1cm, right=2.1cm]{geometry}
+\usepackage[utf8]{inputenc}  %unicode support
+\usepackage{graphicx}
+
+%%% Load packages
+\usepackage{amsthm,amsmath}
+\RequirePackage{natbib}
+%\usepackage{natbib}
+%\RequirePackage{hyperref}
+%\usepackage[applemac]{inputenc} %applemac support if unicode package fails
+%\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage[version=3]{mhchem}
+\usepackage{enumitem}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{gensymb}
+\usepackage{minted}
+\usepackage{fancyvrb}
+\usepackage{color, soul}
+\usepackage{hyperref}
+\usepackage{siunitx}
+
+%%% Put your definitions there:
+
+%opening
+%\title{\textbf{Supplimentary materials.} \linebreak \linebreak Supercell program: a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals.}
+
+\title{\textbf{Supercell program tutorial.}}
+
+\author{Kirill Okhotnikov, Thibault Charpentier and Sylvian Cadars}
+
+\begin{document}
+
+\maketitle
+
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{\dimexpr#1\linewidth-2\tabcolsep}}
+\newcommand{\sups}{\mbox{\textit{supercell}}}
+\newcommand{\Sups}{\mbox{\textit{Supercell}}}
+\newcommand{\clic}[1]{\mintinline[breaklines]{text}{#1}}
+
+\overfullrule=2cm
+
+\section*{Examples of \sups{} program application.}
+
+In the tutorial we discuss technical details of the \sups{} program use. All the examples are based on literature data, which was compared in detail to the results obtained with \sups{} where possible.
+
+\subsection*{Basic functionality: \ce{Ca2Al2SiO7}.}
+
+To understand how the \sups{} program works it is necessary to know the structure of Crystallographic Information File (CIF), which used both as the output and input formats. (The conversion to a number of other format is made very easy by the OpenBabel library, which is used by the program). The CIF file is a standard text file format for representing crystallographic information. The format promulgated by the International Union of Crystallography (IUCr) and the detailed information about it can be found at IUCr site (\url{http://www.iucr.org/})
+
+The structure of the sections of a CIF file relevant to our program will be illustrated with the \linebreak \clic{Ca2Al2SiO7.cif} file located in the \path{supercell/data/example} folder. 
+
+\begin{Verbatim}[commandchars=\\\{\}, numbers=left]
+\textcolor{red}{data_Ca2Al2SiO7}
+\textcolor{blue}{_cell_length_a}                   7.716
+\textcolor{blue}{_cell_length_b}                   7.716
+\textcolor{blue}{_cell_length_c}                   5.089
+\textcolor{blue}{_cell_angle_alpha}                90
+\textcolor{blue}{_cell_angle_beta}                 90
+\textcolor{blue}{_cell_angle_gamma}                90
+\textcolor{blue}{_cell_volume}                     302.982
+\textcolor{blue}{_symmetry_space_group_name_H-M}   'P -4 21 m'
+\textcolor{blue}{_symmetry_int_tables_number}      113
+\textcolor{magenta}{loop_}
+\textcolor{blue}{_space_group_symop_operation_xyz}
+x,y,z
+1/2-y,1/2-x,z
+y,-x,-z
+1/2-x,1/2+y,-z
+-x,-y,z
+1/2+y,1/2+x,z
+-y,x,-z
+1/2+x,1/2-y,-z
+\textcolor{magenta}{loop_}
+\textcolor{blue}{_atom_type_symbol}
+\textcolor{blue}{_atom_type_oxidation_number}
+  Ca1  +2
+  AlT1 +3
+  AlT2 +3
+  SiT2 +4
+  O1   -2
+  O2   -2
+  O3   -2
+\textcolor{magenta}{loop_}
+\textcolor{blue}{_atom_site_label}
+\textcolor{blue}{_atom_site_fract_x}
+\textcolor{blue}{_atom_site_fract_y}
+\textcolor{blue}{_atom_site_fract_z}
+\textcolor{blue}{_atom_site_occupancy}
+AlT1 0.00000 0.00000 0.00000 1.00000
+\colorbox{yellow}{AlT2 0.14310 0.35690 0.95280 0.50000}
+\colorbox{yellow}{SiT2 0.14310 0.35690 0.95280 0.50000}
+O1   0.50000 0.00000 0.18840 1.00000
+O2   0.14180 0.35820 0.28320 1.00000
+O3   0.08720 0.17060 0.80330 1.00000
+\end{Verbatim}
+
+The file consists of cell and spacegroup information at lines 2-21 (required by \sups{}), atoms charges (lines 22-30, optional) and atomic positions (lines 32-43, required). The partial occupancies of some sites (last column in lines 32-43) are a feature specific to disordered crystals. In the case presented here, partial occupancies are found for AlT2 and SiT2 sites, which are highlighted above. Both correspond to the same crystallographic position and will therefore be assigned to a single group by the \sups{} program. All other sites are fully occupied and will remain as such throughout the procedure.
+
+The \sups{} program is a user-friendly command-line software. It can be directly applied to cif files. Let us use it for an \clic{Ca2Al2SiO7.cif} file in 
+\path{supercell/data/examples} folder.
+\begin{Verbatim}[breaklines]
+supercell -d -i Ca2Al2SiO7.cif -m
+\end{Verbatim}
+
+The output of the command will be
+\begin{minted}[linenos, breaklines]{shell-session}
+kirill@asus-laptop:~/supercell/data/examples$ supercell -d -i Ca2Al2SiO7.cif -m 
+-----------------------------------------------------
+-               Supercell program                   -
+-----------------------------------------------------
+-      Authors:   * Kirill Okhotnikov               -
+-                  (kirill.okhotnikov@gmail.com)    -
+-                 * Sylvian Cadars                  -
+-                  (sylvian.cadars@cnrs-imn.fr)     -
+-----------------------------------------------------
+
+Initial system:
+  Chemical Formula: Al4 Ca4 O14 Si2
+
+Supercell system (1x1x1):
+  Size a=7.716, b=7.716, c=5.089
+
+Current charge balance option is "try"
+Total charge oxidation state (cif):  0
+Total charge used:   0
+
+----------------------------------------------------------------
+| Atom Label    |       charge          | mult  | occup x mult
+|               | Ox. state     | Used  | (cif) |                
+----------------------------------------------------------------
+|  AlT1         |  3            |  3    |  2    |  2
+|  AlT2         |  3            |  3    |  4    |  2
+|  Ca1          |  2            |  2    |  4    |  4
+|  O1           |  -2           |  -2   |  2    |  2
+|  O2           |  -2           |  -2   |  4    |  4
+|  O3           |  -2           |  -2   |  8    |  8
+|  SiT2         |  4            |  4    |  4    |  2
+----------------------------------------------------------------
+
+Chemical formula of the supercell: Al4 Ca4 O14 Si2
+Total charge of supercell: 0
+
+----------------------------------------------------
+ Identification of groups of crystallographic sites 
+----------------------------------------------------
+
+ Group 1 (2 atomic positions in supercell):
+  * Site #1: AlT1 (occ. 1) -> FIXED with occupancy 1.000.
+
+ Group 2 (4 atomic positions in supercell):
+  * Site #1: AlT2 (occ. 0.5) -> distributed over 2 positions out of 4 (actual occ.: 0.500).
+  * Site #2: SiT2 (occ. 0.5) -> distributed over 2 positions out of 4 (actual occ.: 0.500).
+  Number of combinations for the group is 6
+
+ Group 3 (4 atomic positions in supercell):
+  * Site #1: Ca1 (occ. 1) -> FIXED with occupancy 1.000.
+
+ Group 4 (2 atomic positions in supercell):
+  * Site #1: O1 (occ. 1) -> FIXED with occupancy 1.000.
+
+ Group 5 (4 atomic positions in supercell):
+  * Site #1: O2 (occ. 1) -> FIXED with occupancy 1.000.
+
+ Group 6 (8 atomic positions in supercell):
+  * Site #1: O3 (occ. 1) -> FIXED with occupancy 1.000.
+
+Minimal distance between atoms of two distinct groups: 1.68147 A.
+
+-------------------------------------------------
+The total number of combinations is 6
+-------------------------------------------------
+8 symmetry operation found for supercell.
+Combinations after merge: 2
+\end{minted}
+
+The program output gives an information about the initial and supercell system sizes, the total charge, and the chemical formula. The information about atomic species properties in the system are summarized in the table (lines 21-32). The multiplicity parameter is calculated using the symmetry information and atomic positions. The total charge is calculated using \path{_atom_type_oxidation_number} data in the CIF file or user-defined charges, specified with commands of the type:
+\clic{-p "Ca1:c=+2" -p "O1:c=-2"...}
+See the manual and other examples below for more information on the \clic{-p} option. The information about the total number of combinations is presented at line 64. The last two lines (66-67) appear only when the \clic{-m} option is present in the command line. 
+
+To generate structures for cell $1\times1\times2$ (the example presented in the main paper), the \sups{} program should be run with the following parameters:
+\begin{Verbatim}[breaklines]
+supercell -i Ca2Al2SiO7.cif -s 1x1x2 -m -o Ca2Al2SiO7_cell_1x1x2
+\end{Verbatim}
+where the supercell size is controlled by the \clic{-s} option (with ``x'' letter to represent the ``$\times$'' symbol) and the output file name prefix by the \clic{-o} parameter.
+
+\subsection*{Sampling methods: \ce{Ca2Al2SiO7}.}
+
+The number of combinations increases extremely rapidly with the number of atoms in the supercell (see main text and table~\ref{tab:FeSbO4} for example). In the case of the \ce{Ca2Al2SiO7} compound, the number of unique combinations for a $2\times2\times2$ supercell will be \num{9402622} which is too high to process and store, such that sampling is required. \Sups{} offers a few methods of sampling. All of them are controlled by the \clic{-n <type><number>} option, where \clic{<type>} is a letter that determines the sampling method (\clic{r} for random, \clic{l} or \clic{h} for lowest- or highest-$E\_C$ structures, \clic{f} or \clic{a} for first or last-generated generated configurations) and \clic{<number>} is the number of sampled configurations. To get \num{100} configurations picked randomly for the supercell $2\times2\times2$ the program should be executed with the following parameters:
+\begin{Verbatim}[breaklines]
+supercell -i Ca2Al2SiO7.cif -s 2x2x2 -m -n r100 -v 2 -o Ca2Al2SiO7_r100
+\end{Verbatim}
+The option \clic{-v 2} switches the verbosity to level 2, to follow the program execution, this example being time consuming.
+
+Increasing the supercell size to $2\times2\times3$ gives a total number of combinations around $3.2 \times 10^{13}$. This number is too high to be treated by \sups{} directly, but some of random configurations can nevertheless be created with our program, even for such big system. To perform the operation, the initial file should be processed with \sups{} program first.
+\begin{Verbatim}[breaklines]
+supercell -i Ca2Al2SiO7.cif -p "*:fixed" && mv supercell_i0.cif Ca2Al2SiO7_abg.cif
+\end{Verbatim}
+The parameter \clic{-p "*:fixed"} means, that all of the groups should be fixed (stored to output file with the initial partial occupancies). The result file \path{Ca2Al2SiO7_abg.cif} will then be used as an initial structure, but with P1 space group. It contains four crystallographic sites with partial Al/Si occupation. The sites \clic{(Al|Si)T2} should be renamed to \clic{(Al|Si)T2a} (for $z=0.95280$) and \clic{(Al|Si)T2b} for positions with $z=0.04720$. Because the group identification procedure in the \sups{} program uses the site labels as a first criterion (see main text for details), this new input CIF file now results in the identification of 2 independent groups of sites. The permutations can now be performed step by step, with the commands:
+\begin{Verbatim}[breaklines]
+rm Ca2Al2SiO7_step*.cif
+supercell -i Ca2Al2SiO7_abg.cif -s 2x2x3 -p "*T2b:fixed" -n r1 -o Ca2Al2SiO7_step1 
+supercell -i Ca2Al2SiO7_step1_ir*.cif -n r1 -o Ca2Al2SiO7_step2
+\end{Verbatim}
+The first \sups{} execution generates one random structure (with \clic{-n r1}) within the T2a group, leaving T2b group partially occupied (\clic{-p "*T2b:fixed"}). The next command generates a random configuration within the T2b group, based on the previously-generated file (\clic{Ca2Al2SiO7_step1_ir*.cif}). Strictly speaking, the generated structure is nearly random, not fully. The splitting of T2 group to T2a and T2b imposes a occupancy restriction of this groups, 12 atoms of Al and 12 atoms of Si in each group. The restriction can be overcome to some extent by setting the number of Al and Si atoms for each group manually with \clic{-p} command. The parameter is discussed below.
+
+\subsection*{Disorder exploration in \ce{FeSbO4}: Comparison with SOD code.}
+
+The \ce{FeSbO4} system was explored with the SOD program in ref. \cite{Grau2007}. This compound has cation disorder on a single octahedral \ce{MO6} site. The results of the SOD program reported in ref. \cite{Grau2007} are reproduced here in table~\ref{tab:FeSbO4}. Applying the \sups{} program with the symmetry-merging (\clic{-m}) option for the same supercell sizes gives exactly the same number of symmetry operations, total number of combinations and number of independent configurations as with the SOD code.
+
+\begin{table}[t!]
+\caption{Total number of possible combination of atoms for different supercell sizes of \ce{FeSbO4} for comparison with the results published in ref. \cite{Grau2007}.}
+\renewcommand{\arraystretch}{1.7}
+\newcolumntype{x}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{y}[1]{>{\arraybackslash}m{#1}}
+\centering
+\begin{tabular}{|x{2.0cm}|x{2.3cm}|x{2.3cm}|x{2.3cm}|x{2.3cm}|}
+\hline
+Cell, $a\times~b~\times~c$ & Number of symmetry operations & Total number of configurations & Number of unique configurations &  \sups{}/SOD run time \\
+\hline 
+ ~$1\times 1 \times 1$\textsuperscript{*} & 16  & 2                   & 1     & \textless~1~s \\
+ ~$1\times 1 \times 2$\textsuperscript{*} & 32  & 6                   & 2     & \textless~1~s \\
+ ~$1\times 1 \times 3$\textsuperscript{*} & 48  & 20                  & 3     & \textless~1~s \\
+ ~$1\times 1 \times 4$\textsuperscript{*} & 64  & 70                  & 8     & \textless~1~s \\
+ ~$2\times 2 \times 1$\textsuperscript{*} & 64  & 70                  & 7     & \textless~1~s \\
+ ~$2\times 2 \times 2$\textsuperscript{*} & 128 & 12870               & 180   & 1~s/8.0~s \\
+$2\times 2 \times 3$                      & 192 & 2704156             & 15565 & 7.5~s/7~days \\
+$2\times 3 \times 3$                      & 144 & ~$9\cdot 10^9$      & N/A   & N/A      \\
+$3\times 3 \times 3$                      & 432 & ~$1.9\cdot 10^{15}$ & N/A   & N/A      \\
+\hline
+\multicolumn{5}{y{11.5cm}}{\footnotesize{\textsuperscript{*}The data is also presented in table~1 in ref. \cite{Grau2007} and fully agrees with \sups{} results.}} \\
+%\multicolumn{5}{l}{\footnotesize{\textsuperscript{**} The results are also presented in table 1 paper\cite{Grau2007} and fully agree with \sups{} results.}} \\
+\end{tabular}
+\label{tab:FeSbO4}
+\end{table}
+
+The \sups{} command whose output is used to generate a row (for example for supercell size $2\times2\times1$) in table~\ref{tab:FeSbO4} is of the form:
+\begin{Verbatim}[breaklines]
+  supercell -d -i FeSbO4.cif -s 2x2x1 -m 
+\end{Verbatim}
+where \texttt{-d} (\texttt{--dry-run}) options switches the program to dry-run mode (no output-file generation), \clic{-i} (\clic{--input}) must be followed by the input file name (required), \clic{-s} (\clic{--cell-size}) sets the cell size in format \texttt{AxBxC}, where \texttt{A}, \clic{B} and \clic{C} are positive integer numbers.
+
+Table~\ref{tab:FeSbO4} can be generated automatically (except information about SOD run time) with the script \linebreak \path{df_chg.bash} in \path{supercell/data/examples/FeSbO4} folder. The output of \sups{} is parsed during the execution of the script to extract the relevant information.
+
+As mentioned above this example does not generate output structures. To do so, the user should first create a directory where the structures will be stored and then execute the same type of \sups{} command without the \clic{-d}, and with the \clic{-o <path_to_new_directory>/<ouput_file_prefix>} command instead, as in the example below:
+\begin{Verbatim}[breaklines]
+  mkdir FeSbO4_cell221/
+  supercell -i FeSbO4.cif -s 2x2x1 -m -o FeSbO4_cell221/FeSbO4_cell221
+\end{Verbatim}
+
+\subsection*{Coulomb energy calculations in $\gamma$-\ce{Fe2O3}.}
+
+The case of the $\gamma$-\ce{Fe2O3} system, investigated in ref. \cite{Grau2010}, was also examined. The input structure with name \clic{Fe2O3-P4332.cif} can be found in folder \path{supercell/data/examples/gamma-Fe2O3/}. Detailed information about the configurations and their degeneracies was presented therein for a supercell $1\times1\times3$ of $\gamma$-\ce{Fe2O3}, all of which were perfectly reproduced by the \sups{} program.\footnote{Table~2 in~\cite{Grau2010} has a mistyping: L1L3L5L10 degeneracy should be 24 and space group for configuration L1L2L4L5 should be \textit{C2}.}. Among other things, the correlation between total and Coulomb energies was examined in their paper. It was shown that, at least for this particular system, a quite strong correlation is obtained, such that Coulomb energy can be used to approximate the total energy with a reasonable precision. Electrostatic energies can be calculated directly with \sups{}, provided charges are provided for all sites in the CIF input file (with tag \clic{_atom_type_oxidation_number}) and/or in the command line. The following command should be used to calculate the electrostatic energy of all explored unique configurations for supercell size $1\times1\times3$ (examined in ref. \cite{Grau2010}):
+\begin{Verbatim}[breaklines]
+  mkdir cell113_out/
+  supercell -i Fe2O3-P4332.cif -s 1x1x3 -m -q -v 2 -o cell113_out/cell113 
+\end{Verbatim}
+where the \clic{-q} activates electrostatic energy calculations. This option requires the cell to be charge-balanced, and the calculation of all electrostatic energies will take approximately 5 min. A new file named \path{cell113_out/cell113_coulomb_energy.txt} is generated, which contains the electrostatic energy of each structure processed. The \clic{_chemical_name_common} parameter value in each output CIF file also contains the energy value.
+
+We can go further and explore the cell $1\times2\times3$ of $\gamma$-\ce{Fe2O3}. A fast dry-run of \sups{} program:
+\begin{Verbatim}[breaklines]
+  supercell -d -i Fe2O3-P4332.cif -s 1x2x3 -m -v 2 
+\end{Verbatim}
+provides information on the total number of combinations \num{735471} and the number of unique ones \num{30834}. The number of configurations is too high to process them all, but they can nevertheless be sampled. The random sampling was discussed above. Here we also extract the structures with lowest (\clic{-n l<number>}) and highest (\clic{-n h<number>}) electrostatic-energies. All possible samplings can be done simultaneously. 
+\begin{Verbatim}[breaklines]
+  mkdir cell123_out/
+  supercell -i Fe2O3-P4332.cif -s 1x2x3 -v 2 -m -q -n l50 -n r100 -n h20 -o cell123_out/cell123
+\end{Verbatim}
+Options \clic{-n l50}, \clic{-n h20} and \clic{-n r100} forces program to output only the 50 structures with lowest Coulomb energy, the first 20 structures with highest Coulomb energy and 100 random structures, respectively. The \clic{-q} option is of course mandatory to perform such Coulomb-energy-based samplings.
+
+It is important to keep in mind that the output text file \clic{cell123_coulomb_energy.txt} will list the Coulomb energies of all configurations, and not only of the sampled. If you are not interested in all configurations energies, but only in the sampled one, you can find useful files \clic{cell123_coulomb_energy_r.txt}, \clic{cell123_coulomb_energy_l.txt}, and \clic{cell123_coulomb_energy_h.txt}, which lists only the Coulomb energies of configurations sampled with each method. The most of the popular filesystems, has a significant performance degradation, when the total number of file in the folder more than \num{10000}. To overcome this limitation, the archiving option (\clic{-a}), which will automatically compress the output files, can be used.
+\begin{Verbatim}[breaklines]
+  supercell -i Fe2O3-P4332.cif -s 1x2x3 -m -q -v 2 -o Fe2O3/cell123 -a Fe2O3_cell123.zip
+\end{Verbatim}
+This run of \sups{} compress all the output files (except \clic{cell123_coulomb_energy.txt}) to \path{Fe2O3_cell123.zip} archive. The files will be located in the folder \path{Fe2O3} within this archive. The name of the files will start from \path{cell123}. The possible file formats \path{.zip}, \path{.tar}, \path{.tgz}, \path{.tar.gz}, \path{.tar.bz2} and \path{.tar.xz} should be specified like an extension of archive file. The parameter is optional and requires \textit{libarchive} installed, during program compilation.
+
+
+\subsection*{\Sups{} program verification on the $\alpha$-\ce{Si_xGe_{1-x}O2} system}
+
+The ``disorder'' part of the CRYSTAL code has previously been applied to a $\alpha$-\ce{Si_xGe_{1-x}O2} solid solution based on the $\alpha$-quartz structure\cite{El-Kelany2014}. Repeating the same calculations with the \sups{} program again led to the same total number of configurations, number of distinct configurations, and symmetry of individual structures for all $x$ values. The corresponding table may be generated automatically with the script \clic{df_cfg.bash} located in directory \clic{supercell/data/examples/alpha-SiGeO2/}. The \sups{} commands used in this example are of the form:
+\begin{Verbatim}[breaklines]
+  supercell -i alpha-SiGeO2.cif -s 1x1x2 -p "Si1:p=2" -p "Ge1:p=4" -m -o cell112/Si2/SiGeO2_112-Si2
+\end{Verbatim}
+here the \clic{-p} option is used to set the number of \ce{Si} and \ce{Ge} atoms occupying the disordered mixed site Si1/Ge1. The multiplicity of this site is 3 (trigonal space group \ce{P{3}_{2}{21}}, no. 154), which gives for a supercell of size $1\times1\times2$ a total number of 6 positions and imposes that $0 \leq p(\text{Si1})\leq 6$ and $p(\text{Ge1})+p(\text{Si1})=6$. The structures are generated and stored in directory \clic{cell112/Si2/}, which is created by the script before the command is run. The number ``2'' in ``Si2'' stands here for the population $p(\text{Si1})$, and the script actually creates seven such directories named: \path{cell112/Si<p(Si1)>/} where $p(\text{Si1})=0...6$ which contain the generated structures.
+
+\subsection*{\Sups{} program verification on the \ce{Cu2ZnSnS_{x}Se_{4-x}} system.}
+
+Another verification was done by comparison with data published on \ce{Cu2ZnSnS_{x}Se_{4-x}}\cite{Dun2014}, in which the authors performed the symmetry search manually, rather than with any of the software discussed above. The data can therefore be treated as one more independent evidence of the correctness of our algorithm, which again provides results in complete agreement with those reported in ref. \cite{Dun2014}. This example is again distributed with the source code of the \sups{} program, along with a script (\clic{df_cfg.bash} in directory \clic{supercell/data/examples/Cu2ZnSnSxSe4-x/}) that will automatically generate the corresponding tables for direct comparison with the cited article. The \sups{} commands used in this example are of the form:
+\begin{Verbatim}[breaklines]
+  supercell -i stannite.cif -s 1x1x1 -p "S:p=3" -p "Se:p=5" -m -o <output_directory>/stannite
+\end{Verbatim}
+in which, as in the previous example, the \texttt{<output\_directory>} is created before the command is run and the populations of S and Se atoms on crystallographic sites ``S'' and ``Se'' are specified with the \clic{-p} option. It is important to keep in mind that ``S'' and ``Se'' in ``S:p=3'' and ``Se:p=5'' arguments refer to the \textit{crystallographic labels} as they are degined in the CIF file rather than to atom symbols (more typical labels would be of the form ``S1'' and ``Se1''). The multiplicity of these overlapping sites in the cell being 8 and the supercell size being $1\times1\times1$, the population values ``p'' should obey $0 \leq p(\text{S})\leq 8$ and $p(\text{Se}) + p(\text{S})=8$.
+
+\subsection*{\Sups{} program verification on piezoelectric ceramics \ce{PbZr_{x}Ti_{1-x}O3} (PZT).}
+
+Disorder in piezoelectric ceramics can be also processed with \sups{} program. The well-known \ce{PbZr_{x}Ti_{1-x}O3} (PZT) ceramics are a particularly interesting because of the displacement disorder on the Pb position, which is induced by \ce{Zr-Ti} substitution and crucially affects its electric and mechanical properties. The example described here is based on Ref. \cite{Grinberg2004}, where authors used DFT calculations to investigate the correlation between substitution ordering in supercell models and the physical properties of the system. They used in this particular case a strongly anisotropic $4\times2\times1$ supercell of composition \ce{PbZr_{0.5}Ti_{0.5}O3}. The approximations leads to 10 symmetry unique configurations, which were all presented in the paper. They can be easily be generated with the \sups{} program embedded in a simple script \clic{df_cfg.bash} located in \clic{supercell/data/examples/PZT/} folder. We note that the order of configurations differs in the script and in the paper. The command line used in this script is:
+\begin{Verbatim}[breaklines]
+  supercell  -s 4x2x1 -i PZT-PbZr05Ti05O3.cif -m -o <output_directory>/PZT421
+\end{Verbatim}
+Using the \sups{} program makes it possible to proceed with larger supercell sizes $4\times2\times2$ and $4\times3\times2$, yielding 490 and 29606 unique configurations, respectively. The second case may be difficult to process, but the first one is absolutely feasible. Such supercell size allow to research structure distortion in z-dimension also.
+
+\subsection*{Disorder in \ce{Pb_{0.5}Sn_{0.5}Te}: calculation of atom-pair correlation functions}
+The purpose of this section is to describe the procedure and results of the exploration of the \ce{Pb_{0.5}Sn_{0.5}Te} system discussed in the main text, in which we use the \sups{} program combined with a structure-analysis tool (the GULP program) to calculate atom-pair correlation functions. These functions are then used to evaluate to what extent the generated structures are representative of random Pb/Se disorder through their adequacy with Special-Quasirandom-Structure (SQS) character\cite{Zunger1990}.
+
+This example is performed automatically with the script \clic{df_cfg.bash} located in directory \path{supercell/data/examples/PbSnTe-SQS/} for two supercell sizes: $1\times1\times2$ and $1\times2\times2$. The script uses \sups{} commands such as:
+\begin{Verbatim}[breaklines]
+  supercell -i PbSnTe2.cif -s 1x1x2 -m -o cell_1x1x2/PbSnTe_1x1x2
+\end{Verbatim}
+The GULP program is then used to perform the following structure analysis on each one of the (symmetry-unique since the \clic{-m} option is used) output configurations. The correlation functions are calculated like a total energy of the system with set of ``fake'' potentials. The potential energy it set to +1 for \ce{A-A} and \ce{B-B} interactions and -1 for \ce{A-B} at distance $R_m$, with $m$ being the coordination sphere number (see main text), and zero for all other distances. The result is saved in text files \path{SQS-1x1x2} and \path{SQS-1x1x2} in the form of tables which list, for each configuration:
+\begin{itemize}
+ \item the structure name (ex. \path{cell_1x1x2/PbSnTe_c1x1x2_i<index>_w<weight>.cif})
+ \item the atom-pair correlation coefficients (see main text) calculated for the first 4 shells of each cationic site (ignoring \ce{Te} atoms), which correspond to \ce{A-B} distances (where \ce{A}, \ce{B} = \ce{Pb} or \ce{Sn}) of 4.51, 6.39, 7.83, and 9.04~\AA, as listed in the file header.
+\end{itemize}
+The adequacy of the structure to the SQS criteria is indicated by how close these four correlation functions, and in particular the first three, are to zero (because the substituted \ce{Pb} and \ce{Sn} atoms are present in equal concentrations, see main text). A good way to visualize these results is for example to sort the structures by ascending order of the absolute value of those coefficients in columns 1, 2, 3, and 4 (in this order).
+
+\subsection*{Permutations in ice \ce{I_h} $1\times1\times2$ supercell.}
+
+\begin{figure}[t]
+  \caption{ Crystal structure of ice \ce{I_h}. Cell 1x1x2. Hydrogen sites connected to the same oxygen atoms are displayed with the same color, each color being associated in this initial structure to a different H-atom label (from H1 to H8). }   
+  
+  \centering
+  %\includegraphics[scale=0.20]{figures/ice-Ih/ice-Ih-121-adv.png}
+  
+  \label{fig:iceIh-adv}
+\end{figure}
+
+The method described in the main paper to generate correlated ice \ce{I_h} structures will not work with supercells larger than the original one. An advanced method to do so is therefore presented here. The input CIF file should be changed manually to use this method. We strongly encourage the user to also check the \path{df_cfg.bash} script in folder \path{supercell/data/examples/ice-Ih-adv/}, which implements this procedure. 
+
+As mentioned in the main text, the ordering of H atoms in this system is governed by two restrictions: the coordination number of all O atoms should be two and H atoms should not be in close contact with each other. Further below, we describe how to impose the first restriction in the initial structure, by grouping atoms in a non-standard way. But first of all, we generate a $1\times1\times2$ supercell, keeping the disorder:
+\begin{Verbatim}[breaklines]
+  supercell -i ice-Ih.cif -s 1x1x2 -p "*:fixed" -o ice-Ih-121-adv.cif
+\end{Verbatim}
+where the partial occupancies on both sites are kept fixed. (This step could of course alternatively be done with any program for the visualization of crystallographic structures.) The output structure is shown on fig.~\ref{fig:iceIh-adv}. Each oxygen atom is still surrounded by 4 hydrogen positions, strictly two of which should be occupied by H atoms in the end. In the figure, the hydrogen sites are associated with different O atoms marked with different colors. The H atom labels are then changed manually in the same way as the color code, ensuring that (i) all hydrogen positions attached to the same O atom have the same label and that (ii) hydrogen atoms positions associated with different O atoms have different labels (ex. H1, H2, H3, etc).
+
+Importantly, the \sups{} program will associate sites with identical crystallographic labels within a common group (as defined in the main text), such that a run with this customized file (\path{supercell/data/examples/ice-Ih-adv/ice-Ih-121-adv.cif}) as an input gives 8 groups with $C^2_4=6$ combinations each, which yields a total of $6^8=$\num{1679616} configurations. The \sups{} command used for this step is the following:
+\begin{Verbatim}[breaklines]
+  supercell -i ice-Ih-121-adv.cif -m -q -p "O:c=-2" -p "H*:c=+1" -p "r(H[5-8]):fixed" -o <output_directory>/ice-Ih-l1
+\end{Verbatim}
+where the \clic{-p --property} option is first used to set the charges (\clic{<label>:c=<charge_value>}) of O and H crystallographic sites for the Coulomb energy calculation (\clic{-q} option). The ``\clic{H*}'' notation here sets the specified charge to all sites starting with ``H''. The \clic{-p} option is then used again to fix the partial occupancies of H sites labelled ``H5'' to ``H8'' with the notation ``\clic{r(H[5-8]):fixed}'', which excludes these sites from the permutation. Here the ``r'' means that the expression inside the parentheses should be interpreted like a Perl regular expression (RegEx). A description of the corresponding syntax can be found at \url{http://en.wikipedia.org/wiki/Regular_expression}. More information on these wild cards and other advanced text search functionalities to set the properties of several crystallographic sites are provided in the manual (\clic{man supercell}). By comparison, applying the \sups{} program to the same supercell size with the original grouping gives a total of \num{189290920} configurations, which is approximately one hundred times more than with the customized CIF file.
+
+This new group assignment not only solves the problem of the O coordination, but also splits the 32 H positions into 8 groups of sites. The number of configurations (1.6~million) is still very high to generate them all simultaneously, but the process can be done step-by-step. We note that such a number of configurations is not a problem for the\sups{} algorithm, which can deal with up to $8\times{10^8}$ configurations, but for storage and data analysis (by the GULP program). 4 out of 8 groups can be fixed in a first step to generate 656 (after symmetry merging) output structures. These files can then be analyzed to exclude those with \ce{H-H} close contact. Only valid structures are kept for the next step, where they are used as new inputs for the \sups{} program, with the command:
+\begin{Verbatim}[breaklines]
+  supercell -i <new_input_structure> -m -q -p "O:c=-2" -p "H*:c=+1"  -o <output_directory>/<prefix>
+\end{Verbatim}
+The process gives only 9 structures which obey both conditions, and which may be found in the \linebreak \path{ice-Ih-cfgs-final/} directory.
+
+The directories and files created for this example by the script: \clic{df_cfg.bash} in folder \path{supercell/data/examples/ice-Ih-adv/} are organized as follows:
+\begin{itemize}
+ \item \clic{ice-Ih-121-adv.cif}: the starting structure, based on a $1\times2\times1$ supercell of the original ice \ce{I_h} structure, with labels modified as described above.
+ \item \clic{ice-Ih.gin_template}: contains the input-file template for the structure analysis performed with Gulp, which lists inter-atomic distances and is parsed to locate H-H close contacts and check the O-atom coordination.
+ \item \clic{ice-Ih-cfgs-l1/}: contains partially-disordered configurations files with names \path{ice-Ih-l1_i<index>_w<weight>.cif}, in which permutations were treated on groups of H sites H1 to H4, but where partial occupancies were kept on groups H5 to H8. Each structure is associated with a folder (\path{ice-Ih-cfgs-l1/ice-Ih-l1_i<index>_w<weight>/gulp/}) which contains the output of the structure analysis performed with the GULP program.
+ \item \clic{ice-Ih-cfgs-l2/}: Contains copies the structures satisfying both restrictions on the local structure (no \ce{H-H} close contact and 2-coordinated O) among those obtained during the first step. Each of these structures are then associated with directories of the type:
+ \item \clic{ice-Ih-cfgs-l2/ice-Ih-l1_i<index>_w<weight>/} which contains the structures generated by the second run of the algorithm, where the remaining disordered sites (H5 to H8) are treated. These structures are named \path{ice-Ih-l1_i<step1_index>_w<step1_weight>-l2_i<step2_index>w_<step2_weight>.cif} and are again associated with all folder (same name without the extension) containing the result of the structure analysis.  
+ \item \clic{ice-Ih-cfgs-final/}: contains the final selection of structures with disorder in all H sites treated, and which satisfy both structure-restriction conditions.
+\end{itemize}
+
+\section*{\Sups{} program integration to research process.}
+Our program is ``link in chain'' and the efficiency of the research process, obviously, depend on another links and connection between them. Below, there is a list of the programs/resources (in addition to discussed in the main paper), which can be possibly used with supercell program in disorder compound research.
+\begin{description}
+  \item[ASE] (\url{https://wiki.fysik.dtu.dk/ase/}). Atomic Simulation Environment is another set of python tool for setting up, manipulating, running, visualizing and analyzing atomistic simulations. Support many calculation software, both classical and \textit{ab-initio}, including CASTEP and VASP. 
+  \item[cif2cell] (\url{http://sourceforge.net/projects/cif2cell/}). Cif2cell is a tool to generate an input structure in different formats, like CASTEP, CP2K, CRYSTAL09, Quantum Espresso, VASP and many more. 
+  \item[COD] (\url{http://www.crystallography.net}). Open-access  structural database with more than \num{356000} records (Feb 2016). 
+  \item[GULP] (\url{http://gulp.curtin.edu.au/}). GULP is force-field program for performing a variety of tasks on a range of system types. It can be useful for optimizations, energy calculation and analysis of the structure.
+  \item[EnCIFer] (\url{http://www.ccdc.cam.ac.uk/Community/freeservices/encifer/}). A GUI tool for validating of \sups{} input structures. Useful for draft structures.
+  \item[VESTA] (\url{http://jp-minerals.org/vesta/}). A powerful tool for visualization and editing of crystallographic structures. It supports many input/output format (including cif) and can visualize partially occupied sites.
+\end{description}
+
+ 
+\bibliographystyle{unsrt} % Style BST file
+\bibliography{supercell_tutorial}  % Bibliography file (usually '*.bib' )
+
+
+\end{document}
