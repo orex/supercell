@@ -45,8 +45,9 @@ cp ${c_path}/doc/man/supercell_man.css doc/.
 cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf doc/.
 
 cp ${c_path}/build/src/sc_cli/supercell exe/.
+cp ${c_path}/openbabel/data/{aromatic.txt,atomtyp.txt,bondtyp.txt,element.txt,phmodel.txt,space-groups.txt,types.txt} exe/.
 cd exe
-tar czvf supercell.tar.gz supercell
+tar czvf supercell.tar.gz *
 rm supercell
 cd ..
 
