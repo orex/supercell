@@ -43,6 +43,7 @@ before_script:
  - mkdir build
  - cd build
  - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF} `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DCMAKE_BUILD_TYPE=Release -DGLIBC_24_COMPATIBLE=ON -DLINK_STATIC_LIBS=ON" || echo "-DCMAKE_BUILD_TYPE=Debug"`
+ - wget https://github.com/gpoore/minted/raw/master/source/minted.sty -O doc/tutorial/minted.sty
 
 script:
  - make `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "supercell doc_man doc_pdf doc_html tutorial_pdf" || echo "supercell"`
