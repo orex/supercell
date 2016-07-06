@@ -44,12 +44,16 @@ cp ${c_path}/doc/man/supercell_man.css doc/.
 
 cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf doc/.
 
-cp ${c_path}/build/src/sc_cli/supercell exe/.
-find ${c_path} -name aromatic.txt
-cp ${c_path}/openbabel/data/{aromatic.txt,atomtyp.txt,bondtyp.txt,element.txt,phmodel.txt,space-groups.txt,types.txt} exe/.
 cd exe
+cp ${c_path}/build/src/sc_cli/supercell .
+
+for i in {aromatic.txt,atomtyp.txt,bondtyp.txt,element.txt,phmodel.txt,space-groups.txt,types.txt}
+do
+  wget -nv https://github.com/openbabel/openbabel/raw/master/data/$i
+done
+
 tar czvf supercell.tar.gz *
-rm supercell
+find . -mindepth 1 -maxdepth 1 ! -name 'supercell.tar.gz' | xargs rm -rf 
 cd ..
 
 # Commit the "changes", i.e. the new version.
