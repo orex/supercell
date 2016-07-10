@@ -36,8 +36,6 @@ mkdir -p doc
 mkdir -p exe
 
 wget -nv https://github.com/orex/supercell/raw/deploy/index.html
-wget -nv https://github.com/orex/supercell/raw/deploy/README
-
 
 cp ${c_path}/build/doc/man/supercell_man.pdf doc/.
 
@@ -53,6 +51,8 @@ for i in {aromatic.txt,atomtyp.txt,bondtyp.txt,element.txt,phmodel.txt,space-gro
 do
   wget -nv https://github.com/openbabel/openbabel/raw/master/data/$i
 done
+
+wget -nv https://github.com/orex/supercell/raw/deploy/README
 
 tar czvf supercell.tar.gz *
 find . -mindepth 1 -maxdepth 1 ! -name 'supercell.tar.gz' | xargs rm -rf 
