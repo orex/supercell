@@ -32,10 +32,12 @@ git config user.email "$COMMIT_AUTHOR_EMAIL"
 #Main code
 
 #Download index.html
-wget -nv https://github.com/orex/supercell/raw/deploy/index.html
-
 mkdir -p doc
 mkdir -p exe
+
+wget -nv https://github.com/orex/supercell/raw/deploy/index.html
+wget -nv https://github.com/orex/supercell/raw/deploy/README
+
 
 cp ${c_path}/build/doc/man/supercell_man.pdf doc/.
 
