@@ -1,4 +1,33 @@
 #!/bin/bash
+
+function deploy-doc {
+  cp ${c_path}/build/doc/man/supercell_man.pdf ${deploy_dir}/doc/.
+
+  cp ${c_path}/build/doc/man/supercell_man.html ${deploy_dir}/doc/.
+  cp ${c_path}/doc/man/supercell_man.css ${deploy_dir}/doc/.
+
+  cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf ${deploy_dir}/doc/.
+
+}
+
+function deploy-exe {
+  tmp_folder=`mktemp -d`
+  cd ${tmp_folder}
+  cp ${c_path}/build/src/sc_cli/supercell .
+
+  for i in {aromatic.txt,atomtyp.txt,bondtyp.txt,element.txt,phmodel.txt,space-groups.txt,types.txt}
+  do
+    wget -nv https://github.com/openbabel/openbabel/raw/master/data/$i -O $i
+  done
+
+  wget -nv https://github.com/orex/supercell/raw/deploy/README -O README
+
+  tar czvf supercell-$1.tar.gz *
+
+  cp supercell-$1.tar.gz ${deploy_dir}/exe/.
+}
+
+
 set -e # Exit with nonzero exit code if anything fails
 
 SOURCE_BRANCH="master"
@@ -19,49 +48,33 @@ SHA=`git rev-parse --verify HEAD`
 # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
 git clone $REPO out
 cd out
+deploy_dir=${PWD}
 git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
-
-# Clean out existing contents
-#rm -rf out/**/* || exit 1
-find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name "README" | xargs rm -rf 
 
 # Now let's go have some fun with the cloned repo
 git config user.name "Travis CI"
 git config user.email "$COMMIT_AUTHOR_EMAIL"
 
+
 #Main code
 
-#Download index.html
 mkdir -p doc
 mkdir -p exe
 
-wget -nv https://github.com/orex/supercell/raw/deploy/index.html
+wget -nv https://github.com/orex/supercell/raw/deploy/index.html -O index.html
 
-cp ${c_path}/build/doc/man/supercell_man.pdf doc/.
+if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+  deploy-doc
+  deploy-exe linux
+elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+  deploy-exe osx
+fi
 
-cp ${c_path}/build/doc/man/supercell_man.html doc/.
-cp ${c_path}/doc/man/supercell_man.css doc/.
-
-cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf doc/.
-
-cd exe
-cp ${c_path}/build/src/sc_cli/supercell .
-
-for i in {aromatic.txt,atomtyp.txt,bondtyp.txt,element.txt,phmodel.txt,space-groups.txt,types.txt}
-do
-  wget -nv https://github.com/openbabel/openbabel/raw/master/data/$i
-done
-
-wget -nv https://github.com/orex/supercell/raw/deploy/README
-
-tar czvf supercell.tar.gz *
-find . -mindepth 1 -maxdepth 1 ! -name 'supercell.tar.gz' | xargs rm -rf 
-cd ..
 
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
 git add --no-ignore-removal .
-git commit -m "Deploy to GitHub Pages: ${SHA}"
+git commit -m "Deploy to GitHub Pages $TRAVIS_OS_NAME: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
 ENCRYPTION_LABEL="afb0f7bfe5ee"
