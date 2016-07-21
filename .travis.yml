@@ -26,12 +26,18 @@ matrix:
    - os: osx
      osx_image: xcode6.4
      compiler: gcc
-     env: LIBARCHIVE_OFF=TRUE
+     env: LIBARCHIVE_OFF=FALSE
+
+   - os: osx
+     osx_image: xcode6.4
+     compiler: gcc
+     env: LIBARCHIVE_OFF=FALSE
+          DEPLOY_BUILD=TRUE
      
 before_install:
  - wget https://github.com/orex/supercell/raw/deploy/deploy.sh && chmod +x deploy.sh
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; sudo apt-get install -qq libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev libeigen3-dev libarchive-dev liblzma-dev libbz2-dev zlib1g-dev; fi
- - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install eigen; fi
+ - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install eigen libarchive; fi
  - if [[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -qq texlive-extra-utils python texlive-extra-utils texlive-latex-extra python-pygments texlive-science texlive-humanities texlive-pstricks texlive-fonts-recommended; fi
  - if [[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "osx" ]]; then echo "OSX deploy build"; fi
  - export c_path=${PWD}
@@ -53,7 +59,7 @@ before_script:
  - wget https://raw.githubusercontent.com/gpoore/fvextra/master/fvextra/fvextra.sty -O doc/tutorial/fvextra.sty
 
 script:
- - make `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "supercell doc_man doc_pdf doc_html tutorial_pdf" || echo "supercell"`
+ - make `[[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]] && echo "supercell doc_man doc_pdf doc_html tutorial_pdf" || echo "supercell"`
  - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif
 
 deploy:
