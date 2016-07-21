@@ -11,7 +11,7 @@ function deploy-doc {
 }
 
 function deploy-exe {
-  tmp_folder=`mktemp -d`
+  tmp_folder=`mktemp -d -t XXXXXX`
   cd ${tmp_folder}
   cp ${c_path}/build/src/sc_cli/supercell .
 
