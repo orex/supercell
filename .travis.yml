@@ -54,7 +54,7 @@ before_script:
  - cd ${c_path}
  - mkdir build
  - cd build
- - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF} `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DCMAKE_BUILD_TYPE=Release -DGLIBC_24_COMPATIBLE=ON -DLINK_STATIC_LIBS=ON" || echo "-DCMAKE_BUILD_TYPE=Debug"`
+ - cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=${LIBARCHIVE_OFF} `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON" || echo "-DCMAKE_BUILD_TYPE=Debug"`  `[[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]] && echo " -DGLIBC_24_COMPATIBLE=ON"`
  - wget https://github.com/gpoore/minted/raw/master/source/minted.sty -O doc/tutorial/minted.sty
  - wget https://raw.githubusercontent.com/gpoore/fvextra/master/fvextra/fvextra.sty -O doc/tutorial/fvextra.sty
 
