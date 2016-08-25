@@ -1,3 +1,7 @@
+env:
+  global:
+  - COMMIT_AUTHOR_EMAIL: orex@travis-ci.org
+  
 sudo: required
 dist: trusty
 
