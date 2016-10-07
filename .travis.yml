@@ -41,6 +41,7 @@ matrix:
    - os: osx
      osx_image: xcode6.4
      compiler: gcc
+     rvm: 1.27.0
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
      
