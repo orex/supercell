@@ -1,32 +1,38 @@
 env:
   global:
     - COMMIT_AUTHOR_EMAIL: orex@travis-ci.org
-  
-sudo: required
-dist: trusty
 
 language: cpp
 
-cache: ccache
+sudo: required
 
 matrix:
  include:
    - dist: precise
      compiler: gcc
+     cache: ccache
      env: LIBARCHIVE_OFF=FALSE
 
    - compiler: gcc
+     dist: trusty
+     cache: ccache
      env: LIBARCHIVE_OFF=FALSE
 
    - compiler: gcc
+     dist: trusty
+     cache: ccache
      env: LIBARCHIVE_OFF=TRUE
 
    - compiler: clang
+     dist: trusty
      env: LIBARCHIVE_OFF=FALSE
 
    - compiler: gcc
+     dist: trusty
+     cache: ccache
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
+          
    - os: osx
      osx_image: xcode6.4
      compiler: gcc
