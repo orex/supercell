@@ -40,10 +40,8 @@ matrix:
      env: LIBARCHIVE_OFF=FALSE
 
    - os: osx
-     osx_image: xcode6.4
      cache: ccache     
      compiler: gcc
-     rvm: 1.27.0
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
      
