@@ -1,61 +1,183 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
-    <title>Supercell program</title>
-    <style type="text/css">/*
-Copyright (c) 2008, Yahoo! Inc. All rights reserved.
-Code licensed under the BSD License:
-http://developer.yahoo.net/yui/license.txt
-version: 2.6.0
-*/
-html{color:#000;background:#FFF;}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0;}table{border-collapse:collapse;border-spacing:0;}fieldset,img{border:0;}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal;}li{list-style:none;}caption,th{text-align:left;}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal;}q:before,q:after{content:'';}abbr,acronym{border:0;font-variant:normal;}sup{vertical-align:text-top;}sub{vertical-align:text-bottom;}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit;}input,textarea,select{*font-size:100%;}legend{color:#000;}del,ins{text-decoration:none;}body{font:13px/1.231 arial,helvetica,clean,sans-serif;*font-size:small;*font:x-small;}select,input,button,textarea{font:99% arial,helvetica,clean,sans-serif;}table{font-size:inherit;font:100%;}pre,code,kbd,samp,tt{font-family:monospace;*font-size:108%;line-height:100%;}body{text-align:center;}#ft{clear:both;}#doc,#doc2,#doc3,#doc4,.yui-t1,.yui-t2,.yui-t3,.yui-t4,.yui-t5,.yui-t6,.yui-t7{margin:auto;text-align:left;width:57.69em;*width:56.25em;min-width:750px;}#doc2{width:73.076em;*width:71.25em;}#doc3{margin:auto 10px;width:auto;}#doc4{width:74.923em;*width:73.05em;}.yui-b{position:relative;}.yui-b{_position:static;}#yui-main .yui-b{position:static;}#yui-main,.yui-g .yui-u .yui-g{width:100%;}{width:100%;}.yui-t1 #yui-main,.yui-t2 #yui-main,.yui-t3 #yui-main{float:right;margin-left:-25em;}.yui-t4 #yui-main,.yui-t5 #yui-main,.yui-t6 #yui-main{float:left;margin-right:-25em;}.yui-t1 .yui-b{float:left;width:12.30769em;*width:12.00em;}.yui-t1 #yui-main .yui-b{margin-left:13.30769em;*margin-left:13.05em;}.yui-t2 .yui-b{float:left;width:13.8461em;*width:13.50em;}.yui-t2 #yui-main .yui-b{margin-left:14.8461em;*margin-left:14.55em;}.yui-t3 .yui-b{float:left;width:23.0769em;*width:22.50em;}.yui-t3 #yui-main .yui-b{margin-left:24.0769em;*margin-left:23.62em;}.yui-t4 .yui-b{float:right;width:13.8456em;*width:13.50em;}.yui-t4 #yui-main .yui-b{margin-right:14.8456em;*margin-right:14.55em;}.yui-t5 .yui-b{float:right;width:18.4615em;*width:18.00em;}.yui-t5 #yui-main .yui-b{margin-right:19.4615em;*margin-right:19.125em;}.yui-t6 .yui-b{float:right;width:23.0769em;*width:22.50em;}.yui-t6 #yui-main .yui-b{margin-right:24.0769em;*margin-right:23.62em;}.yui-t7 #yui-main .yui-b{display:block;margin:0 0 1em 0;}#yui-main .yui-b{float:none;width:auto;}.yui-gb .yui-u,.yui-g .yui-gb .yui-u,.yui-gb .yui-g,.yui-gb .yui-gb,.yui-gb .yui-gc,.yui-gb .yui-gd,.yui-gb .yui-ge,.yui-gb .yui-gf,.yui-gc .yui-u,.yui-gc .yui-g,.yui-gd .yui-u{float:left;}.yui-g .yui-u,.yui-g .yui-g,.yui-g .yui-gb,.yui-g .yui-gc,.yui-g .yui-gd,.yui-g .yui-ge,.yui-g .yui-gf,.yui-gc .yui-u,.yui-gd .yui-g,.yui-g .yui-gc .yui-u,.yui-ge .yui-u,.yui-ge .yui-g,.yui-gf .yui-g,.yui-gf .yui-u{float:right;}.yui-g div.first,.yui-gb div.first,.yui-gc div.first,.yui-gd div.first,.yui-ge div.first,.yui-gf div.first,.yui-g .yui-gc div.first,.yui-g .yui-ge div.first,.yui-gc div.first div.first{float:left;}.yui-g .yui-u,.yui-g .yui-g,.yui-g .yui-gb,.yui-g .yui-gc,.yui-g .yui-gd,.yui-g .yui-ge,.yui-g .yui-gf{width:49.1%;}.yui-gb .yui-u,.yui-g .yui-gb .yui-u,.yui-gb .yui-g,.yui-gb .yui-gb,.yui-gb .yui-gc,.yui-gb .yui-gd,.yui-gb .yui-ge,.yui-gb .yui-gf,.yui-gc .yui-u,.yui-gc .yui-g,.yui-gd .yui-u{width:32%;margin-left:1.99%;}.yui-gb .yui-u{*margin-left:1.9%;*width:31.9%;}.yui-gc div.first,.yui-gd .yui-u{width:66%;}.yui-gd div.first{width:32%;}.yui-ge div.first,.yui-gf .yui-u{width:74.2%;}.yui-ge .yui-u,.yui-gf div.first{width:24%;}.yui-g .yui-gb div.first,.yui-gb div.first,.yui-gc div.first,.yui-gd div.first{margin-left:0;}.yui-g .yui-g .yui-u,.yui-gb .yui-g .yui-u,.yui-gc .yui-g .yui-u,.yui-gd .yui-g .yui-u,.yui-ge .yui-g .yui-u,.yui-gf .yui-g .yui-u{width:49%;*width:48.1%;*margin-left:0;}.yui-g .yui-g .yui-u{width:48.1%;}.yui-g .yui-gb div.first,.yui-gb .yui-gb div.first{*margin-right:0;*width:32%;_width:31.7%;}.yui-g .yui-gc div.first,.yui-gd .yui-g{width:66%;}.yui-gb .yui-g div.first{*margin-right:4%;_margin-right:1.3%;}.yui-gb .yui-gc div.first,.yui-gb .yui-gd div.first{*margin-right:0;}.yui-gb .yui-gb .yui-u,.yui-gb .yui-gc .yui-u{*margin-left:1.8%;_margin-left:4%;}.yui-g .yui-gb .yui-u{_margin-left:1.0%;}.yui-gb .yui-gd .yui-u{*width:66%;_width:61.2%;}.yui-gb .yui-gd div.first{*width:31%;_width:29.5%;}.yui-g .yui-gc .yui-u,.yui-gb .yui-gc .yui-u{width:32%;_float:right;margin-right:0;_margin-left:0;}.yui-gb .yui-gc div.first{width:66%;*float:left;*margin-left:0;}.yui-gb .yui-ge .yui-u,.yui-gb .yui-gf .yui-u{margin:0;}.yui-gb .yui-gb .yui-u{_margin-left:.7%;}.yui-gb .yui-g div.first,.yui-gb .yui-gb div.first{*margin-left:0;}.yui-gc .yui-g .yui-u,.yui-gd .yui-g .yui-u{*width:48.1%;*margin-left:0;} .yui-gb .yui-gd div.first{width:32%;}.yui-g .yui-gd div.first{_width:29.9%;}.yui-ge .yui-g{width:24%;}.yui-gf .yui-g{width:74.2%;}.yui-gb .yui-ge div.yui-u,.yui-gb .yui-gf div.yui-u{float:right;}.yui-gb .yui-ge div.first,.yui-gb .yui-gf div.first{float:left;}.yui-gb .yui-ge .yui-u,.yui-gb .yui-gf div.first{*width:24%;_width:20%;}.yui-gb .yui-ge div.first,.yui-gb .yui-gf .yui-u{*width:73.5%;_width:65.5%;}.yui-ge div.first .yui-gd .yui-u{width:65%;}.yui-ge div.first .yui-gd div.first{width:32%;}#bd:after,.yui-g:after,.yui-gb:after,.yui-gc:after,.yui-gd:after,.yui-ge:after,.yui-gf:after{content:".";display:block;height:0;clear:both;visibility:hidden;}#bd,.yui-g,.yui-gb,.yui-gc,.yui-gd,.yui-ge,.yui-gf{zoom:1;}</style>
-    <style type="text/css">/*
-Copyright (c) 2008, Yahoo! Inc. All rights reserved.
-Code licensed under the BSD License:
-http://developer.yahoo.net/yui/license.txt
-version: 2.6.0
-*/
-h1{font-size:138.5%;}h2{font-size:123.1%;}h3{font-size:108%;}h1,h2,h3{margin:1em 0;}h1,h2,h3,h4,h5,h6,strong{font-weight:bold;}abbr,acronym{border-bottom:1px dotted #000;cursor:help;} em{font-style:italic;}blockquote,ul,ol,dl{margin:1em;}ol,ul,dl{margin-left:2em;}ol li{list-style:decimal outside;}ul li{list-style:disc outside;}dl dd{margin-left:1em;}th,td{border:1px solid #000;padding:.5em;}th{font-weight:bold;text-align:center;}caption{margin-bottom:.5em;text-align:center;}p,fieldset,table,pre{margin-bottom:1em;}input[type=text],input[type=password],textarea{width:12.25em;*width:11.9em;}
-</style><meta content="Kirill Okhotnikov" name="author">
-    <meta content="disorder partial occupancy" name="keywords">
-  </head>
-  <body>
-    <div class="yui-t1" id="doc3">
-      <div id="hd">
-        <h1 style="text-align: center;">Supercell program</h1>
-        <h1> </h1>
-        <h2>Description</h2>
-        <p><br>
-        </p>
-        <h2>Download</h2>
-        <ul>
-          <li>Program: <a title="Supercell program executable for Linux systems"
-              href="exe/supercell-linux.tar.gz">linux-x86_64</a>, <a title="Supercell program executable for OSX systems"
-              href="exe/supercell-osx.tar.gz">osx</a> </li>
-        </ul>
-        <h2>Documentation</h2>
-        <ul>
-          <li>Manual: <a title="Supercell manual in PDF format" href="doc/supercell_man.pdf">pdf</a>,
-            <a target="_top" title="Supercell manual in HTML format" href="doc/supercell_man.html">html</a></li>
-          <li>Tutorial: <a title="Supercell tutorial in PDF format" href="doc/supercell_tutorial.pdf">pdf</a><br>
-          </li>
-        </ul>
-        <h2>Useful links</h2>
-        <p><br>
-          <a title="Supercell paper" href="http://jcheminf.springeropen.com/articles/10.1186/s13321-016-0129-3">Okhotnikov K, Charpentier T, Cadars S, Supercell program: a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals. Journal of Cheminformatics, 2016 vol: 8 (1) pp: 17</a>
-        </p>
-        <h2>About</h2>
-        <p><br>
-        </p>
-      </div>
-      <div id="bd">
-        <div id="yui-main"> </div>
-        <div class="yui-b">NAVIGATION PANE</div>
-      </div>
-      <div id="ft">
-        <p>FOOTER</p>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supercell program</title>
+
+<!-- Bootstrap -->
+<link rel="stylesheet" href="css/bootstrap.css">
+<link rel="stylesheet" href="css/supercell.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</head>
+<body>
+<nav class="navbar navbar-default navbar-inverse">
+  <div class="container-fluid"> 
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
+      <a class="navbar-brand" href="#">Supercell</a> </div>
+    
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#read-more">Getting Started <span class="sr-only">(current)</span></a> </li>
+        <li><a href="#download">Download</a> </li>
+        <li><a href="#publications">Publications</a> </li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#about">About</a> </li>
+      </ul>
+    </div>
+    <!-- /.navbar-collapse --> 
+  </div>
+  <!-- /.container-fluid --> 
+</nav>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="jumbotron">
+        <h1 class="text-center">Supercell program</h1>
+        <p class="text-center">a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals.</p>
+        <div class="row">
+          <div class="col-lg-3 col-lg-offset-3 col-md-offset-3 col-md-2 col-sm-offset-3 col-sm-3 col-xs-offset-3 col-xs-3">
+            <p><a class="btn btn-success btn-lg" href="#read-more" role="button"> <span class="glyphicon glyphicon-book" aria-hidden="true"></span>  LEARN MORE</a> </p>
+          </div>
+          <div class="col-lg-3 col-lg-offset-1 col-md-6 col-sm-6">
+            <p><a class="btn btn-primary btn-lg" href="#download" role="button"> <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>  DOWNLOAD</a> </p>
+          </div>
+        </div>        
       </div>
     </div>
-  </body>
+  </div>
+</div>
+
+<div class="container" id="read-more">
+  <h1>Getting started</h1>
+  <hr>
+  <div class="row">
+    <div class="text-center col-sm-3">
+      <h3><i class="fa fa-graduation-cap" aria-hidden="true"></i>  Tutorial</h3>
+      <p>The fastest way to start with supercell program is look through the tutorial.</p>
+    </div>  
+    <div class="text-center col-sm-3">
+      <h3><i class="fa fa-file-text-o" aria-hidden="true"></i>  Article</h3>
+		<p>You can read an <b>open access</b> article to get a full information about the program algorithms and scientific applications.</p>
+    </div>  
+    <div class="text-center col-sm-3">
+      <h3><i class="fa fa-book" aria-hidden="true"></i> Manual</h3>
+      <p>The manual explains all supercell command line options. </p>
+    </div>  
+    <div class="text-center col-sm-3">
+      <h3><i class="fa fa-files-o" aria-hidden="true"></i> Examples</h3>
+      <p>Check CIF files of disordered compounds and scripts for supercell program run.</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="text-center col-sm-3">
+       <a class="btn btn-outline btn-lg" href="doc/supercell_tutorial.pdf" role="button"> <img src="images/PDF-32x32.png"> PDF</a></div>
+    <div class="text-center col-sm-3">
+      <a class="btn btn-outline btn-lg" href="https://jcheminf.springeropen.com/articles/10.1186/s13321-016-0129-3" role="button"> <img src="images/www-24x24.png"> Read article</a></div>
+    <div class="text-center col-sm-3">
+      <a class="btn btn-outline btn-lg" href="doc/supercell_man.html" role="button"> <img src="images/text_html_32x32.png"> HTML</a>
+      <a class="btn btn-outline btn-lg" href="doc/supercell_man.pdf" role="button"> <img src="images/PDF-32x32.png"> PDF</a>
+      </div>
+    <div class="text-center col-sm-3">
+       <a class="btn btn-outline btn-lg" href="https://github.com/orex/supercell/tree/master/data/examples" role="button"><img src="images/www-24x24.png"> Examples</a></div>
+  <hr> 
+  </div>
+</div>  
+<br>
+<div id="publications" class="container">
+  <h1>Publications</h1>
+  <hr>
+  <h3>Please site the following paper, if you use supercell program:</h3>
+  <ul class="list-papers">
+  	<li>Okhotnikov, K., Charpentier, T., & Cadars, S. (2016). Supercell program: a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals. Journal of Cheminformatics, 8(1), 17. <a href="http://doi.org/10.1186/s13321-016-0129-3">View Article</a></li>
+  </ul>
+  <h3>Papers which use supercell programs:</h3>
+  <ul class="list-papers">
+    <li>Salager, E., Sarou-Kanian, V., Sathiya, M., Tang, M., Leriche, J.-B., Melin, P., … Tarascon, J.-M. (2014). Solid-State NMR of the Family of Positive Electrode Materials <span style="white-space: nowrap;">Li<sub>2</sub>Ru<sub>1-y</sub>Sn<sub>y</sub>O<sub>3</sub></span> for Lithium-Ion Batteries. Chemistry of Materials, 26(24), 7009–7019. <a href="http://doi.org/10.1021/cm503280s">View Article</a></li>
+  	<li>Okhotnikov, K. (2016). Comment on “Symmetry and random sampling of symmetry independent configurations for the simulation of disordered solids”, <a href="http://arxiv.org/abs/1606.08062">View Article</a></li>  	
+  </ul>
+</div>
+<br>
+<div id="download" class="container">
+  <h1>Download</h1>
+  <hr>
+  <div class="row">
+    <div class="text-center col-sm-6">
+      <h3><i class="fa fa-file-zip-o" aria-hidden="true"></i>  Compiled binaries</h3>
+      <p>The easiest way to obtain the program is download compiled binaries for Linux and Mac platforms. Just download the archive, unpack it and follow the instruction inside. You don't need to install the binaries, therefore you can use it without root permission. Please note, that output packing <a href="doc/supercell_man.html#section_3">(-a option)</a> is not available in these binaries.</p>
+    </div>  
+    <div class="text-center col-sm-6">
+      <h3><i class="fa fa-file-code-o" aria-hidden="true"></i>  Source code</h3>
+		<p>Building the program from source code is suggested for advanced users, who need output packing or want to change the program code. I can reccomend to use Ubuntu 12.04 or later for compiling the code. You can also install compiled program to your system, if you have an administrator rights. The program can be compiled for Windows platfrom also, but I've never try this. Tutorial and manual sources are also available.</p>
+    </div>  
+  </div>
+  <div class="row">
+    <div class="text-center col-sm-6">
+       <a class="btn btn-outline btn-lg" href="exe/supercell-linux.tar.gz" role="button"> <img src="images/Linux64x64.png"> <br>Linux 64bit</a>
+       <a class="btn btn-outline btn-lg" href="exe/supercell-osx.tar.gz" role="button"> <img src="images/mac64x64.png"> <br>OSX</a>
+    </div>
+    <div class="text-center col-sm-6">
+      <a class="btn btn-outline btn-lg" href="https://github.com/orex/supercell" role="button"> <img src="images/github64x64.png"><br>GitHub</a></div>
+  <hr> 
+  </div>
+</div>
+<hr>
+<div id="about" class="container">
+  <div class="row">
+<div class="col-lg-4 col-md-6 col-sm-6">
+      <h2>Contact Us</h2>
+      <address>
+      <strong>Dr. Kirill Okhotnikov</strong><br>
+      <a href="mailto:kirill.okhotnikov@gmail.com">kirill.okhotnikov@gmail.com</a><br>
+      <br>
+      <strong>Dr. Sylvian Cadars</strong><br>
+      <a href="mailto:sylvian.cadars@cnrs-imn.fr">sylvian.cadars@cnrs-imn.fr</a><br>
+      Institut des Materiaux Jean Rouxel (IMN) - UMR6502 <br>
+      2 rue de la Houssiniere, BP32229 <br>
+      44322 Nantes cdx3, France <br>
+      <abbr title="Phone">Phone:</abbr> +33 (0)2 40 37 39 34<br>
+      <abbr title="Fax">Fax:</abbr> +33 (0)2 40 37 39 95
+      </address>
+    </div>
+    <div class="col-lg-4 col-md-6 col-sm-6">
+      <h2>Notes</h2>
+      <div class="media">
+        <div class="media-left" style="min-width:55px;"><a href="#"> <i class="fa fa-balance-scale fa-2x" aria-hidden="true"></i> </a> </div>
+        <div class="media-body">
+          <h4 class="media-heading">License</h4>
+          The supercell code is available for everybody without restrictions, which gives a possibility for all users to check the code, improve it and customize the program for their needs, respecting the license. <a href="https://en.wikipedia.org/wiki/GNU_General_Public_License">Read more...</a></div>
+      </div>
+      <div class="media">
+        <div class="media-left" style="min-width:55px;"> <a href="#">  <i class="fa fa-bug fa-2x" aria-hidden="true"></i> </a> </div>
+        <div class="media-body">
+          <h4 class="media-heading">Problems report</h4>
+          Please, report all bugs and problems in supercell program to <a href="https://github.com/orex/supercell/issues">GitHub</a> site, if possible. Otherwise send a mail to Kirill Okhotnikov. </div>
+      </div>
+    </div>
+    <div class="col-lg-4 col-sm-12">
+      <h2>About Us</h2>
+    </div>
+  </div>
+</div>
+  <hr>
+<footer class="text-center">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12">
+        <p>Copyright © Kirill Okhotnikov. All rights reserved. 2017</p>
+      </div>
+    </div>
+  </div>
+</footer>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) --> 
+<script src="js/jquery-1.11.3.min.js"></script> 
+<!-- Include all compiled plugins (below), or include individual files as needed --> 
+<script src="js/bootstrap.js"></script>
+</body>
 </html>
