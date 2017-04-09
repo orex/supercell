@@ -61,7 +61,7 @@ git config user.email "$COMMIT_AUTHOR_EMAIL"
 mkdir -p doc
 mkdir -p exe
 
-wget -nv https://github.com/orex/supercell/raw/deploy/index.html -O index.html
+#wget -nv https://github.com/orex/supercell/raw/deploy/index.html -O index.html
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   deploy-doc
