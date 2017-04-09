@@ -1,0 +1,5 @@
+.list-papers {
+}
+.list-papers > li {
+	padding-bottom: 1em;
+}
