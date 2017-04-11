@@ -72,9 +72,14 @@ fi
 
 cd ${deploy_dir}
 
+ls -lah
+
 # Commit the "changes", i.e. the new version.
 # The delta will show diffs between new and old versions.
 git add --no-ignore-removal .
+
+git status
+
 git commit -m "Deploy to GitHub Pages $TRAVIS_OS_NAME: ${SHA}"
 
 # Get the deploy key by using Travis's stored variables to decrypt deploy_key.enc
