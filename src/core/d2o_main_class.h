@@ -156,6 +156,7 @@ protected:
   
 protected:
   int verbose_level;
+  bool charge_balancing;
   
   OpenBabel::OBMol mol_initial;
   OpenBabel::OBMol mol_supercell;

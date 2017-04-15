@@ -15,7 +15,7 @@
 
 #include "assigned_variable/av_base.hpp"
 
-enum charge_balance {cb_no, cb_input, cb_try};
+enum charge_balance {cb_no, cb_yes, cb_try};
 
 class cb_names
 {

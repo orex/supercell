@@ -15,7 +15,7 @@ cb_names::cb_init cb_names::_init;
 cb_names::cb_init::cb_init()
 {
   cb_names::mp_cb[cb_no]     = "no";
-  cb_names::mp_cb[cb_input]  = "yes";
+  cb_names::mp_cb[cb_yes]    = "yes";
   cb_names::mp_cb[cb_try]    = "try";
 }
 

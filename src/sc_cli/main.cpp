@@ -77,7 +77,7 @@ int main(int argc, char** argv)
                            (cb_names::get_name(cb_no)     + " - no charge balancing.\n" +
                             cb_names::get_name(cb_try)    + " - Try to charge balance system, " +
                                                            "if initial system is not charged.\n" +
-                            cb_names::get_name(cb_input)  + " - Charge balance the system. ").c_str())
+                            cb_names::get_name(cb_yes)  + " - Charge balance the system. ").c_str())
       ("property,p", po::value<vector<string> >(&manual_properties), 
                     (string("Set properties of atoms by labels. ") +
                             "For detailled description see manual.").c_str())

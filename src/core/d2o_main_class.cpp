@@ -36,6 +36,7 @@ using namespace std;
 
 d2o_main_class::d2o_main_class()
 {
+    charge_balancing = false;
 }
 
 #if defined(LIBARCHIVE_ENABLED) && (!defined(LIBARCHIVE_PATCH_DISABLE))
@@ -1072,7 +1073,7 @@ bool d2o_main_class::get_atoms_population()
         cout << "charge: " << charge << endl;
 
       
-      if( (abs(charge) < charge_tol) && (!overoccup) && (!underoccup))
+      if( (!charge_balancing || (abs(charge) < charge_tol)) && (!overoccup) && (!underoccup))
       {  
         double rms_curr = 0;
         //calculate RMS
@@ -1139,28 +1140,12 @@ bool d2o_main_class::process_charges(charge_balance cb)
   
   for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
   {
-    switch(cb)
-    {        
-      case cb_no:
-        (*it).second.curr_charge = 0;
-      break;  
+    (*it).second.curr_charge = 0;
+    if(! isnan((*it).second.input_charge) )
+      (*it).second.curr_charge = (*it).second.input_charge;
 
-      case cb_input:
-      case cb_try:  
-        if(! isnan((*it).second.input_charge) )
-          (*it).second.curr_charge = (*it).second.input_charge;
-      break;  
-      
-      default:
-        assert(false);
-      break;  
-    }
-    
-    if( cb != cb_no )
-    {  
-      if( (*manual_properties)[(*it).first].charge.assigned()) 
-        (*it).second.curr_charge = (*manual_properties)[(*it).first].charge.value();
-    }   
+    if( (*manual_properties)[(*it).first].charge.assigned()) 
+      (*it).second.curr_charge = (*manual_properties)[(*it).first].charge.value();
   }
 
   double total_input_charge = 0;
@@ -1178,20 +1163,27 @@ bool d2o_main_class::process_charges(charge_balance cb)
   if(( verbose_level >= 0) && (abs(total_used_charge) > charge_tol) )
     cout << "WARN: Total charge of the system is not zero" << endl;
   
-  if( (cb == cb_try ) && (abs(total_used_charge) > charge_tol) )
+  switch(cb)
   {
-    for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
-      (*it).second.curr_charge = 0;
-    if(verbose_level >= 1)
-      cout << "Charge balancing is switched off." << endl;
-    total_used_charge = 0;
+    case cb_no:
+      charge_balancing = false;
+    break;
+    case cb_yes:
+      charge_balancing = true;
+    break;
+    case cb_try:
+      charge_balancing = abs(total_used_charge) < charge_tol;
+    break;
+    default:
+      assert(false);
+    break;  
   }
-
   
   if(verbose_level >= 1)
   {  
     cout << "Total charge oxidation state (cif):  " << total_input_charge << endl;
-    cout << "Total charge used:   " << total_used_charge << endl << endl;
+    cout << "Total charge cell:   " << total_used_charge << endl; 
+    cout << "Charge balancing:   " << (charge_balancing ? "yes" : "no") << endl;
 
     cout << "----------------------------------------------------------------" << endl;
     cout << "| Atom Label\t| \tcharge  \t| mult\t| occup x mult" << endl;
@@ -1753,6 +1745,11 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
 
   if( calc_q_energy )  
   {
+    if(!charge_balancing)
+    {
+      cerr << "ERROR: Electrostatic energy cannot be calculated without charge balancing. " << endl;
+      return false;
+    }    
     if(!calculate_q_matrix())
     {
       cerr << "ERROR: Coulomb energy is not calculated." << endl;
