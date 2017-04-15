@@ -358,12 +358,54 @@ The directories and files created for this example by the script: \clic{df_cfg.b
  \item \clic{ice-Ih-cfgs-final/}: contains the final selection of structures with disorder in all H sites treated, and which satisfy both structure-restriction conditions.
 \end{itemize}
 
+\subsection*{Application of \sups{} program to Rb-PST-1 zeolite.}
+
+The ``scientific'' part of the research is described by S. Cadars \textit{et.al.}\cite{Rb-PST-1}. Here only ``technical'' part will be described. The zeolite has two Ga/Si sites, both of the cites are disordered. The compound has also two Rubidium sites, one disordered and one fully occupied. All Oxygen sites are fully occupied.  
+
+Let's run \sups{} program with several extra options (see Table~\ref{tab:Rb-PST-1-run}) and check the output:
+\begin{Verbatim}[breaklines]
+  supercell -i RB-PST-1-DEHY_1_new.cif -d -v 2 <extra_options>
+\end{Verbatim}
+
+
+\begin{table}[t!]
+\caption{\Sups{} program run for Rb-PST-1 structure.}
+\renewcommand{\arraystretch}{1.7}
+\newcolumntype{x}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{y}[1]{>{\arraybackslash}m{#1}}
+\centering
+\begin{tabular}{|x{3.4cm}|x{2.6cm}|x{2.2cm}|x{1.2cm}|x{1.2cm}|x{3.5cm}|}
+\hline
+Program extra options & Approx cell size,~\AA & Total number of configurations & Si/Ga ratio & Charge of the system &  Comment \\
+\hline 
+ -                                         & $12.6\times12.6\times6.6$   & $\approx5.5\cdot10^5$     &  1.22 & 0   &  Plain \sups{} program run. \\
+\verb+-p "Rb2:p=0"+ \verb+-c no+           & $12.6\times12.6\times6.6$   & \num{68640}               &  1.22 & -1  &  Removing Rb2 disordered site without charge balancing. \\
+\verb+-p "Rb2:p=0"+ \verb+-c yes+          & $12.6\times12.6\times6.6$   & \num{48048}               &  1.5  & 0   &  The same, but with charge balancing  \\
+\verb+-s 1x1x2+                            & $12.6\times12.6\times13.2$  & $\approx4.0\cdot10^{12}$  &  1.22 & 0   &  Twice cell along \textit{z}-direction. \\
+\verb+-s 1x1x2+ \verb+-p "Rb2:p=0"+        & $12.6\times12.6\times13.2$  & $\approx1.6\cdot10^{10}$  &  1.5  & 0   &  Same, but without Rb2 site. \\
+\verb+-s 1x1x2+ \verb+-m+ \verb+-p "Rb2:p=0" -p+        
+\verb+"r(Si1|Ga1):fixed"+                  & $12.6\times12.6\times13.2$  & 70(8)                     &  1.5  & 0   &  Like previous, but excluding (Si/Ga)1 site from permutation. \\
+\hline
+\end{tabular}
+\label{tab:Rb-PST-1-run}
+\end{table} 
+
+As you can see from the table, the cell $1\times1\times1$ has only 6~\AA{} in \textit{z}-direction, therefore periodic effects can be strong. Increasing the cell twice along the direction will decrease the effects, but the number of permutation ($\approx4.0\cdot10^{12}$) is too high to process with ``brute-force'' approach. implemented in \sups{} program. the most easy way to decrease the number is to completely remove Rb2 site, but this will change the charge neutrality of the system. Therefore, Si/Ga ratio should be also adjusted. After the manipulation, the number of permutations is still higher, than the program can process, but it can be processed in two steps. At first step, (Si/Ga)1 site should be fixed. The number of SIC configuration, obtained by permutations of (Si/Ga)2 site is 8 (70 total). At second step, this 8 structures use like an input for next supercell program run:
+\begin{Verbatim}[breaklines]
+  supercell -i <first_step_cif_file> -v 2 -q -p "Si*:c=4" -p "Ga*:c=3" -p "Rb*:c=1" -p "O*:c=-2" -o <output_file_prefix> -n r5000 -n l1000 -n h1000
+\end{Verbatim}
+
+The run generates text file with electrostatic energy of all possible structures, \num{5000} random structures, and \num{1000} structures with lowest and highest energy each. The following analysis of surrounding and connectivity were done with ``in-house'' software. Manual charge settings is needed for Coulomb
+
+The \clic{RB-PST-1-DEHY_1_new.cif} file and script (\clic{df_cfg.bash}) for structure generation you can find in \path{supercell/data/example/Rb-PST-1} folder. The structure generation will take around one hour on 8 cores workstation and up to ten hours on netbook. It will also requires a several gigabytes of storage space to write Coulomb energy for all possible structures.
+
+
 \section*{\Sups{} program integration to research process.}
 Our program is ``link in chain'' and the efficiency of the research process, obviously, depend on another links and connection between them. Below, there is a list of the programs/resources (in addition to discussed in the main paper), which can be possibly used with supercell program in disorder compound research.
 \begin{description}
   \item[ASE] (\url{https://wiki.fysik.dtu.dk/ase/}). Atomic Simulation Environment is another set of python tool for setting up, manipulating, running, visualizing and analyzing atomistic simulations. Support many calculation software, both classical and \textit{ab-initio}, including CASTEP and VASP. 
   \item[cif2cell] (\url{http://sourceforge.net/projects/cif2cell/}). Cif2cell is a tool to generate an input structure in different formats, like CASTEP, CP2K, CRYSTAL09, Quantum Espresso, VASP and many more. 
-  \item[COD] (\url{http://www.crystallography.net}). Open-access  structural database with more than \num{356000} records (Feb 2016). 
+  \item[COD] (\url{http://www.crystallography.net}). Open-access  structural database with more than \num{376300} records (April 2017). 
   \item[GULP] (\url{http://gulp.curtin.edu.au/}). GULP is force-field program for performing a variety of tasks on a range of system types. It can be useful for optimizations, energy calculation and analysis of the structure.
   \item[EnCIFer] (\url{http://www.ccdc.cam.ac.uk/Community/freeservices/encifer/}). A GUI tool for validating of \sups{} input structures. Useful for draft structures.
   \item[VESTA] (\url{http://jp-minerals.org/vesta/}). A powerful tool for visualization and editing of crystallographic structures. It supports many input/output format (including cif) and can visualize partially occupied sites.

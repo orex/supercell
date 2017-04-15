@@ -1,0 +1,45 @@
+# from C:/POSTECH/Rb-PST-1-dehy/GSAS_final_4_2nd/RB-PST-1-DEHY.EXP 
+data_added_by_encifer
+_audit_creation_date             2013-12-19T22:13:27
+_symmetry_cell_setting           tetragonal
+_symmetry_space_group_name_H-M   'I -4 2 d'
+_symmetry_int_tables_number      122
+_chemical_absolute_configuration ?
+_cell_length_a                   12.681090
+_cell_length_b                   12.681090
+_cell_length_c                   6.616533
+_cell_angle_alpha                90.0000
+_cell_angle_beta                 90.0000
+_cell_angle_gamma                90.0000
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Si1 +4
+Si2 +4
+O1 -2
+O2 -2
+O3 -2
+Ga1 +3
+Ga2 +3
+Rb1 +1
+Rb2 +1
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+Si1 Si 0.08913 0.63183 0.63362 1.19303576457 0.56700
+Si2 Si 0.00000 0.00000 0.00000 1.19303576457 0.52600
+O1 O 0.95775 0.64666 0.74289 5.85692918466 1.00000
+O2 O 0.05983 0.58478 0.39869 5.85692918466 1.00000
+O3 O 0.12977 0.75000 0.62500 5.85692918466 1.00000
+Ga1 Ga 0.05988 0.63009 0.62574 1.19303576457 0.43300
+Ga2 Ga 0.00000 0.00000 0.00000 1.19303576457 0.47400
+Rb1 Rb 0.86482 0.25000 0.12500 2.48855732811 1.00000
+Rb2 Rb 0.11124 0.25000 0.12500 2.48855732811 0.10300
+
+
+
