@@ -23,9 +23,11 @@
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="#read-more">Getting Started <span class="sr-only">(current)</span></a> </li>
+        <li class="active"><a href="#introduction">Introduction <span class="sr-only">(current)</span></a> </li>
+        <li><a href="#read-more">Getting Started</a> </li>
         <li><a href="#download">Download</a> </li>
         <li><a href="#publications">Publications</a> </li>
+        <li><a href="#useful-links">Useful Links</a> </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href="#about">About</a> </li>
@@ -47,12 +49,23 @@
           </div>
           <div class="col-lg-3 col-lg-offset-1 col-md-3 col-md-offset-1 col-sm-4 col-sm-offset-2 col-xs-5 col-xs-offset-1">
             <p><a class="btn btn-primary btn-lg" href="#download" role="button"> <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>  DOWNLOAD</a> </p>
-          </div>
-        </div>        
+          </div>          
+        </div>
       </div>
     </div>
   </div>
 </div>
+<div id="introduction" class="container">
+  <h1>Introduction</h1>
+  <hr>
+  <div class="container"> <img class="img-responsive center-block" src="images/Supercell_170418.png" alt=""> </div>
+  <br>
+  <p>A supercell approach is very old, universal and theoretically clean method for approximation of materials with point disorder<sup>1</sup>. But the method mostly applies to some particular cases, like low amount of impurity (one per supercell) or random disorder with special quasirandom structure (SQS) approximation<sup>2</sup>, because the number of derivative structures is one in these cases. In general, the number of derivative structures is high enough to be generated "by hand". A few programs exist, which can help to generate a derivative structures (see <a href="https://jcheminf.springeropen.com/articles/10.1186/s13321-016-0129-3#Sec14">review <i class="fa fa-external-link" aria-hidden="true"></i></a>). We believe that <i>supercell</i> program is one of the best choice, because the software was created to solve most of the technical problems of supercell approximation. The program includes algorithms for structure manipulation, supercell generation, permutations of atoms and vacancies, charge balancing, detecting symmetry-equivalent structures, electrostatic energy calculations and sampling output derivative structures. The software works with <a href="https://en.wikipedia.org/wiki/Crystallographic_Information_File" title="Crystallographic Information File">CIF</a> files, therefore compatible with most of DFT software (<a href="http://www.vasp.at/">VASP <i class="fa fa-external-link" aria-hidden="true"></i></a>, <a href="http://www.castep.org/">CASTEP <i class="fa fa-external-link" aria-hidden="true"></i></a>, <a href="http://wien2k.at">Wien2k <i class="fa fa-external-link" aria-hidden="true"></i></a> etc)  It has powerful command line interface and works out-of-box on linux and OSX platforms. The correctness of the program were verified by available literature data. The documentation includes open access paper, program interface manual, tutorial and variety of examples. </p>
+  <br>
+  <p><sup>1</sup>Buerger, M. J. (1947). Derivative Crystal Structures. The Journal of Chemical Physics, 15(1), 1–16.<br>
+     <sup>2</sup>Zunger, A., Wei, S. H., Ferreira, L. G., & Bernard, J. E. (1990). Special quasirandom structures. Physical Review Letters, 65(3), 353–356.</p>
+</div>
+<br>
 
 <div class="container" id="read-more">
   <h1>Getting started</h1>
@@ -95,14 +108,14 @@
   <hr>
   <h3>Please cite the following paper, if you use supercell program:</h3>
   <ul class="list-papers">
-  	<li>Okhotnikov, K., Charpentier, T., & Cadars, S. (2016). Supercell program: a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals. Journal of Cheminformatics, 8(1), 17. <a href="http://doi.org/10.1186/s13321-016-0129-3">View Article</a></li>
+  	<li>Okhotnikov, K., Charpentier, T., & Cadars, S. (2016). Supercell program: a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals. Journal of Cheminformatics, 8(1), 17. <a href="http://doi.org/10.1186/s13321-016-0129-3"><i class="fa fa-file-text-o" aria-hidden="true"></i> View Article</a></li>
   </ul>
   <h3>Papers which use/cite supercell program:</h3>
   <ul class="list-papers">
-    <li>Salager, E., Sarou-Kanian, V., Sathiya, M., Tang, M., Leriche, J.-B., Melin, P., … Tarascon, J.-M. (2014). Solid-State NMR of the Family of Positive Electrode Materials <span style="white-space: nowrap;">Li<sub>2</sub>Ru<sub>1-y</sub>Sn<sub>y</sub>O<sub>3</sub></span> for Lithium-Ion Batteries. Chemistry of Materials, 26(24), 7009–7019. <a href="http://doi.org/10.1021/cm503280s">View Article</a></li>
-    <li>Okhotnikov, K. (2016). Comment on “Symmetry and random sampling of symmetry independent configurations for the simulation of disordered solids”, <a href="http://arxiv.org/abs/1606.08062">View Article</a></li>
-    <li>Fischer, M., & Angel, R. J. (2017). Accurate structures and energetics of neutral-framework zeotypes from dispersion-corrected DFT calculations. The Journal of Chemical Physics, 146(17), 174111. <a href="http://doi.org/10.1063/1.4981528">View Article</a></li>
-    <li>Cadars, S., Ho Ahn, N., Okhotnikov, K., Shin, J., Vicente, A., Bong Hong, S., & Fernandez, C. (2017). Modeling Short-Range Substitution Order and Disorder in Crystals: Application to the Ga/Si Distribution in a Natrolite Zeolite. Solid State Nuclear Magnetic Resonance. <a href="http://doi.org/10.1016/j.ssnmr.2017.04.001">View Article</a></li>  
+    <li>Salager, E., Sarou-Kanian, V., Sathiya, M., Tang, M., Leriche, J.-B., Melin, P., … Tarascon, J.-M. (2014). Solid-State NMR of the Family of Positive Electrode Materials <span style="white-space: nowrap;">Li<sub>2</sub>Ru<sub>1-y</sub>Sn<sub>y</sub>O<sub>3</sub></span> for Lithium-Ion Batteries. Chemistry of Materials, 26(24), 7009–7019. <a href="http://doi.org/10.1021/cm503280s"><i class="fa fa-file-text-o" aria-hidden="true"></i> View Article</a></li>
+    <li>Okhotnikov, K. (2016). Comment on “Symmetry and random sampling of symmetry independent configurations for the simulation of disordered solids”, <a href="http://arxiv.org/abs/1606.08062"><i class="fa fa-file-text-o" aria-hidden="true"></i> View Article</a></li>
+    <li>Fischer, M., & Angel, R. J. (2017). Accurate structures and energetics of neutral-framework zeotypes from dispersion-corrected DFT calculations. The Journal of Chemical Physics, 146(17), 174111. <a href="http://doi.org/10.1063/1.4981528"><i class="fa fa-file-text-o" aria-hidden="true"></i> View Article</a></li>
+    <li>Cadars, S., Ho Ahn, N., Okhotnikov, K., Shin, J., Vicente, A., Bong Hong, S., & Fernandez, C. (2017). Modeling Short-Range Substitution Order and Disorder in Crystals: Application to the Ga/Si Distribution in a Natrolite Zeolite. Solid State Nuclear Magnetic Resonance. <a href="http://doi.org/10.1016/j.ssnmr.2017.04.001"><i class="fa fa-file-text-o" aria-hidden="true"></i> View Article</a>, <a href="https://github.com/orex/supercell/tree/master/data/examples/Rb-PST-1"><i class="fa fa-file-code-o" aria-hidden="true"></i> View Example</a></li>  
   </ul>
 </div>
 <br>
@@ -127,6 +140,23 @@
     <div class="text-center col-sm-6">
       <a class="btn btn-outline btn-lg" href="https://github.com/orex/supercell" role="button"> <img src="images/github64x64.png"><br>GitHub</a></div>
   <hr> 
+  </div>
+</div>
+<br>
+<div id="useful-links" class="container">
+  <h1>Useful Links</h1>
+  <hr>
+  <div class="row">
+    <div class="col-lg-12">
+    <dl class="dl-horizontal">
+      <dt><a href="https://wiki.fysik.dtu.dk/ase/">ASE</a></dt><dd>Atomic Simulation Environment is another set of python tool for setting up, manipulating, running, visualizing and analyzing atomistic simulations. Support many calculation software, both classical and <i>ab-initio</i>, including CASTEP and VASP.</dd>
+      <dt><a href="http://sourceforge.net/projects/cif2cell/">cif2cell</a></dt><dd>Cif2cell is a tool to generate an input structure in different formats, like CASTEP, CP2K, CRYSTAL09, Quantum Espresso, VASP and many more.</dd> 
+      <dt><a href="http://www.crystallography.net/">COD</a></dt><dd>Open-access  structural database with more than 376 300 records (April 2017).</dd> 
+      <dt><a href="http://gulp.curtin.edu.au/">GULP</a></dt><dd>GULP is force-field program for performing a variety of tasks on a range of system types. It can be useful for optimizations, energy calculation and analysis of the structure.</dd> 
+      <dt><a href="http://www.ccdc.cam.ac.uk/Community/freeservices/encifer/">EnCIFer</a></dt><dd>A GUI tool for validating of <i>supercell</i> input structures. Useful for draft structures.</dd> 
+      <dt><a href="http://jp-minerals.org/vesta/">VESTA</a></dt><dd>A powerful tool for visualization and editing of crystallographic structures. It supports many input/output format (including cif) and can visualize partially occupied sites.</dd> 
+    </dl>
+    </div>  
   </div>
 </div>
 <hr>
