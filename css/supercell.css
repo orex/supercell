@@ -7,3 +7,7 @@ body {
 .list-papers > li {
 	padding-bottom: 1em;
 }
+
+.jumbotron {
+  background-image: linear-gradient(120deg, #efefef, #e0e0e0);
+}
