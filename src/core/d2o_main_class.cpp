@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <cmath>
  
-#include <openbabel/chargemodel.h>
+#include <openbabel/elements.h>
 
 #include "science/combinatorics.h"
 
@@ -287,7 +287,7 @@ std::string d2o_main_class::get_formula_by_groups()
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
       const c_occup_item &ci = occup_groups[i].items[j]; 
-      string atom_symbol = etab.GetSymbol(ci.obp->GetAtomicNum());
+      string atom_symbol = OBElements::GetSymbol(ci.obp->GetAtomicNum());
       formula_map[atom_symbol] += ci.num_of_atoms_sc;
     }  
   }
@@ -313,7 +313,7 @@ std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
   
   for(OBAtomIterator it = mol.BeginAtoms(); it != mol.EndAtoms(); ++it)
   {
-    string atom_symbol = etab.GetSymbol((*it)->GetAtomicNum());
+    string atom_symbol = OBElements::GetSymbol((*it)->GetAtomicNum());
     
     double curr_occup = dynamic_cast<OBPairFloatingPoint *>
                         ((*it)->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
@@ -1323,8 +1323,8 @@ bool d2o_main_class::create_occup_groups()
           same_properties = false;
           cerr << "ERROR: Label " << label_i
                << " has 2 type of atoms " 
-               << etab.GetSymbol(atom_i->GetAtomicNum()) << " != "   
-               << etab.GetSymbol(atom_j->GetAtomicNum()) << endl;
+               << OBElements::GetSymbol(atom_i->GetAtomicNum()) << " != "
+               << OBElements::GetSymbol(atom_j->GetAtomicNum()) << endl;
         }
        
         double occup_j = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
