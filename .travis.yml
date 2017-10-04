@@ -9,6 +9,7 @@ sudo: required
 matrix:
  include:
    - dist: precise
+     sudo: true
      compiler: gcc
      cache: ccache
      env: LIBARCHIVE_OFF=FALSE
