@@ -6,6 +6,8 @@ language: cpp
 
 sudo: required
 
+group: travis_latest
+
 matrix:
  include:
    - compiler: gcc
