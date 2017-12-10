@@ -1510,7 +1510,7 @@ void d2o_main_class::FillUnitCell_rmdup(OpenBabel::OBMol * mol)
 {
   OBUnitCell *uc = (OBUnitCell *)mol->GetData(OBGenericDataType::UnitCell);
   ob_min_dist obm;
-  obm.set_cell(uc->GetCellMatrix());
+  obm.set_cell(uc->GetCellMatrix().transpose());
   set<OBAtom*> atomsToDelete;
   for(int i = 0; i < mol->NumAtoms(); i++)
   {
