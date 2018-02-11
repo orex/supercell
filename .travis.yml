@@ -12,34 +12,46 @@ matrix:
      dist: trusty
      cache: ccache
      env: LIBARCHIVE_OFF=FALSE
+          OB_241_STABLE=TRUE
+
+   - compiler: gcc
+     dist: trusty
+     cache: ccache
+     env: LIBARCHIVE_OFF=FALSE
+          OB_241_STABLE=FALSE
 
    - compiler: gcc
      dist: trusty
      cache: ccache
      env: LIBARCHIVE_OFF=TRUE
+          OB_241_STABLE=FALSE
 
    - compiler: clang
      dist: trusty
      env: LIBARCHIVE_OFF=FALSE
+          OB_241_STABLE=FALSE
 
    - compiler: gcc
      dist: trusty
      cache: ccache
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
-          
+          OB_241_STABLE=FALSE
+
    - os: osx
      osx_image: xcode6.4
      cache: ccache     
      compiler: gcc
      env: LIBARCHIVE_OFF=FALSE
+          OB_241_STABLE=FALSE
 
    - os: osx
      cache: ccache     
      compiler: gcc
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
-     
+          OB_241_STABLE=FALSE
+
 before_install:
  - wget https://github.com/orex/supercell/raw/deploy/deploy.sh && chmod +x deploy.sh
  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; sudo apt-get install -qq libboost-program-options-dev libboost-regex-dev libboost-filesystem-dev libboost-random-dev libboost-system-dev libeigen3-dev libarchive-dev liblzma-dev libbz2-dev zlib1g-dev; fi
@@ -51,7 +63,9 @@ before_install:
 install:
  - cd ~ 
  - git clone https://github.com/openbabel/openbabel.git
- - cd openbabel && mkdir build && cd build
+ - cd openbabel
+ - if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
+ - mkdir build && cd build
  - cmake ../ -DCMAKE_BUILD_TYPE=Release `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"` `[[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]] && echo " -DGLIBC_24_COMPATIBLE=ON"`
  - make && sudo make install
  - cd ~

@@ -12,8 +12,12 @@
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 #include <cmath>
- 
+#ifdef OLD_OB_PERIODIC_TABLE
+#define OB_PT_GETSYMBOL(atomic_num) OpenBabel::etab.GetSymbol(atomic_num)
+#else 
 #include <openbabel/elements.h>
+#define OB_PT_GETSYMBOL(atomic_num) OpenBabel::OBElements::GetSymbol(atomic_num)
+#endif
 
 #include "science/combinatorics.h"
 
@@ -287,7 +291,7 @@ std::string d2o_main_class::get_formula_by_groups()
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
       const c_occup_item &ci = occup_groups[i].items[j]; 
-      string atom_symbol = OBElements::GetSymbol(ci.obp->GetAtomicNum());
+      string atom_symbol = OB_PT_GETSYMBOL(ci.obp->GetAtomicNum());
       formula_map[atom_symbol] += ci.num_of_atoms_sc;
     }  
   }
@@ -313,7 +317,7 @@ std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
   
   for(OBAtomIterator it = mol.BeginAtoms(); it != mol.EndAtoms(); ++it)
   {
-    string atom_symbol = OBElements::GetSymbol((*it)->GetAtomicNum());
+    string atom_symbol = OB_PT_GETSYMBOL((*it)->GetAtomicNum());
     
     double curr_occup = dynamic_cast<OBPairFloatingPoint *>
                         ((*it)->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
@@ -1323,8 +1327,8 @@ bool d2o_main_class::create_occup_groups()
           same_properties = false;
           cerr << "ERROR: Label " << label_i
                << " has 2 type of atoms " 
-               << OBElements::GetSymbol(atom_i->GetAtomicNum()) << " != "
-               << OBElements::GetSymbol(atom_j->GetAtomicNum()) << endl;
+               << OB_PT_GETSYMBOL(atom_i->GetAtomicNum()) << " != "
+               << OB_PT_GETSYMBOL(atom_j->GetAtomicNum()) << endl;
         }
        
         double occup_j = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);

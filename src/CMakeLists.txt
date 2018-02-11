@@ -1,7 +1,12 @@
 #set common includes
 set(sc_includes ${sc_includes} ${CMAKE_CURRENT_SOURCE_DIR}/core)
 
-find_package(OpenBabel2 REQUIRED)
+find_package(OpenBabel2 REQUIRED 2.4.1)
+
+if(NOT EXISTS ${OpenBabel2_INCLUDE_DIRS}/include/openbabel/elements.h)
+  add_definitions(-DOLD_OB_PERIODIC_TABLE)
+endif()
+
 
 set(sc_includes ${sc_includes} ${OpenBabel2_INCLUDE_DIRS})
 set(sc_includes ${sc_includes} ${CMAKE_SOURCE_DIR}/libs/common_utils/)
