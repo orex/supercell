@@ -521,7 +521,7 @@ bool d2o_main_class::create_symmetry_operations_groups()
   Matrix3d cell;
   cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
   
-  syms = get_all_symmetries(cell, vc, bc, symm_tol);
+  syms = get_all_symmetries(cell, vc, bc, symm_tol());
   
   if(verbose_level >= 1)
     cout << syms.size() << " symmetry operation found for supercell." << endl;
@@ -587,7 +587,7 @@ std::vector<int> d2o_main_class::index_symmetries(OpenBabel::OBUnitCell * uc,
     {
       Vector3d ve = pose[j] - cart_tr * pose[i];
       ve = cell * cryst_tools::min_frac(r_cell * ve);
-      if(ve.norm() < symm_tol)
+      if(ve.norm() < symm_tol())
       {
         index_sym = j;
         index_count++;
@@ -1058,7 +1058,7 @@ bool d2o_main_class::get_atoms_population()
         else
         {  
           underoccup = (occup_groups[i].number_of_sites() > ocp_t[i]) &&
-                       (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol);
+                       (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol());
         }          
         
         if((verbose_level >= 5) && underoccup)
@@ -1077,7 +1077,7 @@ bool d2o_main_class::get_atoms_population()
         cout << "charge: " << charge << endl;
 
       
-      if( (!charge_balancing || (abs(charge) < charge_tol)) && (!overoccup) && (!underoccup))
+      if( (!charge_balancing || (abs(charge) < charge_tol())) && (!overoccup) && (!underoccup))
       {  
         double rms_curr = 0;
         //calculate RMS
@@ -1164,7 +1164,7 @@ bool d2o_main_class::process_charges(charge_balance cb)
   if( verbose_level >= 1 )
     cout << "Current charge balance option is \"" << cb_names::get_name(cb) << "\"" << endl;
   
-  if(( verbose_level >= 0) && (abs(total_used_charge) > charge_tol) )
+  if(( verbose_level >= 0) && (abs(total_used_charge) > charge_tol()) )
     cout << "WARN: Total charge of the system is not zero" << endl;
   
   switch(cb)
@@ -1176,7 +1176,7 @@ bool d2o_main_class::process_charges(charge_balance cb)
       charge_balancing = true;
     break;
     case cb_try:
-      charge_balancing = abs(total_used_charge) < charge_tol;
+      charge_balancing = abs(total_used_charge) < charge_tol();
     break;
     default:
       assert(false);
@@ -1332,7 +1332,7 @@ bool d2o_main_class::create_occup_groups()
         }
        
         double occup_j = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
-        if( abs(occup_i - occup_j) > occup_tol )
+        if( abs(occup_i - occup_j) > occup_tol() )
         {
           same_properties = false;
           cerr << "ERROR: Label " << label_i
@@ -1478,7 +1478,7 @@ bool d2o_main_class::show_groups_information()
       // cout << "  The atom position within the group are set unambiguously" << endl;
     
     if( (occup_groups[i].get_total_num_occup_sites() < occup_groups[i].number_of_sites() ) &&
-        (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol) )
+        (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol()) )
     {        
       cout << "  WARNING: Vacancy introduced in a crystallographic site, which was originally fully-occupied." << endl;
     }

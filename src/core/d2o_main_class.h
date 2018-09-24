@@ -253,9 +253,9 @@ protected:
   bool set_labels_to_manual();
   std::string get_q_file_name(const std::string &output_base_name, const std::string &suffix);
 public:
-  static const double charge_tol = 1E-1;
-  static const double occup_tol = 2E-3;
-  static const double symm_tol = 1E-2;
+  static inline double charge_tol() { return 1E-1; };
+  static inline double occup_tol() { return 2E-3; };
+  static inline double symm_tol() { return 1E-2; };
 public:
   d2o_main_class();
   void set_verbosity(int vb)
