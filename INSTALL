@@ -1,6 +1,6 @@
 You can find a compiled program for all 64 bits Linux and MacOS at https://orex.github.io/supercell/ site. 
 
-IMPORTANT!!! Please note, that not all version of OpenBabel support partial occupancies. Please, use the version from https://github.com/openbabel/openbabel
+IMPORTANT!!! Please note, that not all version of OpenBabel support partial occupancies. Please, use the version from https://github.com/openbabel/openbabel. UPD: OB release 2.4.x is fully compatible with supercell program. You can install and use it instead of the latest master.
 
 Superquick installation.
 
