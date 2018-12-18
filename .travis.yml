@@ -41,13 +41,6 @@ matrix:
           OB_241_STABLE=FALSE
 
    - os: osx
-     osx_image: xcode6.4
-     cache: ccache     
-     compiler: gcc
-     env: LIBARCHIVE_OFF=FALSE
-          OB_241_STABLE=FALSE
-
-   - os: osx
      cache: ccache     
      compiler: gcc
      env: LIBARCHIVE_OFF=FALSE
