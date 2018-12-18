@@ -38,6 +38,16 @@
 using namespace OpenBabel;
 using namespace std;
 
+float get_float_property(OpenBabel::OBAtom &a, const std::string &tag, float def_value) {
+  OBPairFloatingPoint * pd = dynamic_cast<OBPairFloatingPoint *>(a.GetData(tag));
+  return (pd == NULL) ? def_value : pd->GetGenericValue();
+}
+
+float get_atom_occupancy(OpenBabel::OBAtom &a) {
+    return get_float_property(a, "_atom_site_occupancy", 1.0);
+}
+
+
 d2o_main_class::d2o_main_class()
 {
     charge_balancing = false;
@@ -211,7 +221,7 @@ c_occup_item::c_occup_item(OpenBabel::OBAtom *ob, double charge_v)
   obp->Duplicate(ob);
   
   label = obp->GetData("original_label")->GetValue();
-  occup_target = dynamic_cast<OBPairFloatingPoint *> (obp->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+  occup_target = get_atom_occupancy(*obp);
   
   charge = charge_v;
 }
@@ -319,8 +329,7 @@ std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
   {
     string atom_symbol = OB_PT_GETSYMBOL((*it)->GetAtomicNum());
     
-    double curr_occup = dynamic_cast<OBPairFloatingPoint *>
-                        ((*it)->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+    double curr_occup = get_atom_occupancy(*(*it));
 
     formula_map[atom_symbol] += curr_occup;
   }
@@ -1124,8 +1133,8 @@ bool d2o_main_class::process_charges(charge_balance cb)
   FOR_ATOMS_OF_MOL(a, mol_initial)
   {
     string label = a->GetData("_atom_site_label")->GetValue();
-    double curr_input_charge = dynamic_cast<OBPairFloatingPoint *>(a->GetData("input_charge"))->GetGenericValueDef(NAN);
-    double curr_occup = dynamic_cast<OBPairFloatingPoint *>(a->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+    double curr_input_charge = get_float_property(*a, "input_charge", NAN);
+    double curr_occup = get_atom_occupancy(*a);
     if( scs.count(label) > 0 )
     {  
       if(!isnan(scs[label].input_charge) || !isnan(curr_input_charge))
@@ -1309,7 +1318,7 @@ bool d2o_main_class::create_occup_groups()
   {
     OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
     string label_i = atom_i->GetData("original_label")->GetValue();
-    double occup_i = dynamic_cast<OBPairFloatingPoint *> (atom_i->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+    double occup_i = get_atom_occupancy(*atom_i);
 
     if ( tot_occ.count(label_i) == 0)
        tot_occ[label_i] = occup_i;
@@ -1331,7 +1340,7 @@ bool d2o_main_class::create_occup_groups()
                << OB_PT_GETSYMBOL(atom_j->GetAtomicNum()) << endl;
         }
        
-        double occup_j = dynamic_cast<OBPairFloatingPoint *> (atom_j->GetData("_atom_site_occupancy"))->GetGenericValueDef(1.0);
+        double occup_j = get_atom_occupancy(*atom_j);
         if( abs(occup_i - occup_j) > occup_tol() )
         {
           same_properties = false;
@@ -1573,8 +1582,6 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
         {
           OBAtom *new_atom = mol_supercell.NewAtom();
           new_atom->Duplicate(*it);
-          
-          //cout << dynamic_cast<OBPairFloatingPoint *> ((*it)->GetData("_atom_site_occupancy"))->GetGenericValue() << endl;
           
           string label = (*it)->GetData("_atom_site_label")->GetValue();
           
