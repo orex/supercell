@@ -13,7 +13,7 @@
 #include <vector>
 #include <set>
 
-#include "assigned_variable/av_base.hpp"
+#include <boost/optional.hpp>
 
 enum charge_balance {cb_no, cb_yes, cb_try};
 
@@ -38,16 +38,16 @@ public:
 class c_man_atom_prop_item
 {
 public:
-  c_assigned_value<double> charge;
-  c_assigned_value<bool> fixed;  
-  c_assigned_value<int> population;
+  boost::optional<double> charge;
+  boost::optional<bool> fixed;
+  boost::optional<int> population;
  
   c_man_atom_prop_item() {};
   void assign(const c_man_atom_prop_item &orig)
   { 
-    charge.assign(orig.charge);
-    fixed.assign(orig.fixed);
-    population.assign(orig.population);
+    charge = orig.charge;
+    fixed = orig.fixed;
+    population= orig.population;
   };
 };        
 

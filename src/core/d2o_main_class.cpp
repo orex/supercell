@@ -10,6 +10,7 @@
 #include <openbabel/obconversion.h>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 #include <algorithm>
 #include <cmath>
 #ifdef OLD_OB_PERIODIC_TABLE
@@ -923,7 +924,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
     c_occup_group &curr_group = occup_groups[i];
     
     if( (curr_group.items.size() == 1) && 
-        (!(*manual_properties)[curr_group.items[0].label].population.assigned()) &&
+        (!(*manual_properties)[curr_group.items[0].label].population.is_initialized()) &&
         (abs(1 - curr_group.get_total_occup_input()) < 1E-4) )
     {
       rangi rd;
@@ -941,7 +942,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         rangi rd;
         rd.group_index = i;
         rd.atom_index = j;
-        if(!(*manual_properties)[curr_group.items[j].label].population.assigned())
+        if(!(*manual_properties)[curr_group.items[j].label].population.is_initialized())
         {  
           correct_rms_range(curr_group.number_of_sites(), 
                             occup_groups[i].items[j].occup_target, x2,
@@ -950,7 +951,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         }
         else
         {
-          int value = (*manual_properties)[curr_group.items[j].label].population.value();
+          int value = (*manual_properties)[curr_group.items[j].label].population.get();
           rd.min_value  = value;
           rd.max_value  = value;
           rd.curr_value = value;
@@ -1058,7 +1059,7 @@ bool d2o_main_class::get_atoms_population()
         
         for(int j = 0; j < occup_groups[i].items.size(); j++)
         {
-           man_occup_group = (*manual_properties)[occup_groups[i].items[j].label].population.assigned();
+           man_occup_group = (*manual_properties)[occup_groups[i].items[j].label].population.is_initialized();
            if( man_occup_group )
              break;
         }
@@ -1157,8 +1158,8 @@ bool d2o_main_class::process_charges(charge_balance cb)
     if(! isnan((*it).second.input_charge) )
       (*it).second.curr_charge = (*it).second.input_charge;
 
-    if( (*manual_properties)[(*it).first].charge.assigned()) 
-      (*it).second.curr_charge = (*manual_properties)[(*it).first].charge.value();
+    if( (*manual_properties)[(*it).first].charge.is_initialized())
+      (*it).second.curr_charge = (*manual_properties)[(*it).first].charge.get();
   }
 
   double total_input_charge = 0;
@@ -1227,12 +1228,12 @@ bool d2o_main_class::fix_groups()
                                         itg != occup_groups.end(); ++itg)
   {
     assert(itg->items.size() > 0);
-    bool fixed_status = (*manual_properties)[itg->items[0].label].fixed.value_def(false);
+    bool fixed_status = (*manual_properties)[itg->items[0].label].fixed.get_value_or(false);
     bool wrong_status = false;
     for(vector< c_occup_item >::iterator iti  = itg->items.begin();
                                          iti != itg->items.end(); ++iti)
     {
-      wrong_status = fixed_status != (*manual_properties)[iti->label].fixed.value_def(false);
+      wrong_status = fixed_status != (*manual_properties)[iti->label].fixed.get_value_or(false);
       if(wrong_status)
         break;
     }    
@@ -1638,6 +1639,16 @@ bool d2o_main_class::read_molecule(std::string file_name)
   return result;  
 }
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const boost::optional<T> &cav)
+{
+  if(cav.is_initialized())
+    os << *cav;
+  else
+    os << "N/A";
+
+  return os;
+}
 
 bool d2o_main_class::set_labels_to_manual()
 {
