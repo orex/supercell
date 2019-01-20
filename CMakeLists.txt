@@ -3,9 +3,7 @@ cmake_minimum_required (VERSION 2.8.6)
 project(supercell)
 include(FeatureSummary)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_ROOT}/Modules" "${CMAKE_SOURCE_DIR}/libs/common_utils/cmake/modules/")
-
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O3 -Wall -Wno-sign-compare -Wextra " )
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2 -Wall -Wno-sign-compare -Wextra " )
 
 option(LINK_STATIC_LIBS "Build project with static libs" OFF)
 
