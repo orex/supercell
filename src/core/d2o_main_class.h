@@ -105,13 +105,13 @@ class struct_info
 public:
   t_vec_comb cmb;
   double energy;
-  int index;
+  int64_t index;
   //weight should be equal 0 for non-merge run.
   int weight;
   
   struct_info(): energy(0), index(0), weight(0) {};
 
-  std::string file_name(const std::string &prefix, int tot_comb, 
+  std::string file_name(const std::string &prefix, int64_t tot_comb, 
                         const std::string &sampl_type = "") const;
   
   bool operator < (const struct_info &second ) const
@@ -124,7 +124,7 @@ class c_struct_sel_containers : public c_struct_sel
 {
 protected:  
   boost::mt19937 rnd;
-  int min_comb;
+  int64_t min_comb;
   int symm_op;
   double probability;
 public:
@@ -140,8 +140,8 @@ public:
   //symm_op 1 for non-merging
   bool sampling_active() const
   { return !save_all();  };
-  void set_containers_prop(int total_comb, int symm_op_v);  
-  void add_structure(const struct_info &si, int str_left);
+  void set_containers_prop(int64_t total_comb, int symm_op_v);  
+  void add_structure(const struct_info &si, int64_t str_left);
   void prepare_to_store();
 };
 
@@ -212,7 +212,7 @@ protected:
   template<class ConstIterator>
   void store_cont_cif(const ConstIterator& begin, 
                        const ConstIterator& end,
-                       const std::string &prefix, int tot_comb, 
+                       const std::string &prefix, int64_t tot_comb, 
                        const std::string &sampl_type = "")
   {
     for(ConstIterator it = begin; it != end; it++)
@@ -222,7 +222,7 @@ protected:
   template<class ConstIterator>
   void store_cont_eng(const ConstIterator& begin, 
                       const ConstIterator& end,
-                      const std::string &prefix, int tot_comb, 
+                      const std::string &prefix, int64_t tot_comb, 
                       const std::string &sampl_type = "")
   {
     if(begin == end)
@@ -239,10 +239,10 @@ protected:
   }
   
   bool write_struct(const struct_info &si,
-                     const std::string &prefix, int tot_comb, 
+                     const std::string &prefix, int64_t tot_comb, 
                      const std::string &sampl_type = "");
   
-  bool store_samling(std::string output_base_name, int tot_comb);
+  bool store_sampling(std::string output_base_name, int64_t tot_comb);
   bool write_files(std::string output_base_name, bool dry_run, bool merge_confs);
   bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
   bool create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out);

@@ -9,6 +9,8 @@
 
 #include <openbabel/obconversion.h>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 #include <algorithm>
@@ -128,20 +130,23 @@ bool d2o_main_class::close_tar_container()
 }
 
 
-std::string struct_info::file_name(const std::string &prefix, int tot_comb, 
+std::string struct_info::file_name(const std::string &prefix, int64_t tot_comb, 
                                    const std::string &sampl_type) const
 {
-  std::string result = prefix + "_i" + sampl_type + get_index_str(index, tot_comb - 1);
+  stringstream result;
+  
+  result << prefix << "_i" << sampl_type;
+  result << std::setfill('0') << std::setw(boost::lexical_cast<std::string>(tot_comb).length()) << std::internal << index;
 
   if( weight > 0 ) 
-    result += "_w" + boost::lexical_cast<string>(weight);
+    result << "_w" << weight;
   
-  result += ".cif";
+  result << ".cif";
   
-  return result;
+  return result.str();
 }
 
-void c_struct_sel_containers::add_structure(const struct_info &si, int str_left)
+void c_struct_sel_containers::add_structure(const struct_info &si, int64_t str_left)
 {
   //Random
   if(str_random_count() > 0)
@@ -199,11 +204,11 @@ void c_struct_sel_containers::prepare_to_store()
 }
 
 
-void c_struct_sel_containers::set_containers_prop(int total_comb, int symm_op_v)
+void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_op_v)
 {
   rnd = create_rnd_gen();
   symm_op = symm_op_v;
-  min_comb = max(total_comb / symm_op, 1);
+  min_comb = max<int64_t>(total_comb / symm_op, 1);
   
   probability = 4 * double(str_random_count()) / double(min_comb);
   
@@ -264,8 +269,11 @@ int64_t c_occup_group::get_number_of_combinations() const
 
     if(sum <= number_of_sites())
     {  
-      nm[-1] = number_of_sites() - sum;    
-      result = num_combinations(nm);
+      nm[-1] = number_of_sites() - sum;
+    
+      bool good = num_combinations(nm, result);
+      if(!good)
+        result = -1;
     }
     else
       result = 0;
@@ -668,7 +676,7 @@ bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
 }
 
 bool d2o_main_class::write_struct(const struct_info &si, 
-                                  const std::string &prefix, int tot_comb, 
+                                  const std::string &prefix, int64_t tot_comb, 
                                   const std::string &sampl_type)
 {
   bool result = true;
@@ -699,7 +707,7 @@ bool d2o_main_class::write_struct(const struct_info &si,
   return result;
 }
 
-bool d2o_main_class::store_samling(std::string output_base_name, int tot_comb)
+bool d2o_main_class::store_sampling(std::string output_base_name, int64_t tot_comb)
 {
   ss_p.prepare_to_store();
   
@@ -775,7 +783,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
     occup_groups[i].set_fixed_fast();
   }  
   
-  int tot_comb = total_combinations();
+  int64_t tot_comb = total_combinations();
   
   if(!dry_run && !tar_enabled() )
   {
@@ -785,12 +793,12 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
       cout << "Output files was deleted successfully" << endl;
   }
   
-  int combination_left = total_combinations();
-  int total_index = 0;
-  int index = 0;
+  int64_t combination_left = tot_comb;
+  int64_t total_index = 0;
+  int64_t index = 0;
   bool done;
   
-  int syms_num = max(int(occup_groups[0].symms_sets.size()), 1);
+  int syms_num = max<int>(occup_groups[0].symms_sets.size(), 1);
   ss_p.set_containers_prop(tot_comb, syms_num);
      
   
@@ -875,7 +883,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
     cerr << "ERROR: Combination left " << combination_left << " != 0 " << endl;
   
   if( ss_p.sampling_active() && (!dry_run) )
-    store_samling(output_base_name, tot_comb);
+    store_sampling(output_base_name, tot_comb);
   
   return combination_left == 0;
 }
@@ -966,14 +974,24 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
 
 int64_t d2o_main_class::total_combinations()
 {
-  int64_t result = 1;
+  bool overflow = false;
+  std::vector<int64_t> tm;
   for(vector<c_occup_group>::const_iterator it = occup_groups.begin(); 
                                             it != occup_groups.end(); ++it)
   {
-    result *= it->get_number_of_combinations();
+    int64_t tc = it->get_number_of_combinations();
+    overflow = overflow || (tc < 0);
+    tm.push_back(tc);
   }
   
-  return result;  
+  if(overflow)
+    return -1;
+  else
+  {
+    int64_t result = 1;
+    bool good = safe_multiplication(tm, result);
+    return good ? result : -1;
+  }
 }
 
 double d2o_main_class::ss_charge_by_occup_groups()
@@ -1477,15 +1495,17 @@ bool d2o_main_class::show_groups_information()
       cout << "  Crystallographic sites with different positions found for this group." << endl;
       cout << "  Maximum distance within the group: " << occup_groups[i].max_dis_within_group << " A." << endl;
     }
-    else
-      ;
-      // cout << "  All atoms occupied the same site." << endl;
+    // else
+    //   cout << "  All atoms occupied the same site." << endl;
+
+    int64_t g_occ = occup_groups[i].get_number_of_combinations();
     
-    if(occup_groups[i].get_number_of_combinations() != 1)
-      cout << "  Number of combinations for the group is " << occup_groups[i].get_number_of_combinations() << endl;
-    else
-      ;
-      // cout << "  The atom position within the group are set unambiguously" << endl;
+    if( g_occ > 1)
+      cout << "  Number of combinations for the group is " << g_occ  << endl;
+    else if( g_occ < 0 )
+      cout << "  WARNING: Number of combinations for the group is too high to work with." << endl;
+    //  else
+    //    cout << "  The atom position within the group are set unambiguously" << endl;
     
     if( (occup_groups[i].get_total_num_occup_sites() < occup_groups[i].number_of_sites() ) &&
         (abs(1.0 - occup_groups[i].get_total_occup_input()) < occup_tol()) )
@@ -1504,6 +1524,7 @@ bool d2o_main_class::show_groups_information()
 
   int64_t t_comb = total_combinations();
   string t_comb_approx = "";
+  string t_comb_str = t_comb > 0 ? boost::lexical_cast<std::string>(t_comb) : "+INF";
   if(t_comb > 1E5)
   {  
     boost::format fmt("(~%1$2.1e)");
@@ -1513,7 +1534,7 @@ bool d2o_main_class::show_groups_information()
   
   cout << endl ;
   cout << "-------------------------------------------------" << endl ;
-  cout << "The total number of combinations is " << t_comb 
+  cout << "The total number of combinations is " << t_comb_str
        << t_comb_approx << endl;
   cout << "-------------------------------------------------" << endl ;
   
@@ -1750,9 +1771,15 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   if(verbose_level >= 1)
    show_groups_information();
   
-  if(total_combinations() > 8E8)
+  int64_t tc = total_combinations();
+  if(tc > static_cast<int64_t>(1E15) || tc < 0 )
   {
     cerr << "ERROR: Number of total combinations is too high to work with." << endl;
+    return false;
+  }
+
+  if( tc == 0) {
+    cerr << "ERROR: Number of total combinations is 0. Probably wrong pupulation values." << endl;
     return false;
   }
   
