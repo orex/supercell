@@ -35,9 +35,9 @@
 
 \renewcommand{\File}[1]{\path{#1}}
 
-\setDate{2015/09/01}    %%%% must be manually set, if rcsinfo is not present
+\setDate{2019/01/23}    %%%% must be manually set, if rcsinfo is not present
 \setVersionWord{Version:}  %%% that's the default, no need to set it.
-\setVersion{1.0}
+\setVersion{1.1}
 
 \begin{document}
 \newcommand{\Dd}{-{}-}
@@ -62,7 +62,7 @@
 
 \section{Description}
 %%%%%%%%%%%%%%%%%%%%%
-Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties required ideal periodicity. In opposite of many reported research, which implies periodicity to disordered system ``by hand'' and ad-hoc the program \Prog{supercell} allows to apply the approximation systematically with all-in-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program is fast-algorithms implementation and availability under GPL license. 
+Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties require ideal periodicity. In opposite of many reported research, which imply periodicity to disordered system ``by hand'' and ad-hoc the program \Prog{supercell} allows to apply the approximation systematically with all-in-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program are fast-algorithms implementation and availability under GPL license. 
 
 \section{Options}
 %%%%%%%%%%%%%%%%%
@@ -72,20 +72,20 @@ Disordered compounds are very important now for fundamental science and industri
       Print help message and exit the program.
 
 \item[\OptArg{-v }{level}, \OptArg{\Dd verbose=}{level}] 
-      Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
+      Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 is suggested for regular users. Higher levels suggested for developers, bug tracking and long program execution times. 
 
 \item[\OptArg{-i }{input-file}, \OptArg{\Dd input=}{input-file}]
       Required option. Input file in CIF format. Only one file can be specified.
 
 \item[\Opt{-d}, \Opt{\Dd dry-run}]
       The option is highly recommended for the first run of the program with new input specified. 
-      With the option the program will do everything but write the files. Be careful if you switched \Opt{-m}, \Opt{\Dd merge-by-distance} option: the program will go through all crystal structures, so even the dry-run mode can take time.
+      With the option the program will do everything but write the files. Be careful if you switched \Opt{-m}, \Opt{\Dd merge-symmetric} option: the program will go through all crystal structures, so even the dry-run mode can take time.
 
 \item[\OptArg{-s }{cell-size}, \OptArg{\Dd cell-size=}{cell-size}]
       The option specifies the size of the supercell. The format is AxBxC, where A, B, C are positive integer multipliers of \textbf{a}, \textbf{b} and \textbf{c} unit cell vectors of input system. Default is "1x1x1".
 
 \item[\OptArg{-c }{balance-type}, \OptArg{\Dd charge-balance=}{balance-type}]
-      The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it even can freeze the program.  Charges (i.e. oxydation states) may be specified with the \Opt{-p}, \Opt{\Dd labels-properties} option (see below) or directly in the CIF file ("\_atom\_type\_oxidation\_number"). The possible arguments are:
+      The option helps to balance charges of the structure. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can even freeze the program. Charges (i.e. oxydation states) may be specified with the \Opt{-p}, \Opt{\Dd labels-properties} option (see below) or directly in the CIF file ("\_atom\_type\_oxidation\_number"). The possible arguments are:
       \begin{itemize}
          \item[no]   No charge balancing. The option will set all charges to zero.
          \item[try]  Default. Try to charge balance system, if initial system is not charged.
@@ -98,7 +98,7 @@ Disordered compounds are very important now for fundamental science and industri
          \item Simple: $<$label$>$:$<$property\_name$>$[=$<$property\_value$>$].
          \item Extended: "$<$OPT$>$($<$labels$>$):{$<$properties$>$}" (Do not forget to put extended syntax in quotes).
        \end{itemize}
-       Where $<$label$>$ is the label of the crystallographic site, the properties of which you want to change, $<$labels$>$ set of space-separated labels. $<$OPT$>$ is the type of string-pprocessing you want use to set the labels. The possible values of $<$OPT$>$ are:
+       Where $<$label$>$ is the label of the crystallographic site, the properties of which you want to change, $<$labels$>$ set of space-separated labels. $<$OPT$>$ is the type of string processing you want use to set the labels. The possible values of $<$OPT$>$ are:
        \begin{itemize}
          \item[p] Treat the labels in parenthesis like a plain string. 
          \item[w, ""] Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * (any numbers of any symbol) and ? (any symbol: exactly one).
@@ -115,8 +115,8 @@ Disordered compounds are very important now for fundamental science and industri
 \item[\OptArg{-t }{tolerance}, \OptArg{\Dd tolerance=}{tolerance}]
       The argument of the option specifies the maximum distance (in Angstroms) between sites that should be contained within the same group (meaning that the corresponding positions in the supercell cannot be occupied simultaneously). Check carefully the minimal distance between 2 atoms assigned to different groups, which is written in the output of \Prog{supercell} before changing this parameter. Default \OptArg{}{tolerance}=0.75 A.
 
-\item[\Opt{-m}, \Opt{\Dd merge-by-distance}]
-      The options enables the symmetry-check algorithm on output structures. Structures that can be transform to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than $10^4$ total combinations it is recommended to use verbosity level 2 or higher to trace program execution.
+\item[\Opt{-m}, \Opt{\Dd merge-symmetric}]
+      The option enables the symmetry check algorithm on output structures. Structures that can be transformed to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than $10^4$ total combinations it is recommended to use verbosity level 2 or higher to trace program execution.
       
 \item[\OptArg{-n }{selection}, \OptArg{\Dd store-structures=}{selection}]
       The option allows you to generate subsets of structures (rather than all) according to certain criteria (listed below). The option is very useful to both save disk space and facilitate navigation among files for large numbers combinations (typically more than $10^5$).The argument of the option has special structure $<$sampling type$><$count$>$. The $<$count$>$ is a positive integer value or zero. $<$sampling type$>$ is a letter which sets the sampling (selection) mode:
@@ -132,13 +132,13 @@ Disordered compounds are very important now for fundamental science and industri
       Multiple declaration of the option is allowed. If the option is enabled, an extra prefix (the letter $<$sampling type$>$ will be added to output file name. Be careful, enabling the option required an extra memory, proportionally to the number of structures to store.
 
 \item[\Opt{-q}, \Opt{\Dd coulomb-energy}] 
-      The option enable Coulumb energy calculations. The result energies for each structures are stored in file $<$output-prefix$>$\_coulomb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \Opt{\Dd charge-balance} option.
+      The option enable Coulomb energy calculations. The result energies for each structure are stored in file $<$output-prefix$>$\_coulomb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \Opt{\Dd charge-balance} option.
       
 \item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output-prefix=}{output-prefix}]
       The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output-prefix=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be $<$output-prefix$>$\_i$<$sampling type$><$index$>$.cif. For merging run the template will be $<$output-prefix$>$\_i$<$sampling type$><$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
       
 \item[\OptArg{-a }{archive-file}, \OptArg{\Dd archive=}{archive-file}]
-      The option specify a target archive file for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required \Prog{libarchive} \URL{http://www.libarchive.org/} to be available in the system. Otherwise the option will be disabled. Check the status by \Opt{-h} option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''.
+      The option specifies a target archive file name for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required \Prog{libarchive} \URL{http://www.libarchive.org/} to be available in the system. Otherwise the option will be disabled. Check the status by \Opt{-h} option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''.
 
 \end{Description}
 
@@ -187,7 +187,7 @@ Some advances examples, with \Prog{supercell} embedded to bash scripts you can f
 
 \begin{Description}\setlength{\itemsep}{0cm}
 \item[Supercell size limitation.]
-The maximum number of permutations should not exceed limit of 800 million. If more, the program will return a error. If the number of permutations within the groups is less than the limit, but total number of combinations is above the limit, the pro gram can be executed step-by-step with some groups excluded from permutation. Due to rapid increasing of number of combination with changing cell size the program can crash with arithmetic overflow at large cell, when number of combination more than $2^{63}$ (around $10^{18}$) due to finite size integer variables in the program.
+The maximum number of permutations should not exceed limit of $10^{15}$ (\textbf{double} variable limit). If more, the program will return an error. The value is far beyond a reasonable limit due to calculation time. The average program performance is about 10-100 billion structures per day with standard desktop processor.
 \item[Filesystem limitation.]
 Although, \Prog{supercell} can produce millions of files, most of the filesystems can't manage more than one thousand files in one folder with acceptable performance. Be careful, if you need to process a lot of combination, sample them or use \Opt{-a} option.
 \item[Symmetry information handling in input file.]
