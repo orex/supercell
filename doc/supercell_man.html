@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
-<!-- Manual page created with latex2man on Sun Jan 20 17:24:05 UTC 2019
+<!-- Manual page created with latex2man on Thu Jan 24 07:59:28 2019
 ** Author of latex2man: Juergen.Vollmer@informatik-vollmer.de
 ** NOTE: This file is generated, DO NOT EDIT. -->
 <html>
@@ -11,8 +11,8 @@ supercell -<br>
  A Scientific Tool 
 </h1>
 <h4 class="authorhead">Kirill Okhotnikov, Sylvian Cadars </h4>
-<h4 class="datehead">2015/09/01</h4>
-<h4 class="versionhead">Version 1.0</h4>
+<h4 class="datehead">2019/01/23</h4>
+<h4 class="versionhead">Version 1.1</h4>
 <p>
 <font class="progname">supercell</font>
 is a tool to convert a crystallographic structure with partial occupancy and/or vacancies to ordinary supercell structure suitable for calculations. 
@@ -57,8 +57,8 @@ is a tool to convert a crystallographic structure with partial occupancy and/or 
 <p>
 <h2 class="sectionname"><a name="section_2">Description</a></h2>
 
-Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties required ideal periodicity. In opposite of many reported research, which implies periodicity to disordered system ``by hand'' and ad-hoc the program <font class="progname">supercell</font>
-allows to apply the approximation systematically with all-in-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program is fast-algorithms implementation and availability under GPL license. 
+Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties require ideal periodicity. In opposite of many reported research, which imply periodicity to disordered system ``by hand'' and ad-hoc the program <font class="progname">supercell</font>
+allows to apply the approximation systematically with all-in-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program are fast-algorithms implementation and availability under GPL license. 
 <p>
 <h2 class="sectionname"><a name="section_3">Options</a></h2>
 
@@ -73,7 +73,7 @@ Print help message and exit the program.
 <dt><font class="optstyle">-v </font><font class="argstyle">level</font>, <font class="optstyle">--verbose=</font><font class="argstyle">level</font>
 </dt>
 <dd> 
-Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 suggested for regular users. Higher levels suggested to developers, bug tracking and long program execution times. 
+Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 is suggested for regular users. Higher levels suggested for developers, bug tracking and long program execution times. 
 <p>
 </dd>
 <dt><font class="optstyle">-i </font><font class="argstyle">input-file</font>, <font class="optstyle">--input=</font><font class="argstyle">input-file</font>
@@ -87,7 +87,7 @@ Required option. Input file in CIF format. Only one file can be specified.
 <dd> 
 The option is highly recommended for the first run of the program with new input specified. 
 With the option the program will do everything but write the files. Be careful if you switched <font class="optstyle">-m</font>,
-<font class="optstyle">--merge-by-distance</font>
+<font class="optstyle">--merge-symmetric</font>
 option: the program will go through all crystal structures, so even the dry-run mode can take time. 
 <p>
 </dd>
@@ -103,7 +103,7 @@ unit cell vectors of input system. Default is "1x1x1".
 <dt><font class="optstyle">-c </font><font class="argstyle">balance-type</font>, <font class="optstyle">--charge-balance=</font><font class="argstyle">balance-type</font>
 </dt>
 <dd> 
-The option helps you to charge balance the system. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it even can freeze the program. Charges (i.e. oxydation states) may be specified with the <font class="optstyle">-p</font>,
+The option helps to balance charges of the structure. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can even freeze the program. Charges (i.e. oxydation states) may be specified with the <font class="optstyle">-p</font>,
 <font class="optstyle">--labels-properties</font>
 option (see below) or directly in the CIF file ("_atom_type_oxidation_number"). The possible arguments are: 
 <ul compact>
@@ -129,7 +129,7 @@ The option will allow you to manually specify some properties of atoms with spec
 <li>Extended: "&lt;OPT&gt;(&lt;labels&gt;):{&lt;properties&gt;}" (Do not forget to put extended syntax in quotes). 
 </li>
 </ul>
-Where &lt;label&gt; is the label of the crystallographic site, the properties of which you want to change, &lt;labels&gt; set of space-separated labels. &lt;OPT&gt; is the type of string-pprocessing you want use to set the labels. The possible values of &lt;OPT&gt; are: 
+Where &lt;label&gt; is the label of the crystallographic site, the properties of which you want to change, &lt;labels&gt; set of space-separated labels. &lt;OPT&gt; is the type of string processing you want use to set the labels. The possible values of &lt;OPT&gt; are: 
 <ul compact>
 <dt>p</dt>
 <dd> Treat the labels in parenthesis like a plain string. 
@@ -164,10 +164,10 @@ before changing this parameter. Default <font class="optstyle"></font><font clas
 A. 
 <p>
 </dd>
-<dt><font class="optstyle">-m</font>, <font class="optstyle">--merge-by-distance</font>
+<dt><font class="optstyle">-m</font>, <font class="optstyle">--merge-symmetric</font>
 </dt>
 <dd> 
-The options enables the symmetry-check algorithm on output structures. Structures that can be transform to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than 10^4 total combinations it is recommended to use verbosity level 2 or higher to trace program execution. 
+The option enables the symmetry check algorithm on output structures. Structures that can be transformed to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than 10^4 total combinations it is recommended to use verbosity level 2 or higher to trace program execution. 
 <p>
 </dd>
 <dt><font class="optstyle">-n </font><font class="argstyle">selection</font>, <font class="optstyle">--store-structures=</font><font class="argstyle">selection</font>
@@ -201,7 +201,7 @@ Multiple declaration of the option is allowed. If the option is enabled, an extr
 <dt><font class="optstyle">-q</font>, <font class="optstyle">--coulomb-energy</font>
 </dt>
 <dd> 
-The option enable Coulumb energy calculations. The result energies for each structures are stored in file &lt;output-prefix&gt;_coulomb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also <font class="optstyle">--charge-balance</font>
+The option enable Coulomb energy calculations. The result energies for each structure are stored in file &lt;output-prefix&gt;_coulomb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also <font class="optstyle">--charge-balance</font>
 option. 
 <p>
 </dd>
@@ -215,7 +215,7 @@ option enabled.
 <dt><font class="optstyle">-a </font><font class="argstyle">archive-file</font>, <font class="optstyle">--archive=</font><font class="argstyle">archive-file</font>
 </dt>
 <dd> 
-The option specify a target archive file for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required <font class="progname">libarchive</font>
+The option specifies a target archive file name for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required <font class="progname">libarchive</font>
 <a class="urlstyle" href ="http://www.libarchive.org/"><tt>http://www.libarchive.org/</tt></a>
 to be available in the system. Otherwise the option will be disabled. Check the status by <font class="optstyle">-h</font>
 option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''. 
@@ -279,7 +279,8 @@ folder.
 <dl compact>
 <dt>Supercell size limitation.</dt>
 <dd> 
-The maximum number of permutations should not exceed limit of 800 million. If more, the program will return a error. If the number of permutations within the groups is less than the limit, but total number of combinations is above the limit, the pro gram can be executed step-by-step with some groups excluded from permutation. Due to rapid increasing of number of combination with changing cell size the program can crash with arithmetic overflow at large cell, when number of combination more than 2^{63} (around 10^{18}) due to finite size integer variables in the program. 
+The maximum number of permutations should not exceed limit of 10^{15} (<strong>double</strong>
+variable limit). If more, the program will return an error. The value is far beyond a reasonable limit due to calculation time. The average program performance is about 10-100 billion structures per day with standard desktop processor. 
 </dd>
 <dt>Filesystem limitation.</dt>
 <dd> 
@@ -303,7 +304,7 @@ libraries to handle symmetry operations in input file. The algorithm, implemente
 <h2 class="sectionname"><a name="section_9">Version</a></h2>
 
 <p>
-Version: 1.0 of 2015/09/01.
+Version: 1.1 of 2019/01/23.
 <p>
 <h2 class="sectionname"><a name="section_10">License and Copyright</a></h2>
 
