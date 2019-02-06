@@ -25,6 +25,8 @@ before_install:
  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install eigen libarchive; fi
  - if [[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install -qq texlive-extra-utils python texlive-extra-utils texlive-latex-extra python-pygments texlive-science texlive-humanities texlive-pstricks texlive-fonts-recommended; fi
  - if [[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "osx" ]]; then echo "OSX deploy build"; fi
+ - choco feature enable -n=allowGlobalConfirmation
+ - choco install jom
  - export c_path=${PWD}
 
 install:
@@ -33,7 +35,7 @@ install:
  - cd openbabel
  - if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
  - mkdir build && cd build
- - cmake ../ "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF
+ - cmake ../ -G"NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF
  - cat CMakeCache.txt | grep CMAKE_GENERATOR
  - ls
  - cmake --build .
