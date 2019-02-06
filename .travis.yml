@@ -9,40 +9,7 @@ sudo: required
 group: travis_latest
 
 matrix:
- include:
-   - compiler: gcc
-     dist: trusty
-     cache: ccache
-     env: LIBARCHIVE_OFF=FALSE
-          OB_241_STABLE=TRUE
-
-   - compiler: gcc
-     dist: trusty
-     cache: ccache
-     env: LIBARCHIVE_OFF=FALSE
-          OB_241_STABLE=FALSE
-
-   - compiler: gcc
-     dist: trusty
-     cache: ccache
-     env: LIBARCHIVE_OFF=TRUE
-          OB_241_STABLE=FALSE
-
-   - compiler: clang
-     dist: trusty
-     env: LIBARCHIVE_OFF=FALSE
-          OB_241_STABLE=FALSE
-
-   - compiler: gcc
-     dist: trusty
-     cache: ccache
-     env: LIBARCHIVE_OFF=FALSE
-          DEPLOY_BUILD=TRUE
-          OB_241_STABLE=FALSE
-
-   - os: osx
-     cache: ccache     
-     compiler: gcc
+   - os: windows
      env: LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD=TRUE
           OB_241_STABLE=FALSE
@@ -76,11 +43,3 @@ before_script:
 script:
  - make `[[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]] && echo "supercell doc_man doc_pdf doc_html tutorial_pdf" || echo "supercell"`
  - ./src/sc_cli/supercell -d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif
-
-deploy:
-  provider: script
-  script: ${c_path}/deploy.sh
-  skip_cleanup: true
-  on:
-    branch: master
-    condition: $DEPLOY_BUILD = TRUE
