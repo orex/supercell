@@ -33,10 +33,10 @@ install:
  - cd openbabel
  - if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
  - mkdir build && cd build
- - cmake ../ -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF
+ - cmake ../ "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF
  - cat CMakeCache.txt | grep CMAKE_GENERATOR
  - ls
- - MSBuild.exe openbabel.sln
+ - cmake --build .
  - cd ~
 
 before_script:
