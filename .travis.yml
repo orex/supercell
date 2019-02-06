@@ -4,8 +4,6 @@ env:
 
 language: cpp
 
-sudo: required
-
 group: travis_latest
 
 matrix:
