@@ -14,6 +14,7 @@ matrix:
             OB_241_STABLE=FALSE
      - os: linux
        dist: xenial
+       cache: ccache
        env: LIBARCHIVE_OFF=FALSE
             DEPLOY_BUILD=TRUE
             OB_241_STABLE=FALSE
@@ -33,7 +34,7 @@ install:
  - if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
  - mkdir build && cd build
  - cmake ../ -DCMAKE_BUILD_TYPE=Release `[[ ${DEPLOY_BUILD} == TRUE ]] && echo "-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"` `[[ ${DEPLOY_BUILD} == TRUE && "$TRAVIS_OS_NAME" == "linux" ]] && echo " -DGLIBC_24_COMPATIBLE=ON"`
- - make && sudo make install
+ - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then devenv /build CMake.sln; else make && sudo make install; fi
  - cd ~
 
 before_script:
