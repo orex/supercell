@@ -36,7 +36,8 @@ install:
  - cmake ../ -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF
  - cat CMakeCache.txt | grep CMAKE_GENERATOR
  - ls
- - cmake --build . --target install
+ - msbuild openbabel.sln
+ - MSBuild.exe openbabel.sln
  - cd ~
 
 before_script:
