@@ -1,19 +1,16 @@
 #!/bin/bash
 
 function deploy-doc {
-  cp ${c_path}/build/doc/man/supercell_man.pdf ${deploy_dir}/doc/.
-
-  cp ${c_path}/build/doc/man/supercell_man.html ${deploy_dir}/doc/.
-  cp ${c_path}/doc/man/supercell_man.css ${deploy_dir}/doc/.
-
-  cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf ${deploy_dir}/doc/.
+  cp ${c_path}/build/doc/man/supercell_man.{pdf,html} ${deploy_dir}/${d_prefix}/doc/.
+  cp ${c_path}/doc/man/supercell_man.css ${deploy_dir}/${d_prefix}/doc/.
+  cp ${c_path}/build/doc/tutorial/supercell_tutorial.pdf ${deploy_dir}/${d_prefix}/doc/.
 
 }
 
 function deploy-exe {
   tmp_folder=`mktemp -d -t XXXXXX`
   cd ${tmp_folder}
-  cp ${c_path}/build/src/sc_cli/supercell .
+  cp ${c_path}/build/src/sc_cli/supercell* .
 
   for i in {atomtyp.txt,bondtyp.txt,phmodel.txt,space-groups.txt,types.txt}
   do
@@ -22,19 +19,22 @@ function deploy-exe {
 
   wget -nv https://github.com/orex/supercell/raw/deploy/README -O README
 
-  tar czvf supercell-$1.tar.gz *
+  if [[ "$1" == "windows" ]]; then
+    zip -9 supercell-$1.zip *
+  else
+    tar czvf supercell-$1.tar.gz *
+  fi
 
-  cp supercell-$1.tar.gz ${deploy_dir}/exe/.
+  cp supercell-$1.* ${deploy_dir}/${d_prefix}/exe/.
 }
 
 
 set -e # Exit with nonzero exit code if anything fails
 
-SOURCE_BRANCH="master"
 TARGET_BRANCH="gh-pages"
 
 # Pull requests and commits to other branches shouldn't try to deploy, just build to verify
-if [ "$TRAVIS_PULL_REQUEST" != "false" -o "$TRAVIS_BRANCH" != "$SOURCE_BRANCH" -o "$DEPLOY_BUILD" != "TRUE" ]; then
+if [ "$DEPLOY_BUILD" == "FALSE" -o "$DEPLOY_BUILD" == "" ]; then
     echo "Skipping deploy."
     exit 0
 fi
@@ -49,6 +49,11 @@ SHA=`git rev-parse --verify HEAD`
 git clone $REPO out
 cd out
 deploy_dir=${PWD}
+d_prefix="."
+if [ "$TRAVIS_BRANCH" != "master" ]; then
+  d_prefix="deploy_artifacts/$TRAVIS_BRANCH"
+fi
+
 git checkout $TARGET_BRANCH || git checkout --orphan $TARGET_BRANCH
 
 # Now let's go have some fun with the cloned repo
@@ -58,16 +63,15 @@ git config user.email "$COMMIT_AUTHOR_EMAIL"
 
 #Main code
 
-mkdir -p doc
-mkdir -p exe
+mkdir -p ${d_prefix}/doc
+mkdir -p ${d_prefix}/exe
 
 #wget -nv https://github.com/orex/supercell/raw/deploy/index.html -O index.html
 
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+if [[ "$DEPLOY_BUILD" == "doc" ]]; then
   deploy-doc
-  deploy-exe linux
-elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-  deploy-exe osx
+else
+  deploy-exe "$DEPLOY_BUILD"
 fi
 
 cd ${deploy_dir}
