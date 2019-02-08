@@ -3,9 +3,12 @@ set(sc_includes ${sc_includes} ${CMAKE_CURRENT_SOURCE_DIR}/core)
 
 find_package(OpenBabel2 REQUIRED 2.4.1)
 
-if(NOT EXISTS ${OpenBabel2_INCLUDE_DIRS}/openbabel/elements.h)
-  add_definitions(-DOLD_OB_PERIODIC_TABLE)
-endif()
+add_definitions(-DOLD_OB_PERIODIC_TABLE)
+foreach(OB_ID ${OpenBabel2_INCLUDE_DIRS})
+  if(EXISTS ${OB_ID}/openbabel/elements.h)
+    remove_definitions(-DOLD_OB_PERIODIC_TABLE)
+  endif()
+endforeach()  
 
 
 set(sc_includes ${sc_includes} ${OpenBabel2_INCLUDE_DIRS})
@@ -18,14 +21,22 @@ endif()
 
 # The following workaround only need for Ubuntu 14.04 with non-default version of cmake (travis-ci case).
 if(NOT DEFINED EIGEN3_FOUND)
-  if(EXISTS "/usr/include/eigen3/Eigen/Core")
-    set(EIGEN3_INCLUDE_DIR "/usr/include/eigen3/")
+  find_path(EIGEN3_INCLUDE_DIR NAMES Eigen/Core
+      HINTS
+      ${CMAKE_INSTALL_PREFIX}/include
+      PATH_SUFFIXES eigen3 
+    )  
+    if(EXISTS "${EIGEN3_INCLUDE_DIR}/Eigen/Core")
     set(EIGEN3_FOUND TRUE)
     message(STATUS "Eigen FOUND directly")
   else()
-    message(FATAL_ERROR "Eigen3 library not FOUND!")
   endif()
 endif()
+
+if(NOT ${EIGEN3_FOUND})
+  message(FATAL_ERROR "Eigen3 library not FOUND!")
+endif()
+
 set(sc_includes ${sc_includes} ${EIGEN3_INCLUDE_DIR})
 
 find_package(LibArchive)

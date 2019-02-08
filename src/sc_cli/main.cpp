@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     if(!m_prop.parse_input(manual_properties, param_error))
     {
       cerr << "Error in manual property input parameter " << param_error << endl;
-      return false;
+      return ERROR_IN_COMMAND_LINE;
     }
     
     c_struct_sel_cli sampl_prop;
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
     if(!sampl_prop.parse_input(structure_sampling, param_error))
     {
       cerr << "Error in sampling input parameter " << param_error << endl;
-      return false;
+      return ERROR_IN_COMMAND_LINE;
     }
     
     charge_balance cb;
