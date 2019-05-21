@@ -15,22 +15,26 @@ jobs:
  include:
    - name: "Developing build."
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build against stable OpenBabel version."
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           OB_241_STABLE=TRUE
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build for old trusty platform."
      dist: trusty
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build without LibArchive support."
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
           SUPERCELL_CMAKE_OPTIONS="-DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
@@ -40,12 +44,14 @@ jobs:
      dist: trusty #xenial build fails with clang
      cache: false
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Deploy build Linux."
      compiler: gcc
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD="linux"
           OB_241_STABLE=FALSE
@@ -55,30 +61,42 @@ jobs:
    - name: "Deploy build MacOS."
      os: osx
      env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="osx"
           OB_241_STABLE=FALSE
           OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"
           SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
 
    - name: "Deploy build Windows crosscompile."
-     cache: false
-     services:
-       - docker
-     env: DOCKER_NAME="dockcross/windows-x64"
+     cache:
+       timeout: 2000
+       directories:
+         - $HOME/.cache_mxe
+         
+     env: MXE_URL="https://github.com/mxe/mxe.git"
+          CROSS_TARGET='x86_64-w64-mingw32.static'
+          CMAKE_COMMAND="${CROSS_TARGET}-cmake"
           BUILD_TYPE=CROSS
           DEPLOY_BUILD="windows"
-          OB_241_STABLE=FALSE
+          OB_241_STABLE=TRUE
           OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"
           SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
      addons:
        apt:
          update: true
          packages:
-           - docker-ce
            - wine
-
+           - autopoint
+           - gperf
+           - intltool
+           - libtool
+           - libtool-bin
+           - lzip
+           - p7zip-full
+           
    - name: "Deploy build documentation."
      env: BUILD_TYPE=DOC
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="doc"
      cache: false
      addons:
@@ -125,15 +143,23 @@ before_install:
  - export c_path=${PWD}
 
 install:
+ - export START_TIME=`date +%s`
+ - mkdir -p tmp && cd tmp
  - |
    if [[ ${BUILD_TYPE} == CROSS ]]; then
-     docker pull ${DOCKER_NAME}
-     docker run --rm ${DOCKER_NAME} > ./dockcross
-     chmod +x ./dockcross
+     pushd .
+     git clone ${MXE_URL} && cd mxe
+     ln -s $HOME/.cache_mxe .ccache
+     while(true); do sleep 9m; echo "watchdog signal"; done &
+     WATCHDOG_PID=$!
+     make MXE_TARGETS=${CROSS_TARGET} boost eigen -j2
+     kill $WATCHDOG_PID
+     export PATH=${PWD}/usr/bin:$PATH
+     popd
    fi
  - |
    if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
-      mkdir -p tmp && cd tmp && git clone https://github.com/openbabel/openbabel.git && cd openbabel
+      git clone https://github.com/openbabel/openbabel.git && cd openbabel
       if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
       mkdir build
    fi
@@ -148,40 +174,38 @@ install:
    fi
  - cd ${c_path}
 
-
 script:
+ - export FINISH_TIME=`date +%s`
  - |
-   if [[ ${BUILD_TYPE} == PROGRAM ]]; then
-      cd tmp/openbabel/build
-      cmake ../ -DCMAKE_BUILD_TYPE=Release `echo ${OB_CMAKE_OPTIONS}`
-      make -j 2 && sudo make install
-      mkdir ${c_path}/build && cd ${c_path}/build
-      cmake ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
-      make -j 2 supercell
-   fi
- - |
-   if [[ ${BUILD_TYPE} == CROSS ]]; then
-      mkdir ${c_path}/build
-      ./dockcross bash -c "cd /usr/src/mxe && sudo make -j2 boost eigen && \
-                           cd /work/tmp/openbabel/build/ && \
-                           cmake ../ -DCMAKE_BUILD_TYPE=Release `echo ${OB_CMAKE_OPTIONS}` && make -j2 && \
-                           cd /work/build/ && \
-                           cmake ../ -DCMAKE_BUILD_TYPE=Release -DOpenBabel2_DIR=/work/tmp/openbabel/build `echo ${SUPERCELL_CMAKE_OPTIONS}` \
-                           && make -j2 supercell"
+   if ((FINISH_TIME-START_TIME < 1800)); then
+     if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
+        cd tmp/openbabel/build
+        ${CMAKE_COMMAND} ../ -DCMAKE_BUILD_TYPE=Release `echo ${OB_CMAKE_OPTIONS}`
+        make -j 2
+        if [[ ${BUILD_TYPE} == PROGRAM ]]; then 
+          sudo make install
+        else 
+          OBDIR="-DOpenBabel2_DIR=${c_path}/tmp/openbabel/build"
+          export BABEL_LIBDIR="${c_path}/tmp/openbabel/build/lib"
+          export BABEL_DATADIR="${c_path}/tmp/openbabel/data"
+        fi
+        mkdir ${c_path}/build && cd ${c_path}/build
+        ${CMAKE_COMMAND} ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release ${OBDIR} -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
+        make -j 2 supercell
+     fi
+   else
+     echo "Too much time spended. Trying to save cache."
+     false
    fi
  - |
    if [[ ${BUILD_TYPE} == DOC ]]; then
       mkdir ${c_path}/build && cd ${c_path}/build
-      cmake ../ -DBUILD_PROGRAM=OFF -DBUILD_DOC=ON
+      ${CMAKE_COMMAND} ../ -DBUILD_PROGRAM=OFF -DBUILD_DOC=ON
       make -j 2
    fi
  - cd ${c_path}/build
  - if [[ ${BUILD_TYPE} == PROGRAM ]]; then ./src/sc_cli/supercell `echo ${TEST_PROGRAM_CMD}`; fi
- - |
-   if [[ ${BUILD_TYPE} == CROSS ]]; then
-      cp -a ../tmp/openbabel/data/{space-groups,bondtyp}.txt .
-      wine ./src/sc_cli/supercell.exe `echo ${TEST_PROGRAM_CMD}`
-   fi
+ - if [[ ${BUILD_TYPE} == CROSS ]]; then wine ./src/sc_cli/supercell.exe `echo ${TEST_PROGRAM_CMD}`; fi
  - |
    if [[ ${BUILD_TYPE} == DOC ]]; then
       ls doc/man/supercell_man.{html,pdf} doc/man/supercell.1 doc/tutorial/supercell_tutorial.pdf
