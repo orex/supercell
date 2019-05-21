@@ -8,6 +8,7 @@
 #include "d2o_main_class.h"
 
 #include <openbabel/obconversion.h>
+#include <openbabel/obiter.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
