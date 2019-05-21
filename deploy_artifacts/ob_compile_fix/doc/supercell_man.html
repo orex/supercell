@@ -1,0 +1,355 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<!-- Manual page created with latex2man on Tue May 21 13:02:53 2019
+** Author of latex2man: Juergen.Vollmer@informatik-vollmer.de
+** NOTE: This file is generated, DO NOT EDIT. -->
+<html>
+<head><title>SUPERCELL</title>
+<link href="supercell_man.css" rel="stylesheet" type="text/css">
+</head><body>
+<h1 class="titlehead">
+supercell -<br>
+ A Scientific Tool 
+</h1>
+<h4 class="authorhead">Kirill Okhotnikov, Sylvian Cadars </h4>
+<h4 class="datehead">2019/01/23</h4>
+<h4 class="versionhead">Version 1.1</h4>
+<p>
+<font class="progname">supercell</font>
+is a tool to convert a crystallographic structure with partial occupancy and/or vacancies to ordinary supercell structure suitable for calculations. 
+<h3>Table of Contents</h3>
+<ul>
+<li><a href="#section_1">Synopsis </a></li>
+<li><a href="#section_2">Description </a></li>
+<li><a href="#section_3">Options </a></li>
+<li><a href="#section_4">Files </a></li>
+<li><a href="#section_5">Examples </a></li>
+<li><a href="#section_6">Requirements </a></li>
+<li><a href="#section_7">Bugs and limitations </a></li>
+<li><a href="#section_8">See Also </a></li>
+<li><a href="#section_9">Version </a></li>
+<li><a href="#section_10">License and Copyright </a></li>
+<li><a href="#section_11">Author </a></li>
+</ul>
+<p>
+<h2 class="sectionname"><a name="section_1">Synopsis</a></h2>
+
+<p>
+<dl compact>
+<dt></dt>
+<dd> 
+<font class="progname">supercell</font>
+<font class="optstyle">-h, --help</font>
+</dd>
+<dt></dt>
+<dd> 
+<font class="progname">supercell</font>
+[<font class="optstyle">OPTIONS</font>]
+<font class="optstyle">-i </font><font class="argstyle">input-file</font>
+</dd>
+<dt></dt>
+<dd> 
+<font class="progname">supercell</font>
+[<font class="optstyle">OPTIONS</font>]
+<font class="optstyle">--input=</font><font class="argstyle">input-file</font>
+<p>
+</dd>
+</dl>
+<p>
+<h2 class="sectionname"><a name="section_2">Description</a></h2>
+
+Disordered compounds are very important now for fundamental science and industrial applications, but most of the methods of exploring solid state material properties require ideal periodicity. In opposite of many reported research, which imply periodicity to disordered system ``by hand'' and ad-hoc the program <font class="progname">supercell</font>
+allows to apply the approximation systematically with all-in-one algorithms implemented for structure manipulation, supercell generation, permutations of atoms and vacancies, charge-balancing, detecting symmetry equivalent structures, Coulomb energy calculations and sampling output data. The advantages of the program are fast-algorithms implementation and availability under GPL license. 
+<p>
+<h2 class="sectionname"><a name="section_3">Options</a></h2>
+
+<dl compact>
+<p>
+<dt><font class="optstyle">-h</font>, <font class="optstyle">--help</font>
+</dt>
+<dd> 
+Print help message and exit the program. 
+<p>
+</dd>
+<dt><font class="optstyle">-v </font><font class="argstyle">level</font>, <font class="optstyle">--verbose=</font><font class="argstyle">level</font>
+</dt>
+<dd> 
+Change verbosity level from default 1. Level 0 - quiet mode, only error output. Level 1 is suggested for regular users. Higher levels suggested for developers, bug tracking and long program execution times. 
+<p>
+</dd>
+<dt><font class="optstyle">-i </font><font class="argstyle">input-file</font>, <font class="optstyle">--input=</font><font class="argstyle">input-file</font>
+</dt>
+<dd> 
+Required option. Input file in CIF format. Only one file can be specified. 
+<p>
+</dd>
+<dt><font class="optstyle">-d</font>, <font class="optstyle">--dry-run</font>
+</dt>
+<dd> 
+The option is highly recommended for the first run of the program with new input specified. 
+With the option the program will do everything but write the files. Be careful if you switched <font class="optstyle">-m</font>,
+<font class="optstyle">--merge-symmetric</font>
+option: the program will go through all crystal structures, so even the dry-run mode can take time. 
+<p>
+</dd>
+<dt><font class="optstyle">-s </font><font class="argstyle">cell-size</font>, <font class="optstyle">--cell-size=</font><font class="argstyle">cell-size</font>
+</dt>
+<dd> 
+The option specifies the size of the supercell. The format is AxBxC, where A, B, C are positive integer multipliers of <strong>a</strong>,
+<strong>b</strong>
+and <strong>c</strong>
+unit cell vectors of input system. Default is "1x1x1". 
+<p>
+</dd>
+<dt><font class="optstyle">-c </font><font class="argstyle">balance-type</font>, <font class="optstyle">--charge-balance=</font><font class="argstyle">balance-type</font>
+</dt>
+<dd> 
+The option helps to balance charges of the structure. Be careful, charge balancing with wrong input charges will make output system composition far from desired or it can even freeze the program. Charges (i.e. oxydation states) may be specified with the <font class="optstyle">-p</font>,
+<font class="optstyle">--labels-properties</font>
+option (see below) or directly in the CIF file ("_atom_type_oxidation_number"). The possible arguments are: 
+<ul compact>
+<dt>no</dt>
+<dd> No charge balancing. The option will set all charges to zero. 
+</dd>
+<dt>try</dt>
+<dd> Default. Try to charge balance system, if initial system is not charged. 
+</dd>
+<dt>yes</dt>
+<dd> Charge balance the system. 
+</li>
+</ul>
+<p>
+</dd>
+<dt><font class="optstyle">-p </font><font class="argstyle">labels-properties</font>, <font class="optstyle">--property=</font><font class="argstyle">labels-properties</font>
+</dt>
+<dd> 
+The option will allow you to manually specify some properties of atoms with specific labels. You may use the simple or the extended syntax. 
+<ul compact>
+<li>Simple: &lt;label&gt;:&lt;property_name&gt;[=&lt;property_value&gt;]. 
+</li>
+<li>Extended: "&lt;OPT&gt;(&lt;labels&gt;):{&lt;properties&gt;}" (Do not forget to put extended syntax in quotes). 
+</li>
+</ul>
+Where &lt;label&gt; is the label of the crystallographic site, the properties of which you want to change, &lt;labels&gt; set of space-separated labels. &lt;OPT&gt; is the type of string processing you want use to set the labels. The possible values of &lt;OPT&gt; are: 
+<ul compact>
+<dt>p</dt>
+<dd> Treat the labels in parenthesis like a plain string. 
+</dd>
+<dt>w, ""</dt>
+<dd> Default for simple syntax. Treat the labels in parenthesis like a wild card. For example, N* means all labels, starting with N: N1, N12, but also Na3. You can use * (any numbers of any symbol) and ? (any symbol: exactly one). 
+</dd>
+<dt>r</dt>
+<dd> Treat the labels in parenthesis like a Perl Regex. Syntax description can be found at <a class="urlstyle" href ="http://en.wikipedia.org/wiki/Regular_expression"><tt>http://en.wikipedia.org/wiki/Regular_expression</tt></a>.
+</li>
+</ul>
+The &lt;property_name&gt; is the name of the property you want to set for all specified crystallographic sites. Some properties can have values, which you should set using equal symbol. The properties can be: 
+<ul compact>
+<dt>c[harge]</dt>
+<dd> Set the charge of atoms with specified label(s). Floating-point value in elementary charge units. 
+</dd>
+<dt>p[opulation]</dt>
+<dd> Number of atoms with specific label(s) in output supercell structure. 
+</dd>
+<dt>[not]fixed</dt>
+<dd> Exclude crystallographic sites from the combinatorial analysis. The output supercell file will contain partial occupancies for the corresponding sites (if there were partial occupancies in the original structures). 
+</li>
+</ul>
+Some fancy examples can be found below. 
+<p>
+</dd>
+<dt><font class="optstyle">-t </font><font class="argstyle">tolerance</font>, <font class="optstyle">--tolerance=</font><font class="argstyle">tolerance</font>
+</dt>
+<dd> 
+The argument of the option specifies the maximum distance (in Angstroms) between sites that should be contained within the same group (meaning that the corresponding positions in the supercell cannot be occupied simultaneously). Check carefully the minimal distance between 2 atoms assigned to different groups, which is written in the output of <font class="progname">supercell</font>
+before changing this parameter. Default <font class="optstyle"></font><font class="argstyle">tolerance</font>=0.75
+A. 
+<p>
+</dd>
+<dt><font class="optstyle">-m</font>, <font class="optstyle">--merge-symmetric</font>
+</dt>
+<dd> 
+The option enables the symmetry check algorithm on output structures. Structures that can be transformed to each other using crystallographic symmetry operations will be merged and stored as one structure. For cases with more than 10^4 total combinations it is recommended to use verbosity level 2 or higher to trace program execution. 
+<p>
+</dd>
+<dt><font class="optstyle">-n </font><font class="argstyle">selection</font>, <font class="optstyle">--store-structures=</font><font class="argstyle">selection</font>
+</dt>
+<dd> 
+The option allows you to generate subsets of structures (rather than all) according to certain criteria (listed below). The option is very useful to both save disk space and facilitate navigation among files for large numbers combinations (typically more than 10^5).The argument of the option has special structure &lt;sampling type><count&gt;. The &lt;count&gt; is a positive integer value or zero. &lt;sampling type&gt; is a letter which sets the sampling (selection) mode: 
+<ul compact>
+<dt>r</dt>
+<dd>: select &lt;count&gt; random structures. 
+</dd>
+<dt>f</dt>
+<dd>: select &lt;count&gt; first structures. 
+</dd>
+<dt>a</dt>
+<dd>: select &lt;count&gt; last structures. 
+</dd>
+<dt>l</dt>
+<dd>: select &lt;count&gt; low energy structures (<font class="optstyle">--coulomb-energy</font>
+option required). 
+</dd>
+<dt>h</dt>
+<dd>: select &lt;count&gt; high energy structures (<font class="optstyle">--coulomb-energy</font>
+option required). 
+</li>
+</ul>
+Example: l100 will store first 100 structures with low Coulomb energy. 
+<p>
+Multiple declaration of the option is allowed. If the option is enabled, an extra prefix (the letter &lt;sampling type&gt; will be added to output file name. Be careful, enabling the option required an extra memory, proportionally to the number of structures to store. 
+<p>
+</dd>
+<dt><font class="optstyle">-q</font>, <font class="optstyle">--coulomb-energy</font>
+</dt>
+<dd> 
+The option enable Coulomb energy calculations. The result energies for each structure are stored in file &lt;output-prefix&gt;_coulomb_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also <font class="optstyle">--charge-balance</font>
+option. 
+<p>
+</dd>
+<dt><font class="optstyle">-o </font><font class="argstyle">output-prefix</font>, <font class="optstyle">--output-prefix=</font><font class="argstyle">output-prefix</font>
+</dt>
+<dd> 
+The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, --output-prefix=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be &lt;output-prefix&gt;_i&lt;sampling type><index&gt;.cif. For merging run the template will be &lt;output-prefix&gt;_i&lt;sampling type><index&gt;_w&lt;weight&gt;.cif, where &lt;weight&gt; - number of the structures merged to the structure. Be careful, all existing files with mask "&lt;output-prefix&gt;*.cif" will be deleted during not dry-run. The &lt;output-prefix&gt;_coulomb_energy.txt file will be overwritten only in case of <font class="optstyle">--coulomb-energy</font>
+option enabled. 
+<p>
+</dd>
+<dt><font class="optstyle">-a </font><font class="argstyle">archive-file</font>, <font class="optstyle">--archive=</font><font class="argstyle">archive-file</font>
+</dt>
+<dd> 
+The option specifies a target archive file name for the output files, except energy file for all permuted configurations. If archive-file string is empty (default) no packing will be performed and all files will be stored directly to disk. If the file with the name exist it will be overwriting. This optional feature required <font class="progname">libarchive</font>
+<a class="urlstyle" href ="http://www.libarchive.org/"><tt>http://www.libarchive.org/</tt></a>
+to be available in the system. Otherwise the option will be disabled. Check the status by <font class="optstyle">-h</font>
+option. The extension of the file should be set according to desired archive type: ``.zip'', ``.tar'', ``.tgz'', ``.tar.gz'', ``.tar.bz2'', ``.tar.xz''. 
+<p>
+</dd>
+</dl>
+<p>
+<h2 class="sectionname"><a name="section_4">Files</a></h2>
+
+<p>
+<h2 class="sectionname"><a name="section_5">Examples</a></h2>
+
+The examples are based on file <font class="filename">supercell/data/examples/Ca2Al2SiO7</font>.
+<p>
+<ul compact>
+<li>Dry run. Obtain information about the structure: group assignment, cell size, etc. It is good practice to start a new structure processing with this command. This run doesn't produce any output files. 
+<p>
+<dl compact>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>supercell -d -i Ca2Al2SiO7.cif</strong>
+</dd>
+</dl>
+<p>
+</li>
+<li>Dry run. Obtain information about the structure. 
+<p>
+<dl compact>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>supercell -d -i Ca2Al2SiO7.cif -s 1x1x2</strong>
+</dd>
+</dl>
+<p>
+</li>
+<li>Dry run. Obtain information about the structure. 
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>supercell -d -i Ca2Al2SiO7.cif -s 1x1x2</strong>
+<p>
+</li>
+</ul>
+<p>
+Some advances examples, with <font class="progname">supercell</font>
+embedded to bash scripts you can find in <font class="filename">supercell/data/examples</font>
+folder. 
+<p>
+<h2 class="sectionname"><a name="section_6">Requirements</a></h2>
+
+Compiled version of <font class="progname">supercell</font>
+from site <a class="urlstyle" href ="https://orex.github.io/supercell"><tt>https://orex.github.io/supercell</tt></a>
+is standard alone program for both Linux and MacOS systems, which neither required installation nor third-party libraries to install. Please check <font class="filename">supercell/INSTALL</font>
+file, if you would like to compile program by yourself. 
+<p>
+<h2 class="sectionname"><a name="section_7">Bugs and limitations</a></h2>
+
+<p>
+<dl compact>
+<dt>Supercell size limitation.</dt>
+<dd> 
+The maximum number of permutations should not exceed limit of 10^{15} (<strong>double</strong>
+variable limit). If more, the program will return an error. The value is far beyond a reasonable limit due to calculation time. The average program performance is about 10-100 billion structures per day with standard desktop processor. 
+</dd>
+<dt>Filesystem limitation.</dt>
+<dd> 
+Although, <font class="progname">supercell</font>
+can produce millions of files, most of the filesystems can't manage more than one thousand files in one folder with acceptable performance. Be careful, if you need to process a lot of combination, sample them or use <font class="optstyle">-a</font>
+option. 
+</dd>
+<dt>Symmetry information handling in input file.</dt>
+<dd> 
+Our program used <font class="progname">openbabel</font>
+libraries to handle symmetry operations in input file. The algorithm, implemented there, gives wrong result for some structures. The problem can be fully solved by converting input file to P1 structure with any other software. In most of the cases, the problem can be solved by removing "_space_group_IT_number" tag from input cif file. 
+<p>
+</dd>
+</dl>
+<p>
+<h2 class="sectionname"><a name="section_8">See Also</a></h2>
+
+<p>
+<font class="commandname">openbabel</font>(1).
+<p>
+<h2 class="sectionname"><a name="section_9">Version</a></h2>
+
+<p>
+Version: 1.1 of 2019/01/23.
+<p>
+<h2 class="sectionname"><a name="section_10">License and Copyright</a></h2>
+
+<p>
+<dl compact>
+<dt>Copyright</dt>
+<dd> 
+All rights to the program belongs to authors. 
+<p>
+</dd>
+<dt>License</dt>
+<dd> This program can be redistributed and/or modified under the 
+terms of the GNU GENERAL PUBLIC LICENSE Version 2. 
+<p>
+</dd>
+<dt>Misc</dt>
+<dd> 
+The actual version of <font class="progname">supercell</font>
+may be found on my homepage<br>
+
+<a class="urlstyle" href ="https://orex.github.io/supercell"><tt>https://orex.github.io/supercell</tt></a>.
+Please, use github site <br>
+
+<a class="urlstyle" href ="https://github.com/orex/supercell"><tt>https://github.com/orex/supercell</tt></a>
+to download the source code and submit a bug of the program. 
+<p>
+</dd>
+</dl>
+<p>
+<h2 class="sectionname"><a name="section_11">Author</a></h2>
+
+<dl compact>
+<dt>Kirill Okhotnikov</dt>
+<dd> 
+e-mail: <a class="emailstyle" href ="mailto:kirill.okhotnikov@gmail.com">kirill.okhotnikov@gmail.com</a>
+<p>
+</dd>
+<dt>Dr. Sylvian Cadars</dt>
+<dd> 
+e-mail: <a class="emailstyle" href ="mailto:sylvian.cadars@cnrs-imn.fr">sylvian.cadars@cnrs-imn.fr</a>
+<br>
+Institut des Materiaux Jean Rouxel (IMN) - UMR6502<br>
+
+2 rue de la Houssiniere, BP32229<br>
+
+44322 Nantes cdx3, France<br>
+
+Tel: +33 (0)2 40 37 39 34<br>
+
+Fax: +33 (0)2 40 37 39 95 
+</dd>
+</dl>
+<p>
+</body>
+</html>
+<!-- NOTE: This file is generated, DO NOT EDIT. -->
