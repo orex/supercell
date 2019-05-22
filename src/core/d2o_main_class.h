@@ -13,6 +13,9 @@
 #include <iostream>
 #include <sstream>
 
+#include <openbabel/babelconfig.h>
+#include <openbabel/generic.h>
+#include <openbabel/atom.h>
 #include <openbabel/mol.h>
 
 #include "common_types.h"
