@@ -849,8 +849,10 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
       if( calc_q_energy )
       {  
         curr_struct.energy = calculate_q_energy(cur_combs);
-        string fname_str = str_proc.file_name(curr_struct);
-        f_q_calc << struct_processor::get_energy_line(fname_str, curr_struct) + "\n";
+        if( create_q_file ) {
+          string fname_str = str_proc.file_name(curr_struct);
+          f_q_calc << struct_processor::get_energy_line(fname_str, curr_struct) + "\n";
+        }
       }
       
       if(ss_p.sampling_active())
@@ -1723,7 +1725,7 @@ bool d2o_main_class::set_labels_to_manual()
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              const std::vector<int> &scs,
                              charge_balance cb, double tolerance_v,
-                             bool merge_confs, bool calc_q_energy_v,
+                             bool merge_confs, bool calc_q_energy_v, bool create_q_file_v,
                              c_man_atom_prop &manual_properties_v,
                              const c_struct_sel &ss_p_v,        
                              std::string output_base_name,
@@ -1735,6 +1737,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   manual_properties = &manual_properties_v;
   ss_p.assign_base(ss_p_v);
   calc_q_energy = calc_q_energy_v;
+  create_q_file = create_q_file_v;
           
   if(!read_molecule(input_file_name))
   {
@@ -1806,6 +1809,12 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     }
   }
 
+  if( create_q_file && !calc_q_energy)
+  {
+    cerr << "ERROR: Electrostatic energy file cannot be created without electrostatic energy calculation. " << endl;
+    return false;
+  }
+
   if( calc_q_energy )  
   {
     if(!charge_balancing)
@@ -1819,7 +1828,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
       return false;
     }
     
-    if( !dry_run )
+    if( !dry_run && create_q_file )
     {
       struct_processor sp(output_base_name, tc);
       string fq_name = sp.get_q_file_name("");

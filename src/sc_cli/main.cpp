@@ -47,6 +47,7 @@ int main(int argc, char** argv)
     bool dry_run = false;
     bool merge_confs = false;
     bool calc_q = false;
+    bool store_q_all = false;
     //double memory_limit;
     int verb_level;
     string cell_size_str;
@@ -80,11 +81,12 @@ int main(int argc, char** argv)
                             cb_names::get_name(cb_yes)  + " - Charge balance the system. ").c_str())
       ("property,p", po::value<vector<string> >(&manual_properties), 
                     (string("Set properties of atoms by labels. ") +
-                            "For detailled description see manual.").c_str())
+                            "For detailed description see manual.").c_str())
       ("tolerance,t", po::value<double>(&pos_tol)->default_value(0.75), 
                       "Skip structures with atoms closer than <arg> Angstrom.")
       ("merge-symmetric,m", "Merge output structures that are equivalent by symmetry.")
       ("coulomb-energy,q", "Calculate Coulomb energies of output structures.")
+      ("coulomb-store,g", "Store electrostatic energy for all structures.")
       ("store-structures,n", po::value<vector<string> >(&structure_sampling),
                             "Generate structures according to certain criteria. See manual for details.")
       ("archive,a", po::value<std::string>(&output_tar_file)->default_value(""), 
@@ -158,6 +160,7 @@ int main(int argc, char** argv)
     dry_run = vm.count("dry-run") > 0;
     merge_confs = vm.count("merge-symmetric") > 0;
     calc_q = vm.count("coulomb-energy") > 0;
+    store_q_all = vm.count("coulomb-store") > 0;
     
     if(!parse_d2o_input::get_supercell_size(cell_size_str, supercell_mult))
     {
@@ -205,7 +208,7 @@ int main(int argc, char** argv)
     
     bool processed = 
     mc.process(input_file, dry_run, supercell_mult, 
-               cb, pos_tol, merge_confs, calc_q, 
+               cb, pos_tol, merge_confs, calc_q, store_q_all,
                m_prop, sampl_prop, output_file, 
                output_tar_file);
     

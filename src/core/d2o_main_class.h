@@ -202,6 +202,7 @@ protected:
   std::map<std::string, site_charges> scs;
   
   bool calc_q_energy;
+  bool create_q_file;
   Eigen::MatrixXd q_energy;
   std::ofstream f_q_calc;
   
@@ -291,7 +292,7 @@ public:
   bool process(std::string input_file_name, bool dry_run,
                const std::vector<int> &scs,
                charge_balance cb, double tolerance_v, 
-               bool merge_confs, bool calc_q_energy_v,
+               bool merge_confs, bool calc_q_energy_v, bool create_q_file_v,
                c_man_atom_prop &manual_properties,
                const c_struct_sel &ss_p,
                std::string output_base_name,
