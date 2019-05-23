@@ -133,7 +133,10 @@ Disordered compounds are very important now for fundamental science and industri
 
 \item[\Opt{-q}, \Opt{\Dd coulomb-energy}] 
       The option enable Coulomb energy calculations. The result energies for each structure are stored in file $<$output-prefix$>$\_coulomb\_energy.txt. The energies can help to consider the relevant regular structures for following calculations. Ewald summation algorithm is used for the calculations. Be careful, in case of charged cell the energy values can be meanless. See also \Opt{\Dd charge-balance} option.
-      
+
+\item[\Opt{-g}, \Opt{\Dd coulomb-store}]
+      Use the option to create a file with electrostatic energy for all processed structures.
+
 \item[\OptArg{-o }{output-prefix}, \OptArg{\Dd output-prefix=}{output-prefix}]
       The options specify output file name prefix. The prefix can contain folder name but the folder should be created before run the program. For example, \Dd output-prefix=myfolder/myfiles. The output files will be created according to templates. For non merging run the template will be $<$output-prefix$>$\_i$<$sampling type$><$index$>$.cif. For merging run the template will be $<$output-prefix$>$\_i$<$sampling type$><$index$>$\_w$<$weight$>$.cif, where $<$weight$>$ - number of the structures merged to the structure. Be careful, all existing files with mask "$<$output-prefix$>$*.cif" will be deleted during not dry-run. The $<$output-prefix$>$\_coulomb\_energy.txt file will be overwritten only in case of \Opt{\Dd coulomb-energy} option enabled.
       
