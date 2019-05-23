@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cells=( 1x1x1 1x1x2 1x1x3 1x1x4 2x2x1 2x2x2 2x2x3 2x3x3 3x3x3 )
+cells=( 1x1x1 1x1x2 1x1x3 1x1x4 2x2x1 2x2x2 2x2x3 )
 
 #go through all the combination
 mkdir -p out
