@@ -12,6 +12,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 #include <openbabel/babelconfig.h>
 #include <openbabel/generic.h>
@@ -23,6 +24,7 @@
 #include <boost/utility.hpp>
 #include <boost/random.hpp>
 #include <boost/format.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -114,13 +116,38 @@ public:
   
   struct_info(): energy(0), index(0), weight(0) {};
 
-  std::string file_name(const std::string &prefix, int64_t tot_comb, 
-                        const std::string &sampl_type = "") const;
-  
   bool operator < (const struct_info &second ) const
   {
-    return (energy < second.energy) || ( (energy == second.energy) && (index < second.index) );
+    if( energy == second.energy )
+      return index < second.index;
+    else
+      return energy < second.energy;
   }
+
+  std::string get_energy_str(int prec = 3) const {
+    std::stringstream result;
+    result << std::fixed << std::setprecision(prec) << energy << " eV";
+    return result.str();
+  }
+};
+
+class struct_processor {
+public:
+  struct_processor(const std::string &prefix_, int64_t tot_comb_) : prefix(prefix_),
+  index_length(boost::lexical_cast<std::string>(tot_comb_).length()) {};
+  std::string file_name(const struct_info &si, const std::string &sampl_type = "") const;
+  std::string get_q_file_name(const std::string &suffix = "") const
+  {
+    return prefix + "_coulomb_energy" + ( suffix.empty() ? std::string("") : std::string("_") ) + suffix + ".txt";
+  }
+
+  static std::string get_energy_line(const std::string &file_name, const struct_info &si, int prec = 3) {
+    return file_name + "\t" + si.get_energy_str(prec);
+  }
+
+private:
+  std::string prefix;
+  int index_length;
 };
 
 class c_struct_sel_containers : public c_struct_sel
@@ -214,47 +241,45 @@ protected:
                                      const std::vector<OpenBabel::vector3> &pos);
   template<class ConstIterator>
   void store_cont_cif(const ConstIterator& begin, 
-                       const ConstIterator& end,
-                       const std::string &prefix, int64_t tot_comb, 
-                       const std::string &sampl_type = "")
+                      const ConstIterator& end,
+                      const struct_processor &sp,
+                      const std::string &sampl_type = "")
   {
     for(ConstIterator it = begin; it != end; it++)
-      write_struct(*it, prefix, tot_comb, sampl_type);
+      write_struct(sp, *it, sampl_type);
   }
 
   template<class ConstIterator>
   void store_cont_eng(const ConstIterator& begin, 
                       const ConstIterator& end,
-                      const std::string &prefix, int64_t tot_comb, 
+                      const struct_processor &sp,
                       const std::string &sampl_type = "")
   {
     if(begin == end)
       return;
     
     std::stringstream fq;
-    std::string qfname = get_q_file_name(prefix, sampl_type);
+    std::string qfname = sp.get_q_file_name(sampl_type);
     for(ConstIterator it = begin; it != end; it++)
     {  
-      std::string fname_str = it->file_name(prefix, tot_comb, sampl_type);
-      fq << boost::format("%1%\t%2$.3f eV\n") % fname_str % it->energy;
+      std::string fname_str = sp.file_name(*it, sampl_type);
+      fq << struct_processor::get_energy_line(fname_str, *it) + "\n";
     }  
     add_file_to_tar(qfname, fq);
   }
   
-  bool write_struct(const struct_info &si,
-                     const std::string &prefix, int64_t tot_comb, 
-                     const std::string &sampl_type = "");
+  bool write_struct(const struct_processor &sp, const struct_info &si, const std::string &sampl_type = "");
   
   bool store_sampling(std::string output_base_name, int64_t tot_comb);
   bool write_files(std::string output_base_name, bool dry_run, bool merge_confs);
-  bool check_comb_unique(const t_vec_comb &mc, int &merged_comb);
-  bool create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out);
+  std::vector< t_vec_comb > create_cache_for_check_comb_unique(const t_vec_comb & start_comb) const;
+  bool check_comb_unique( std::vector< t_vec_comb > &cache, const t_vec_comb &mc, int &merged_comb) const;
+  static bool create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out);
   bool init_atom_change_mol(OpenBabel::OBMol *cmol, const struct_info &si);
   bool add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &ppc);
   std::string get_formula(OpenBabel::OBMol &mol);
   std::string get_formula_by_groups();
   bool set_labels_to_manual();
-  std::string get_q_file_name(const std::string &output_base_name, const std::string &suffix);
 public:
   static inline double charge_tol() { return 1E-1; };
   static inline double occup_tol() { return 2E-3; };

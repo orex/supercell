@@ -131,16 +131,14 @@ bool d2o_main_class::close_tar_container()
 }
 
 
-std::string struct_info::file_name(const std::string &prefix, int64_t tot_comb, 
-                                   const std::string &sampl_type) const
+std::string struct_processor::file_name(const struct_info &si, const std::string &sampl_type) const
 {
   stringstream result;
-  
-  result << prefix << "_i" << sampl_type;
-  result << std::setfill('0') << std::setw(boost::lexical_cast<std::string>(tot_comb).length()) << std::internal << index;
 
-  if( weight > 0 ) 
-    result << "_w" << weight;
+  result << prefix + "_i" + sampl_type << std::setfill('0') << std::setw(index_length) << std::internal << si.index;
+
+  if( si.weight > 0 )
+    result << "_w" << si.weight;
   
   result << ".cif";
   
@@ -296,7 +294,7 @@ bool d2o_main_class::init_atom_change_mol(OpenBabel::OBMol *cmol, const struct_i
   OBUnitCell *uc = new OBUnitCell(*dynamic_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell)));
   assert(!cmol->HasData(OBGenericDataType::UnitCell));
   cmol->SetData(uc);
-  string title = boost::lexical_cast<string>("Supercell generated structure. E_col = ") + boost::lexical_cast<string>(si.energy);
+  string title = std::string("Supercell generated structure. E_col = ") + si.get_energy_str(10);
   cmol->SetTitle( title );
   
   return true;
@@ -476,8 +474,8 @@ double d2o_main_class::calculate_q_energy(const t_vec_comb &mc)
   
   for(int i = 0; i < occup_groups.size(); i++)
   {
-    c_occup_group &curr_group = occup_groups[i];
-    bool fixed_group = curr_group.is_fixed();
+    const c_occup_group &curr_group = occup_groups[i];
+    bool fixed_group = curr_group.is_fixed_fast();
     for(int j = 0; j < curr_group.positions.size(); j++)
     {
       double charge = 0;
@@ -636,49 +634,66 @@ bool d2o_main_class::create_comb(const symm_set &sc, const std::vector<int> &cmb
   return result;
 }
 
-bool d2o_main_class::check_comb_unique(const t_vec_comb &mc, int &merged_comb)
+std::vector< t_vec_comb > d2o_main_class::create_cache_for_check_comb_unique(const t_vec_comb & start_comb) const {
+  std::vector< t_vec_comb > result;
+
+  result.resize(occup_groups[0].symms_sets.size());
+
+  for(int i = 0; i < result.size(); i++) {
+    result[i] = start_comb;
+  }
+
+  return result;
+}
+
+
+bool d2o_main_class::check_comb_unique(std::vector< t_vec_comb > &cache, const t_vec_comb &mc, int &merged_comb) const
 {
   assert(occup_groups.size() > 0);
   assert(mc.size() == occup_groups.size());
   int syms_num = occup_groups[0].symms_sets.size();
   assert(syms_num > 0);
   
-  set< t_vec_comb > st;
-  t_vec_comb nc;
-  nc.resize(mc.size());
-  nc = mc;  
-
-  bool not_first = false;
+  bool first_occurrence = true;
   for(int i = 0; i < syms_num; i++)
   {
     bool good_cb = true;
     for(int j = 0; j < mc.size(); j++)
     {
       assert(syms_num == occup_groups[j].symms_sets.size());
-      
+
       if(!occup_groups[j].is_fixed_fast())
-        good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], mc[j], nc[j]);
+        good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], mc[j], cache[i][j]);
     }
     if(good_cb)
     {  
-      st.insert(nc);
-      if(nc < mc)
+      if(cache[i] < mc)
       {
-        not_first = true;
-	break;
+        first_occurrence = false;
+        break;
       }
-    }  
+    } 
+    else
+      std::cout << "ERROR: wrong combination symmetry." << std::endl;  
   }
-  merged_comb = st.size();
   
+  if( first_occurrence ) {
+    std::sort(cache.begin(), cache.end());
+    merged_comb = 1;
+    for(int i = 1; i < syms_num; i++) {
+      if( cache[i - 1] < cache[i] )
+        merged_comb++;
+    }
+  }
+  else {
+    merged_comb = 0;
+  }
   //assert(*st.begin() <= mc);
   
-  return !not_first;
+  return first_occurrence;
 }
 
-bool d2o_main_class::write_struct(const struct_info &si, 
-                                  const std::string &prefix, int64_t tot_comb, 
-                                  const std::string &sampl_type)
+bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info &si, const std::string &sampl_type)
 {
   bool result = true;
   
@@ -689,7 +704,7 @@ bool d2o_main_class::write_struct(const struct_info &si,
   
   OBConversion obc;
 
-  string f_name = si.file_name(prefix, tot_comb, sampl_type);
+  string f_name = sp.file_name(si, sampl_type);
   
   result = obc.SetOutFormat("cif");
   if(result)
@@ -711,48 +726,50 @@ bool d2o_main_class::write_struct(const struct_info &si,
 bool d2o_main_class::store_sampling(std::string output_base_name, int64_t tot_comb)
 {
   ss_p.prepare_to_store();
+
+  struct_processor str_proc(output_base_name, tot_comb);
   
   store_cont_cif(ss_p.first_container.begin(),
                  ss_p.first_container.end(),
-                 output_base_name, tot_comb, "f");
+                 str_proc, "f");
 
   store_cont_cif(ss_p.last_container.begin(),
                  ss_p.last_container.end(),
-                 output_base_name, tot_comb, "a");
+                 str_proc, "a");
 
   store_cont_cif(ss_p.low_container.begin(),
                  ss_p.low_container.end(),
-                 output_base_name, tot_comb, "l");
+                 str_proc, "l");
 
   store_cont_cif(ss_p.high_container.begin(),
                  ss_p.high_container.end(),
-                 output_base_name, tot_comb, "h");
+                 str_proc, "h");
 
   store_cont_cif(ss_p.rnd_container.begin(),
                  ss_p.rnd_container.end(),
-                 output_base_name, tot_comb, "r");
+                 str_proc, "r");
   
   if( calc_q_energy )
   {
     store_cont_eng(ss_p.first_container.begin(),
                    ss_p.first_container.end(),
-                   output_base_name, tot_comb, "f");
+                   str_proc, "f");
 
     store_cont_eng(ss_p.last_container.begin(),
                    ss_p.last_container.end(),
-                   output_base_name, tot_comb, "a");
+                   str_proc, "a");
 
     store_cont_eng(ss_p.low_container.begin(),
                    ss_p.low_container.end(),
-                   output_base_name, tot_comb, "l");
+                   str_proc, "l");
 
     store_cont_eng(ss_p.high_container.begin(),
                    ss_p.high_container.end(),
-                   output_base_name, tot_comb, "h");
+                   str_proc, "h");
 
     store_cont_eng(ss_p.rnd_container.begin(),
                    ss_p.rnd_container.end(),
-                   output_base_name, tot_comb, "r");
+                   str_proc, "r");
   }  
     
   return true;
@@ -785,7 +802,8 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   }  
   
   int64_t tot_comb = total_combinations();
-  
+  struct_processor str_proc(output_base_name, tot_comb);
+
   if(!dry_run && !tar_enabled() )
   {
     string del_command = "rm -f " + output_base_name + "*.cif";
@@ -801,8 +819,9 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
   
   int syms_num = max<int>(occup_groups[0].symms_sets.size(), 1);
   ss_p.set_containers_prop(tot_comb, syms_num);
-     
-  
+
+  std::vector< t_vec_comb > cache = create_cache_for_check_comb_unique(cur_combs);
+
   OBMol cmol;
   do
   {
@@ -810,7 +829,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
     int merged_conf_num;
 
     if( merge_confs )
-      u_comb = check_comb_unique(cur_combs, merged_conf_num);
+      u_comb = check_comb_unique(cache, cur_combs, merged_conf_num);
     else
     {  
       u_comb = true;
@@ -830,15 +849,14 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
       if( calc_q_energy )
       {  
         curr_struct.energy = calculate_q_energy(cur_combs);
-        string fname_str = curr_struct.file_name(output_base_name, tot_comb);
-        f_q_calc << boost::format("%1%\t%2$.3f eV\n") %
-          fname_str % curr_struct.energy;
+        string fname_str = str_proc.file_name(curr_struct);
+        f_q_calc << struct_processor::get_energy_line(fname_str, curr_struct) + "\n";
       }
       
       if(ss_p.sampling_active())
         ss_p.add_structure(curr_struct, combination_left);
       else
-        write_struct(curr_struct, output_base_name, tot_comb);
+        write_struct(str_proc, curr_struct);
     }
     
     if( u_comb )
@@ -847,7 +865,7 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
       index++;
     }  
 
-    if( (total_index % 2000 == 0) && (total_index != 0) && (verbose_level >= 2))
+    if( (total_index % 20000 == 0) && (total_index != 0) && (verbose_level >= 2))
     {  
       cout << "Finished " << round(double(total_index) / double(tot_comb) * 1000) / 10.0 << "%. " 
            << "Stored " << index << " configurations. Left " 
@@ -1702,11 +1720,6 @@ bool d2o_main_class::set_labels_to_manual()
   return true;
 }
 
-std::string d2o_main_class::get_q_file_name(const std::string &output_base_name, const std::string &suffix)
-{
-  return output_base_name + "_coulomb_energy" + ( suffix.empty() ? string("") : string("_") ) + suffix + ".txt";
-}
-
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              const std::vector<int> &scs,
                              charge_balance cb, double tolerance_v,
@@ -1807,8 +1820,9 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     }
     
     if( !dry_run )
-    {  
-      string fq_name = get_q_file_name(output_base_name, "");
+    {
+      struct_processor sp(output_base_name, tc);
+      string fq_name = sp.get_q_file_name("");
       f_q_calc.open(fq_name.c_str(), fstream::out);
       if(!f_q_calc.is_open())
       {
