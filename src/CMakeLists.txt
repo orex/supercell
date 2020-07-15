@@ -1,17 +1,50 @@
 #set common includes
 set(sc_includes ${sc_includes} ${CMAKE_CURRENT_SOURCE_DIR}/core)
 
-find_package(OpenBabel2 REQUIRED 2.4.1)
+find_package(OpenBabel3 QUIET)
+find_package(OpenBabel2 2.4.1 QUIET)
 
-add_definitions(-DOLD_OB_PERIODIC_TABLE)
-foreach(OB_ID ${OpenBabel2_INCLUDE_DIRS})
-  if(EXISTS ${OB_ID}/openbabel/elements.h)
-    remove_definitions(-DOLD_OB_PERIODIC_TABLE)
+find_package(PkgConfig)
+if( PkgConfig_FOUND )
+  pkg_check_modules(OB3PKG openbabel-3 QUIET)
+  pkg_check_modules(OB2PKG openbabel-2.0 QUIET)
+endif()
+
+set(OB_FOUND NO)
+foreach(OBV OpenBabel3 OpenBabel2 OB3PKG OB2PKG)
+  if( ${${OBV}_FOUND} )
+    message(STATUS "Using OpenBabel version ${${OBV}_VERSION} from path(s) ${${OBV}_INCLUDE_DIRS}")
+    set(OB_FOUND YES)
+    set(sc_includes ${sc_includes} ${${OBV}_INCLUDE_DIRS})
+    if(DEFINED ${${OBV}_LIBRARIES})
+      set(sc_libraries ${sc_libraries} ${${OBV}_LIBRARIES})
+    elseif(DEFINED ${${OBV}_LIBRARY})
+      set(sc_libraries ${sc_libraries} ${${OBV}_LIBRARY})
+    else()
+      set(sc_libraries ${sc_libraries} openbabel)
+    endif()
+    add_definitions(-DOLD_OB_PERIODIC_TABLE)
+    foreach(OB_ID ${${OBV}_INCLUDE_DIRS})
+      if(EXISTS ${OB_ID}/openbabel/elements.h)
+        remove_definitions(-DOLD_OB_PERIODIC_TABLE)
+      endif()
+    endforeach()    
+    break()
   endif()
 endforeach()  
 
+if(NOT ${OB_FOUND})
+  message(FATAL_ERROR "OpenBabel is not found.")
+endif()
 
-set(sc_includes ${sc_includes} ${OpenBabel2_INCLUDE_DIRS})
+if( OpenBabel3_FOUND OR OB3PKG_FOUND )
+  set (CMAKE_CXX_STANDARD 11)
+  if( NOT LINK_STATIC_LIBS ) 
+    find_package(Threads)
+  endif()
+endif()
+
+
 set(sc_includes ${sc_includes} ${CMAKE_SOURCE_DIR}/libs/common_utils/)
 
 find_package(Eigen3 QUIET)
@@ -47,8 +80,9 @@ if( ${LibArchive_FOUND} )
   if(LINK_STATIC_LIBS)
     find_package(BZip2 REQUIRED)
     find_package(LibLZMA REQUIRED)
-    set(CMAKE_REQUIRED_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES})
-    set(LibArchive_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES})
+    find_package(ZLIB REQUIRED)
+    set(CMAKE_REQUIRED_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
+    set(LibArchive_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
   else()
     set(CMAKE_REQUIRED_LIBRARIES ${LibArchive_LIBRARIES})
   endif()
@@ -69,8 +103,6 @@ set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/cryst_tools.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/comb_points.cpp)
-
-set(sc_libraries ${sc_libraries} openbabel)
 
 add_subdirectory(sc_cli)
 #add_subdirectory(sc_qt)

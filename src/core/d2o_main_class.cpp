@@ -1177,7 +1177,7 @@ bool d2o_main_class::process_charges(charge_balance cb)
     double curr_occup = get_atom_occupancy(*a);
     if( scs.count(label) > 0 )
     {  
-      if(!isnan(scs[label].input_charge) || !isnan(curr_input_charge))
+      if(!std::isnan(scs[label].input_charge) || !std::isnan(curr_input_charge))
         assert(scs[label].input_charge  == curr_input_charge);
 
       scs[label].occup += curr_occup;
@@ -1194,7 +1194,7 @@ bool d2o_main_class::process_charges(charge_balance cb)
   for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
   {
     (*it).second.curr_charge = 0;
-    if(! isnan((*it).second.input_charge) )
+    if(! std::isnan((*it).second.input_charge) )
       (*it).second.curr_charge = (*it).second.input_charge;
 
     if( (*manual_properties)[(*it).first].charge.is_initialized())
