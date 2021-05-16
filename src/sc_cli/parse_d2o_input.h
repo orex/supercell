@@ -21,7 +21,7 @@
 class c_man_atom_prop_item_cli : public c_man_atom_prop_item
 {
 public:
-  typedef enum {ltPlain, ltWC, ltRegex} lbl_type;
+  enum class lbl_type {ltPlain, ltWC, ltRegex};
   
   std::string label;
   lbl_type l_type;
@@ -59,11 +59,7 @@ public:
   static bool get_charge_balance(std::string cb_str, charge_balance &cb);
 };
 
-class c_struct_sel_cli : public c_struct_sel
-{
-public:
-  bool parse_input(const std::vector<std::string> &inp, std::string &param_error);
-};
+bool parse_sel_input(const std::vector<std::string> &inp, c_struct_sel & out, std::string &param_error);
 
 #endif	/* PARSE_D2O_INPUT_H */
 

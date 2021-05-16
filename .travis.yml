@@ -3,11 +3,10 @@ env:
     - COMMIT_AUTHOR_EMAIL: orex@travis-ci.org
     - TEST_PROGRAM_CMD="-d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"
 
-sudo: required
-
 group: travis_latest
 
-dist: xenial
+os: linux
+dist: bionic
 language: cpp
 cache: ccache
 
@@ -16,36 +15,25 @@ jobs:
    - name: "Developing build."
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
-   - name: "Developing build against stable OpenBabel version."
+   - name: "Developing build for old xenial platform."
+     dist: xenial
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=TRUE
-          DEPLOY_BUILD=FALSE
-
-   - name: "Developing build for old trusty platform."
-     dist: trusty
-     env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build without LibArchive support."
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
           SUPERCELL_CMAKE_OPTIONS="-DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
 
    - name: "Developing build with clang."
      compiler: clang
-     dist: trusty #xenial build fails with clang
      cache: false
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Deploy build Linux."
@@ -54,17 +42,14 @@ jobs:
           CMAKE_COMMAND='cmake'
           LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD="linux"
-          OB_241_STABLE=FALSE
-          OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF -DGLIBC_24_COMPATIBLE=ON"
-          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DGLIBC_24_COMPATIBLE=ON"
+          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
 
    - name: "Deploy build MacOS."
      os: osx
+     osx_image: xcode11
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="osx"
-          OB_241_STABLE=FALSE
-          OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"
           SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
 
    - name: "Deploy build Windows crosscompile."
@@ -78,9 +63,7 @@ jobs:
           CMAKE_COMMAND="${CROSS_TARGET}-cmake"
           BUILD_TYPE=CROSS
           DEPLOY_BUILD="windows"
-          OB_241_STABLE=TRUE
-          OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"
-          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
+          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
      addons:
        apt:
          update: true
@@ -137,6 +120,8 @@ addons:
     - boost
     - eigen
     - libarchive
+    - zlib
+    - libxml2
 
 
 before_install:
@@ -148,25 +133,14 @@ install:
  - |
    if [[ ${BUILD_TYPE} == CROSS ]]; then
      pushd .
-     git clone ${MXE_URL} && cd mxe
+     git clone --depth 1 ${MXE_URL} && cd mxe
      ln -s $HOME/.cache_mxe .ccache
      while(true); do sleep 9m; echo "watchdog signal"; done &
      WATCHDOG_PID=$!
-     make MXE_TARGETS=${CROSS_TARGET} boost eigen -j2
+     make MXE_TARGETS=${CROSS_TARGET} MXE_PLUGIN_DIRS=plugins/gcc9 intel-tbb boost eigen --jobs=4 JOBS=2
      kill $WATCHDOG_PID
      export PATH=${PWD}/usr/bin:$PATH
      popd
-   fi
- - |
-   if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
-      git clone https://github.com/openbabel/openbabel.git && cd openbabel
-      if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
-      mkdir build
-   fi
- - |
-   if [[ ${BUILD_TYPE} == CROSS ]]; then
-      echo "PATCH OPENBABEL"
-      sed -ir 's/#define isfinite _finite//g' src/config.h.cmake
    fi
  - |
    if [[ ${BUILD_TYPE} == DOC ]]; then
@@ -179,18 +153,8 @@ script:
  - |
    if ((FINISH_TIME-START_TIME < 1800)); then
      if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
-        cd tmp/openbabel/build
-        ${CMAKE_COMMAND} ../ -DCMAKE_BUILD_TYPE=Release `echo ${OB_CMAKE_OPTIONS}`
-        make -j 2
-        if [[ ${BUILD_TYPE} == PROGRAM ]]; then 
-          sudo make install
-        else 
-          OBDIR="-DOpenBabel2_DIR=${c_path}/tmp/openbabel/build"
-          export BABEL_LIBDIR="${c_path}/tmp/openbabel/build/lib"
-          export BABEL_DATADIR="${c_path}/tmp/openbabel/data"
-        fi
         mkdir ${c_path}/build && cd ${c_path}/build
-        ${CMAKE_COMMAND} ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release ${OBDIR} -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
+        ${CMAKE_COMMAND} ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
         make -j 2 supercell
      fi
    else

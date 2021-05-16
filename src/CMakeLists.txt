@@ -1,17 +1,9 @@
 #set common includes
 set(sc_includes ${sc_includes} ${CMAKE_CURRENT_SOURCE_DIR}/core)
 
-find_package(OpenBabel2 REQUIRED 2.4.1)
+find_package(PkgConfig)
 
-add_definitions(-DOLD_OB_PERIODIC_TABLE)
-foreach(OB_ID ${OpenBabel2_INCLUDE_DIRS})
-  if(EXISTS ${OB_ID}/openbabel/elements.h)
-    remove_definitions(-DOLD_OB_PERIODIC_TABLE)
-  endif()
-endforeach()  
-
-
-set(sc_includes ${sc_includes} ${OpenBabel2_INCLUDE_DIRS})
+find_package(Threads REQUIRED)
 set(sc_includes ${sc_includes} ${CMAKE_SOURCE_DIR}/libs/common_utils/)
 
 find_package(Eigen3 QUIET)
@@ -37,7 +29,21 @@ if(NOT ${EIGEN3_FOUND})
   message(FATAL_ERROR "Eigen3 library not FOUND!")
 endif()
 
-set(sc_includes ${sc_includes} ${EIGEN3_INCLUDE_DIR})
+find_package(TBB COMPONENTS tbb)
+if( NOT ${TBB_FOUND} )
+  if( ${PkgConfig_FOUND} )
+    pkg_check_modules(TBB REQUIRED IMPORTED_TARGET intel-tbb)
+    add_library(TBB::tbb ALIAS PkgConfig::TBB)
+  else()
+    find_package(TBB REQUIRED COMPONENTS tbb)
+  endif()
+elseif( LINK_STATIC_LIBS )
+  get_property(pmt TARGET TBB::tbb PROPERTY IMPORTED_LOCATION_RELEASE)
+  string(REPLACE "libtbb.so" "libtbb_static.a" pmt ${pmt})
+  set_property(TARGET TBB::tbb PROPERTY IMPORTED_LOCATION_RELEASE ${pmt})
+endif()
+
+set(sc_includes ${sc_includes} ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd_party/gemmi/include)
 
 find_package(LibArchive)
 if( ${LibArchive_FOUND} )
@@ -47,10 +53,8 @@ if( ${LibArchive_FOUND} )
   if(LINK_STATIC_LIBS)
     find_package(BZip2 REQUIRED)
     find_package(LibLZMA REQUIRED)
-    set(CMAKE_REQUIRED_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES})
-    set(LibArchive_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES})
-  else()
-    set(CMAKE_REQUIRED_LIBRARIES ${LibArchive_LIBRARIES})
+    find_package(ZLIB REQUIRED)
+    set(LibArchive_LIBRARIES ${LibArchive_LIBRARIES} ${LIBLZMA_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES})
   endif()
   include(CheckFunctionExists) 
   CHECK_FUNCTION_EXISTS(archive_write_set_format_filter_by_ext LibArchive_format_filter_by_ext)
@@ -63,14 +67,10 @@ endif()
 
 #set common sources
 file(GLOB core_sources ${CMAKE_CURRENT_SOURCE_DIR}/core/*.cpp)
-set(sc_sources ${WRAP_MEMCPY_SRC} ${sc_sources} ${core_sources})
+set(sc_sources ${sc_sources} ${core_sources})
 
 set(sc_sources ${sc_sources} ${CMAKE_SOURCE_DIR}/libs/common_utils/others/string_utils.cpp
-                             ${CMAKE_SOURCE_DIR}/libs/common_utils/others/rnd_utils.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/cryst_tools.cpp
                              ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/comb_points.cpp)
 
-set(sc_libraries ${sc_libraries} openbabel)
-
 add_subdirectory(sc_cli)
-#add_subdirectory(sc_qt)

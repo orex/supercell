@@ -153,17 +153,17 @@ bool c_man_atom_prop_cli::get_labels(std::string left_str,
   if(regex_match(left_str, rx_out, left_rx))
   {
     str_lbl = rx_out[2];
-    lt = c_man_atom_prop_item_cli::ltPlain;
+    lt = c_man_atom_prop_item_cli::lbl_type::ltPlain;
     if( (rx_out[1] == "W") || (rx_out[1] == "w") )
-      lt = c_man_atom_prop_item_cli::ltWC;
+      lt = c_man_atom_prop_item_cli::lbl_type::ltWC;
     
     if( (rx_out[1] == "R") || (rx_out[1] == "r") )
-      lt = c_man_atom_prop_item_cli::ltRegex;
+      lt = c_man_atom_prop_item_cli::lbl_type::ltRegex;
   }
   else
   {
     str_lbl = left_str;
-    lt = c_man_atom_prop_item_cli::ltWC;
+    lt = c_man_atom_prop_item_cli::lbl_type::ltWC;
   }  
   
   lables_pattern.clear();
@@ -171,7 +171,7 @@ bool c_man_atom_prop_cli::get_labels(std::string left_str,
   
   bool result = lables_pattern.size() > 0;
   
-  if( lt == c_man_atom_prop_item_cli::ltRegex )
+  if( lt == c_man_atom_prop_item_cli::lbl_type::ltRegex )
   {  
     for(int i = 0; i < lables_pattern.size(); i++)
     { 
@@ -295,11 +295,11 @@ void c_man_atom_prop_cli::convert_properties(const std::set<std::string> &labels
                                                      it_p != vc_raw.end(); ++it_p)
     {
       bool the_label = false;
-      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltPlain) && 
+      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::lbl_type::ltPlain) &&
                                   (*it_lbl == it_p->label) ); 
-      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltWC) && 
+      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::lbl_type::ltWC) &&
                                   (match_wildcard(it_p->label, *it_lbl)) ); 
-      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltRegex) && 
+      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::lbl_type::ltRegex) &&
                                   ( regex_match(*it_lbl, regex(it_p->label)) ) );
       if( the_label )
         data_map[*it_lbl].assign(*it_p);
@@ -339,13 +339,12 @@ bool parse_d2o_input::get_charge_balance(std::string cb_str, charge_balance &cb)
 }
 
 
-bool c_struct_sel_cli::parse_input(const std::vector<std::string>& inp, std::string& param_error)
+bool parse_sel_input(const std::vector<std::string>& inp, c_struct_sel & out, std::string& param_error)
 {
   bool result = true;
   param_error = "";
  
-  scanf_pp::regex_scanf rp("^([farlh])([0-9]+)$");  
-  
+  scanf_pp::regex_scanf rp("^([farlhw])([0-9]+)$");
   for(int i = 0; i < inp.size(); i++)
   {
     if( rp.regex_match(inp[i]) )
@@ -353,8 +352,8 @@ bool c_struct_sel_cli::parse_input(const std::vector<std::string>& inp, std::str
       string s;
       int cnt;
       rp >> s >> cnt;
-      sp[s] = cnt;
-    }  
+      out.set_sampling(s.front(), cnt);
+    }
     else
     {
       result = false;

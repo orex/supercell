@@ -1,3 +1,6 @@
 [submodule "libs/common_utils"]
 	path = libs/common_utils
 	url = https://github.com/orex/common_utils.git
+[submodule "3rd_party/gemmi"]
+	path = 3rd_party/gemmi
+	url = https://github.com/project-gemmi/gemmi.git

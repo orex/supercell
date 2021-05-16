@@ -7,55 +7,39 @@
 
 #include "d2o_main_class.h"
 
-#include <openbabel/obconversion.h>
-#include <openbabel/obiter.h>
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <cmath>
-#ifdef OLD_OB_PERIODIC_TABLE
-#define OB_PT_GETSYMBOL(atomic_num) OpenBabel::etab.GetSymbol(atomic_num)
-#else 
-#include <openbabel/elements.h>
-#define OB_PT_GETSYMBOL(atomic_num) OpenBabel::OBElements::GetSymbol(atomic_num)
-#endif
+#include <chrono>
+#include <gemmi/elem.hpp>
+#define PT_GETSYMBOL(atomic_num) gemmi::Element(atomic_num).name()
 
 #include "science/combinatorics.h"
 
 #include "others/rnd_utils.h"
 #include "others/string_utils.h"
 #include "containers/array_common.hpp"
+#include "containers/hash_unique.h"
+#include "permut_process_t.h"
 
-#include "obabel/eigen2babel.h"
+
 #include "cryst_tools/comb_points.h"
 #include "cryst_tools/cryst_tools.h"
 
 #include <Eigen/Dense>
+#include <tbb/pipeline.h>
+#include <tbb/concurrent_queue.h>
 
 #ifdef LIBARCHIVE_ENABLED
 #include <archive_entry.h>
 #endif
 
-using namespace OpenBabel;
+
 using namespace std;
-
-float get_float_property(OpenBabel::OBAtom &a, const std::string &tag, float def_value) {
-  OBPairFloatingPoint * pd = dynamic_cast<OBPairFloatingPoint *>(a.GetData(tag));
-  return (pd == NULL) ? def_value : pd->GetGenericValue();
-}
-
-float get_atom_occupancy(OpenBabel::OBAtom &a) {
-    return get_float_property(a, "_atom_site_occupancy", 1.0);
-}
-
-
-d2o_main_class::d2o_main_class()
-{
-    charge_balancing = false;
-}
 
 #if defined(LIBARCHIVE_ENABLED) && (!defined(LIBARCHIVE_PATCH_DISABLE))
 #include "archive_extent_patch.h"
@@ -73,7 +57,7 @@ bool d2o_main_class::create_tar_container(const std::string &fname)
       result = archive_write_open_filename(tar_container, fname.c_str()) == ARCHIVE_OK;
   }
   else
-    tar_container = NULL;
+    tar_container = nullptr;
   #endif
   return result;
 }
@@ -81,7 +65,7 @@ bool d2o_main_class::create_tar_container(const std::string &fname)
 bool d2o_main_class::add_file_to_tar(const std::string &fname, const std::stringstream &strm)
 {
   #ifdef LIBARCHIVE_ENABLED    
-  if( tar_container != NULL )
+  if( tar_container != nullptr )
   {  
     archive_entry *entry = archive_entry_new();
     archive_entry_set_pathname(entry, fname.c_str());
@@ -107,7 +91,7 @@ bool d2o_main_class::add_file_to_tar(const std::string &fname, const std::string
 bool d2o_main_class::tar_enabled()
 {
   #ifdef LIBARCHIVE_ENABLED
-  return tar_container != NULL;
+  return tar_container != nullptr;
   #else
   return false;
   #endif 
@@ -116,7 +100,7 @@ bool d2o_main_class::tar_enabled()
 bool d2o_main_class::close_tar_container()
 {
   #ifdef LIBARCHIVE_ENABLED
-  if( tar_container != NULL)
+  if( tar_container != nullptr)
   {  
     bool b1, b2;
     b1 = archive_write_close(tar_container) == ARCHIVE_OK;
@@ -145,12 +129,12 @@ std::string struct_processor::file_name(const struct_info &si, const std::string
   return result.str();
 }
 
-void c_struct_sel_containers::add_structure(const struct_info &si, int64_t str_left)
+void c_struct_sel_containers::add_structure(const struct_info &si)
 {
   //Random
   if(str_random_count() > 0)
   {  
-    if( get_rnd_value_in_interval(rnd, 0, 1) < probability )
+    if( std::uniform_real_distribution<double>(0.0, 1.0)(rnd) < probability )
       rnd_container.push_back(si);
   }
   
@@ -159,37 +143,47 @@ void c_struct_sel_containers::add_structure(const struct_info &si, int64_t str_l
     first_container.push_back(si);
   
   //Last
-  if( str_left / symm_op < str_last_count() + 1 )
-  {  
+  if( str_last_count() > 0 ) {
     last_container.push_back(si);
-    while (last_container.size() > str_last_count() )
-      last_container.pop_front();
   }  
   
   //Low
-  if(str_low_count() > 0)
-  {
-    if(low_container.size() < str_low_count() )
-      low_container.insert(si);
-    else if ( si < *(--low_container.end()) )
-    {  
-      low_container.insert(si);
-      low_container.erase(--low_container.end());
+  if(str_low_count() > 0) {
+    if (low_container.size() < str_low_count()) {
+      low_container.push_back(si);
+      std::push_heap(low_container.begin(), low_container.end());
+    } else {
+      if (si < low_container.front()) {
+        low_container.push_back(si);
+        std::push_heap(low_container.begin(), low_container.end());
+        std::pop_heap(low_container.begin(), low_container.end());
+        low_container.pop_back();
+      }
     }  
   }  
   
   //High
-  if(str_high_count() > 0)
-  {
-    if(high_container.size() < str_high_count() )
-      high_container.insert(si);
-    else if ( *(high_container.begin()) < si)
-    {  
-      high_container.insert(si);
-      high_container.erase(high_container.begin());
+  if(str_high_count() > 0) {
+    auto cmp = [](const auto &a, const auto &b) -> bool {
+      return b < a;
+    };
+
+    if (high_container.size() < str_high_count()) {
+      high_container.push_back(si);
+      std::push_heap(high_container.begin(), high_container.end(), cmp);
+    } else {
+      if ( high_container.front() < si ) {
+        high_container.push_back(si);
+        std::push_heap(high_container.begin(), high_container.end(), cmp);
+        std::pop_heap(high_container.begin(), high_container.end(), cmp);
+        high_container.pop_back();
+      }
     }  
   }  
    
+  //Weight
+  if( si.weight <= str_weight_limit() )
+    weight_container.push_back(si);
 }
 
 void c_struct_sel_containers::prepare_to_store()
@@ -200,12 +194,14 @@ void c_struct_sel_containers::prepare_to_store()
   assert(str_low_count()   >= low_container.size());  
   
   random_thin_to(rnd_container, str_random_count(), rnd);
+  std::sort(low_container.begin(), low_container.end());
+  std::sort(high_container.begin(), high_container.end());
+
 }
 
 
 void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_op_v)
 {
-  rnd = create_rnd_gen();
   symm_op = symm_op_v;
   min_comb = max<int64_t>(total_comb / symm_op, 1);
   
@@ -216,19 +212,14 @@ void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_o
   last_container.clear();
   high_container.clear();
   low_container.clear();
+  weight_container.clear();
   
+  rnd_container.reserve(5 * str_random_count());
   first_container.reserve(str_first_count());
-}
+  last_container.set_capacity(str_last_count());
+  high_container.reserve(str_high_count() + 1);
+  low_container.reserve(str_low_count() + 1);
 
-c_occup_item::c_occup_item(OpenBabel::OBAtom *ob, double charge_v)
-{ 
-  obp = new OpenBabel::OBAtom(); 
-  obp->Duplicate(ob);
-  
-  label = obp->GetData("original_label")->GetValue();
-  occup_target = get_atom_occupancy(*obp);
-  
-  charge = charge_v;
 }
 
 double c_occup_group::get_total_occup_input() const
@@ -281,25 +272,6 @@ int64_t c_occup_group::get_number_of_combinations() const
   return result;
 }
 
-void c_occup_group::add_item(OpenBabel::OBAtom * oba, double charge)
-{
-  c_occup_item item(oba, charge);
-  items.push_back(item);
-}
-
-bool d2o_main_class::init_atom_change_mol(OpenBabel::OBMol *cmol, const struct_info &si)
-{
-  cmol->Clear();
-  
-  OBUnitCell *uc = new OBUnitCell(*dynamic_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell)));
-  assert(!cmol->HasData(OBGenericDataType::UnitCell));
-  cmol->SetData(uc);
-  string title = std::string("Supercell generated structure. E_col = ") + si.get_energy_str(10);
-  cmol->SetTitle( title );
-  
-  return true;
-}
-
 std::string d2o_main_class::get_formula_by_groups()
 {
   map<string, int> formula_map;
@@ -309,12 +281,12 @@ std::string d2o_main_class::get_formula_by_groups()
     for(int j = 0; j < occup_groups[i].items.size(); j++)
     {
       const c_occup_item &ci = occup_groups[i].items[j]; 
-      string atom_symbol = OB_PT_GETSYMBOL(ci.obp->GetAtomicNum());
+      string atom_symbol = PT_GETSYMBOL(ci.el_num);
       formula_map[atom_symbol] += ci.num_of_atoms_sc;
     }  
   }
   
-  string result = "";
+  string result;
   
   for(map<string, int>::iterator it = formula_map.begin();
                                  it != formula_map.end(); ++it)
@@ -329,20 +301,16 @@ std::string d2o_main_class::get_formula_by_groups()
   return result;      
 }
 
-std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
+std::string d2o_main_class::get_formula(const cryst_structure_t &cs)
 {
   map<string, double> formula_map;
   
-  for(OBAtomIterator it = mol.BeginAtoms(); it != mol.EndAtoms(); ++it)
-  {
-    string atom_symbol = OB_PT_GETSYMBOL((*it)->GetAtomicNum());
-    
-    double curr_occup = get_atom_occupancy(*(*it));
-
-    formula_map[atom_symbol] += curr_occup;
+  for(const auto &a : cs.atoms) {
+    string atom_symbol = PT_GETSYMBOL(a.el_num);
+    formula_map[atom_symbol] += a.occupancy;
   }
   
-  string result = "";
+  string result;
   
   for(map<string, double>::iterator it = formula_map.begin();
                                     it != formula_map.end(); ++it)
@@ -357,55 +325,25 @@ std::string d2o_main_class::get_formula(OpenBabel::OBMol &mol)
   return result;      
 }
 
-bool d2o_main_class::add_confs_to_mol(OpenBabel::OBMol *cmol, const t_vec_comb &ppc)
-{
-  cmol->BeginModify();
-  for(int i = 0; i < occup_groups.size(); i++)
-  {
-    c_occup_group &curr_group = occup_groups[i];
-    bool fixed_group = curr_group.is_fixed();    
-    for(int j = 0; j < curr_group.positions.size(); j++)
-    {
-      for(int k = 0; k < curr_group.items.size(); k++)
-      {
-        bool the_item = false;
-	if(ppc[i].size() > 0)
-	  the_item = (k == ppc[i][j]);
+bool d2o_main_class::add_confs_to_mol(cif_output &co, const t_comb_descr &cd, const t_vec_comb &ppc) const {
+  for (int i = 0; i < occup_groups.size(); i++) {
+    const c_occup_group &curr_group = occup_groups[i];
+    int gpos = std::distance(cd.group_indexes.cbegin(), std::find(cd.group_indexes.cbegin(), cd.group_indexes.cend(), i));
+    bool fixed_group = gpos == cd.group_indexes.size();
+    assert( fixed_group || cd.prm_indexes[gpos + 1] - cd.prm_indexes[gpos] == curr_group.positions.size() );
+    int cinx = cd.prm_indexes[gpos];
+    for (int j = 0; j < curr_group.positions.size(); j++) {
+      for (int k = 0; k < curr_group.items.size(); k++) {
+        if (fixed_group ||  ppc[j + cinx] == k + 1 ) {
+          double occup_value = fixed_group ? double(curr_group.items[k].num_of_atoms_sc) /
+                double(curr_group.number_of_sites()) : 1.0;
 	
-	if( fixed_group || the_item )
-        {  
-          double occup_value;
-          
-          if( fixed_group )
-            occup_value = double(curr_group.items[k].num_of_atoms_sc) / 
-                          double(curr_group.number_of_sites());
-          else
-            occup_value = 1.0;
-	  
-          OBAtom atm;
-          atm.Duplicate( curr_group.items[k].obp );
-	  
-	  if(occup_value > 0)
-	  {  
-            if( atm.HasData("_atom_site_occupancy") )
-              dynamic_cast<OBPairFloatingPoint *>(atm.GetData("_atom_site_occupancy"))->SetValue(occup_value);
-            else
-            {
-              OBPairFloatingPoint * obo = new OBPairFloatingPoint();
-              obo->SetAttribute("_atom_site_occupancy");
-              obo->SetValue(occup_value);
-              atm.SetData(obo);
+          co.add_atom(curr_group.items[k].el_num, curr_group.items[k].label,
+                      curr_group.positions[j], occup_value);
             }  
-    
-            atm.SetVector(curr_group.positions[j]);
-            cmol->AddAtom(atm, true);
 	  }
         }
       }
-    }  
-  }
-  
-  cmol->EndModify();
 
   return true;
 }
@@ -414,14 +352,12 @@ bool d2o_main_class::calculate_q_matrix()
 {
   using namespace Eigen;
   using namespace cryst_tools;
-  OBUnitCell * uc = static_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell));
-  Matrix3d cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
   
   vector<Vector3d> all_pos;
-  for(int i = 0; i < occup_groups.size(); i++)
+  for(auto & occup_group : occup_groups)
   {
-    for(int j = 0; j < occup_groups[i].positions.size(); j++)
-      all_pos.push_back(b2e_vector<double>(occup_groups[i].positions[j]));
+    for(int j = 0; j < occup_group.positions.size(); j++)
+      all_pos.push_back(occup_group.positions[j]);
   }
   
   if(verbose_level >= 2)
@@ -429,7 +365,7 @@ bool d2o_main_class::calculate_q_matrix()
 
   ewald_sum es;
   
-  es.set_cell(cell);
+  es.set_cell(supercell_cst.unit_cell.cell());
   es.set_precision(all_pos.size(), 1E-7);
   
   q_energy = es.potential_matrix(all_pos);
@@ -440,81 +376,12 @@ bool d2o_main_class::calculate_q_matrix()
   return true;
 }
 
-/*
-   for(int i = 0; i < all_pos.size(); i++)
-  {
-    for(int j = 0; j < all_pos.size(); j++)
-    {
-      vector<Vector3d> vq = 
-      md.get_img_dist(all_pos[i] - all_pos[j], Vector3i(45, 45, 15));
-      for(int k = 0; k < vq.size(); k++)
-      {  
-        double d = vq[k].norm();
-        if(d > symm_tol)
-        {  
-          q_energy(i, j) += 1.0/d;
-          //if(i != j)
-            //q_energy(j, i) += 1.0/d;
-        }  
-      }
-    }
-  }
-
- */
-
-double d2o_main_class::calculate_q_energy(const t_vec_comb &mc)
-{
-  using namespace Eigen;
-  
-  VectorXd q_v;
-  q_v.resize(q_energy.cols());
-  q_v.setZero();
-  
-  int q_v_pos = 0;
-  
-  for(int i = 0; i < occup_groups.size(); i++)
-  {
-    const c_occup_group &curr_group = occup_groups[i];
-    bool fixed_group = curr_group.is_fixed_fast();
-    for(int j = 0; j < curr_group.positions.size(); j++)
-    {
-      double charge = 0;
-      for(int k = 0; k < curr_group.items.size(); k++)
-      {
-        double occup_value = 0;
-
-        bool the_item = false;
-	if(mc[i].size() > 0)
-	  the_item = (k == mc[i][j]);
-        
-        if( fixed_group || the_item )
-        {  
-          if( fixed_group )
-            occup_value = double(curr_group.items[k].num_of_atoms_sc) / 
-                          double(curr_group.number_of_sites());
-          else
-            occup_value = 1.0;
-        }
-        charge += occup_value * curr_group.items[k].charge;
-      }
-      q_v[q_v_pos] = charge;
-      q_v_pos++;
-    }  
-  }
-
-  assert(q_v_pos == q_energy.cols());
-  
-  //0.5 not to count twice pairs
-  //11.4 - to eV
-  return 14.4 * q_v.transpose() * q_energy * q_v;
-}
-
 bool d2o_main_class::create_symmetry_operations_groups()
 {
   using namespace cryst_tools;
   using namespace Eigen;
 
-  OBUnitCell * uc = static_cast<OBUnitCell *>(mol_supercell.GetData(OBGenericDataType::UnitCell));
+  Eigen::Matrix3d m_cell = supercell_cst.unit_cell.cell().inverse();
 
   vc_sets vc;
   vc.resize(occup_groups.size());
@@ -527,18 +394,13 @@ bool d2o_main_class::create_symmetry_operations_groups()
     bc[i] = occup_groups[i].is_fixed();
     for(int j = 0; j < occup_groups[i].positions.size(); j++)
     {  
-      matrix3x3 m_cell = (uc->GetCellMatrix().transpose()).inverse();
-      vector3 v3 = m_cell * occup_groups[i].positions[j];
-      vc[i][j] = b2e_vector<double>(v3);
+      vc[i][j] = m_cell * occup_groups[i].positions[j];
     }
   }
   
-  vector<Affine3d> syms;
+  vector_Affine3d syms;
   
-  Matrix3d cell;
-  cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
-  
-  syms = get_all_symmetries(cell, vc, bc, symm_tol());
+  syms = get_all_symmetries(supercell_cst.unit_cell.cell(), vc, bc, symm_tol());
   
   if(verbose_level >= 1)
     cout << syms.size() << " symmetry operation found for supercell." << endl;
@@ -550,7 +412,7 @@ bool d2o_main_class::create_symmetry_operations_groups()
     occup_groups[i].symms_sets.resize(syms.size());
     for(int j = 0; j < syms.size(); j++)
     {  
-      occup_groups[i].symms_sets[j] = index_symmetries(uc, syms[j], 
+      occup_groups[i].symms_sets[j] = index_symmetries(supercell_cst.unit_cell.cell(), syms[j],
                                       occup_groups[i].positions);
       if( occup_groups[i].is_fixed() )
       {  
@@ -571,14 +433,13 @@ bool d2o_main_class::create_symmetry_operations_groups()
   return good_set;
 }
 
-std::vector<int> d2o_main_class::index_symmetries(OpenBabel::OBUnitCell * uc, 
+std::vector<int> d2o_main_class::index_symmetries(const Eigen::Matrix3d &cell,
                                                   const Eigen::Affine3d &af, 
-                                                  const std::vector<OpenBabel::vector3> &pos)
+                                                  const vector<Eigen::Vector3d> &pos)
 {
   using namespace Eigen;
   
   std::vector<int> result;
-  Matrix3d cell = b2e_matrix<double>(uc->GetCellMatrix().transpose());
   Matrix3d r_cell = cell.inverse();
   Affine3d cart_tr, cl_d, cl_i;
   
@@ -592,7 +453,7 @@ std::vector<int> d2o_main_class::index_symmetries(OpenBabel::OBUnitCell * uc,
   
   std::vector<Vector3d> pose;  
   for(int i = 0; i < pos.size(); i++)
-    pose.push_back(b2e_vector<double>(pos[i]));
+    pose.push_back(pos[i]);
   
   result.resize(pos.size(), -1);
   
@@ -617,105 +478,124 @@ std::vector<int> d2o_main_class::index_symmetries(OpenBabel::OBUnitCell * uc,
   return result;
 }
 
-bool d2o_main_class::create_comb(const symm_set &sc, const std::vector<int> &cmb_in, std::vector<int> &cmb_out)
-{
-  assert(sc.size() == cmb_in.size());
+std::tuple<t_symm_set, t_vec_comb, t_comb_descr> d2o_main_class::create_init_perm_structs() const {
+  t_comb_descr psm;
+  t_vec_comb init_cmb;
+  psm.prm_indexes.emplace_back(0);
+  for(int i = 0; i < occup_groups.size(); i++) {
+    if( !occup_groups[i].is_fixed() ) {
+      map<base_prm_t, int> mvc;
   
-  cmb_out.resize(cmb_in.size());
-  bool result = true;
-  for(int i = 0; i < cmb_in.size(); i++)
-  {  
-    if(sc[i] >= 0)
-      cmb_out[sc[i]] = cmb_in[i];
-    else
-      result = result && (cmb_out[i] < 0);
-  }  
+      for(int j = 0; j < occup_groups[i].items.size(); j++)
+        mvc[j + 1] = occup_groups[i].items[j].num_of_atoms_sc;
   
-  return result;
-}
+      mvc[0] = occup_groups[i].number_of_sites() -
+          occup_groups[i].get_total_num_occup_sites();
 
-std::vector< t_vec_comb > d2o_main_class::create_cache_for_check_comb_unique(const t_vec_comb & start_comb) const {
-  std::vector< t_vec_comb > result;
-
-  result.resize(occup_groups[0].symms_sets.size());
-
-  for(int i = 0; i < result.size(); i++) {
-    result[i] = start_comb;
+      vector<base_prm_t> vp = create_start_combination(mvc);
+      psm.group_indexes.emplace_back(i);
+      psm.prm_indexes.emplace_back(psm.prm_indexes.back() + vp.size());
+      for(int j = 0; j < vp.size(); j++)
+        init_cmb.emplace_back(vp[j]);
+    }
   }
 
-  return result;
+  t_symm_set sm(occup_groups[0].symms_sets.size(), init_cmb.size());
+  if( !occup_groups[0].symms_sets.empty() ) {
+    int smpos = 0;
+    for (int i = 0; i < occup_groups.size(); i++) {
+      if (std::find(psm.group_indexes.cbegin(), psm.group_indexes.cend(), i) != psm.group_indexes.cend()) {
+        for (int j = 0; j < occup_groups[i].symms_sets.size(); j++) {
+          for (int k = 0; k < occup_groups[i].symms_sets[j].size(); k++) {
+            sm.at(j, k + smpos) = occup_groups[i].symms_sets[j][k] + smpos;
+          }
+        }
+        assert(occup_groups[i].symms_sets[0].size() == occup_groups[i].positions.size());
+        smpos += occup_groups[i].symms_sets[0].size();
+      }
+    }
+    assert(smpos == init_cmb.size());
+  }
+  return {sm, init_cmb, psm};
 }
 
+q_energy_reduced d2o_main_class::reduce_q_matrix(const t_comb_descr &cd) const {
+  using namespace Eigen;
+  q_energy_reduced result;
 
-bool d2o_main_class::check_comb_unique(std::vector< t_vec_comb > &cache, const t_vec_comb &mc, int &merged_comb) const
-{
-  assert(occup_groups.size() > 0);
-  assert(mc.size() == occup_groups.size());
-  int syms_num = occup_groups[0].symms_sets.size();
-  assert(syms_num > 0);
+  VectorXd q_v;
+  q_v.resize(q_energy.cols());
+  q_v.setZero();
+  vector<int> dw;
   
-  bool first_occurrence = true;
-  for(int i = 0; i < syms_num; i++)
-  {
-    bool good_cb = true;
-    for(int j = 0; j < mc.size(); j++)
-    {
-      assert(syms_num == occup_groups[j].symms_sets.size());
-
-      if(!occup_groups[j].is_fixed_fast())
-        good_cb = good_cb && create_comb(occup_groups[j].symms_sets[i], mc[j], cache[i][j]);
+  int q_v_pos = 0;
+  int grp_id = 0;
+  for(int i = 0; i < occup_groups.size(); i++) {
+    const c_occup_group &curr_group = occup_groups[i];
+    bool fixed_group = std::find(cd.group_indexes.cbegin(), cd.group_indexes.cend(), i) == cd.group_indexes.cend();
+    if( !fixed_group ) {
+      result.charges.emplace_back(curr_group.items.size() + 1, 0);
+      for (int k = 0; k < curr_group.items.size(); k++)
+        result.charges.back()[k + 1] = curr_group.items[k].charge;
     }
-    if(good_cb)
+    for(int j = 0; j < curr_group.positions.size(); j++)
     {  
-      if(cache[i] < mc)
-      {
-        first_occurrence = false;
-        break;
+      double charge = 0;
+      if( fixed_group ) {
+        for (int k = 0; k < curr_group.items.size(); k++) {
+           double occup_value = double(curr_group.items[k].num_of_atoms_sc) /
+                  double(curr_group.number_of_sites());
+          charge += occup_value * curr_group.items[k].charge;
       }
     } 
-    else
-      std::cout << "ERROR: wrong combination symmetry." << std::endl;  
+      q_v[q_v_pos] = charge;
+      if( !fixed_group ) {
+        dw.emplace_back(q_v_pos);
+        result.d_asn.emplace_back(grp_id);
   }
+      q_v_pos++;
+    }
+    if( !fixed_group )
+      grp_id++;
+  }
+  assert(q_v_pos == q_energy.cols());
+  assert(dw.size() == cd.prm_indexes.back());
+  assert(grp_id == cd.group_indexes.size());
   
-  if( first_occurrence ) {
-    std::sort(cache.begin(), cache.end());
-    merged_comb = 1;
-    for(int i = 1; i < syms_num; i++) {
-      if( cache[i - 1] < cache[i] )
-        merged_comb++;
+  result.cf = q_v.transpose() * q_energy * q_v;
+
+  VectorXd m1 = q_energy * q_v;
+  result.vf.resize(dw.size());
+  for(int i = 0; i < dw.size(); i++)
+    result.vf[i] = m1[dw[i]];
+
+  result.qf.resize(dw.size(), dw.size());
+  for(int i = 0; i < dw.size(); i++) {
+    for(int j = 0; j < dw.size(); j++) {
+      result.qf(i, j) = q_energy(dw[i], dw[j]);
     }
   }
-  else {
-    merged_comb = 0;
-  }
-  //assert(*st.begin() <= mc);
   
-  return first_occurrence;
+  //0.5 not to count twice pairs
+  //11.4 - to eV
+
+  return result;
 }
 
-bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info &si, const std::string &sampl_type)
+bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info &si, const t_comb_descr & cd,
+                                  const std::string &sampl_type)
 {
   bool result = true;
   
-  OBMol cmol;
+  stringstream ss;
+  cif_output co(ss, supercell_cst,
+                std::string("E_e = ") + struct_processor::get_energy_str(si, 10));
   
-  init_atom_change_mol(&cmol, si);
-  add_confs_to_mol(&cmol, si.cmb);
-  
-  OBConversion obc;
+  add_confs_to_mol(co, cd, si.cmb);
 
   string f_name = sp.file_name(si, sampl_type);
   
-  result = obc.SetOutFormat("cif");
-  if(result)
-  {  
-    //result = obc.WriteFile(&cmol, f_name);
-    stringstream ss;
-    result = obc.Write(&cmol, &ss);
-    if( result )
       add_file_to_tar(f_name, ss);
-  }  
-  
   
   if( !result )
     cerr << "An error occurred during storing of \"" << f_name << "\" file." << endl;
@@ -723,7 +603,7 @@ bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info 
   return result;
 }
 
-bool d2o_main_class::store_sampling(std::string output_base_name, int64_t tot_comb)
+bool d2o_main_class::store_sampling(const string &output_base_name, const t_comb_descr &cd, int64_t tot_comb)
 {
   ss_p.prepare_to_store();
 
@@ -731,23 +611,27 @@ bool d2o_main_class::store_sampling(std::string output_base_name, int64_t tot_co
   
   store_cont_cif(ss_p.first_container.begin(),
                  ss_p.first_container.end(),
-                 str_proc, "f");
+                 str_proc, cd, "f");
 
   store_cont_cif(ss_p.last_container.begin(),
                  ss_p.last_container.end(),
-                 str_proc, "a");
+                 str_proc, cd, "a");
 
   store_cont_cif(ss_p.low_container.begin(),
                  ss_p.low_container.end(),
-                 str_proc, "l");
+                 str_proc, cd, "l");
 
   store_cont_cif(ss_p.high_container.begin(),
                  ss_p.high_container.end(),
-                 str_proc, "h");
+                 str_proc, cd, "h");
 
   store_cont_cif(ss_p.rnd_container.begin(),
                  ss_p.rnd_container.end(),
-                 str_proc, "r");
+                 str_proc, cd, "r");
+
+  store_cont_cif(ss_p.weight_container.begin(),
+                 ss_p.weight_container.end(),
+                 str_proc, cd, "w");
   
   if( calc_q_energy )
   {
@@ -770,35 +654,105 @@ bool d2o_main_class::store_sampling(std::string output_base_name, int64_t tot_co
     store_cont_eng(ss_p.rnd_container.begin(),
                    ss_p.rnd_container.end(),
                    str_proc, "r");
+
+    store_cont_eng(ss_p.weight_container.begin(),
+                   ss_p.weight_container.end(),
+                   str_proc, "w");
+
   }  
     
   return true;
 }
 
-bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, bool merge_confs)
+class generate_comb_t {
+ private:
+  tbb::concurrent_queue<permut_process_t *> prc_queue;
+  const vector<int> &permi;
+  t_vec_comb init_cmb, cur_combs;
+  int64_t _combination_left;
+  int64_t _total_index;
+  int64_t _index;
+  int packet_size;
+  bool finish;
+ public:
+  generate_comb_t(int nthreads, int64_t __total_combinations, int64_t __packet_size,
+                  const t_symm_set &sms, const vector<int> &__permi,
+                  const t_vec_comb &init) : permi(__permi),
+                                            init_cmb(init),
+                                            cur_combs(init),
+                                            _combination_left(__total_combinations),
+                                            _total_index(0),
+                                            _index(0),
+                                            packet_size(__packet_size),
+                                            finish(false) {
+    for (int i = 0; i < nthreads; i++) {
+      auto pp = new permut_process_t(sms, permi, packet_size);
+      prc_queue.emplace(pp);
+    }
+  };
+  
+  inline int64_t combination_left() const {
+    return _combination_left;
+  }
+  inline int64_t total_index() const {
+    return  _total_index;
+  }
+  inline int64_t index() const {
+    return _index;
+  }
+  
+  permut_process_t *generator(tbb::flow_control &fc) {
+    if (finish) {
+      fc.stop();
+      return nullptr;
+    }
+    t_vec_comb next_combs = cur_combs;
+    t_vec_comb last_comb;
+    _total_index += next_k_complex_permutation(next_combs, last_comb, packet_size, permi);
+    permut_process_t *result;
+    bool popped = prc_queue.try_pop(result);
+    assert(popped);
+    result->set_proc_range(cur_combs, last_comb);
+    finish = next_combs == init_cmb;
+    swap(cur_combs, next_combs);
+    return result;
+  }
+
+  permut_process_t *indexer(permut_process_t *pp) {
+    for(int i = 0; i < pp->ps_size; i++) {
+      auto &x = pp->ps[i];
+      x.index = _index++;
+      _combination_left -= x.weight;
+    }
+    return pp;
+  }
+    
+  void finalizer(permut_process_t *pp) {
+    prc_queue.push(pp);
+  }
+    
+  ~generate_comb_t() {
+    while (!prc_queue.empty()) {
+      permut_process_t *pp;
+      bool b = prc_queue.try_pop(pp);
+      assert(b);
+      delete pp;
+    }
+  };
+};
+
+bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, bool merge_confs)
 {
   if(dry_run && (!merge_confs) )
     return true;
   
-  t_vec_comb cur_combs;
-  
-  cur_combs.resize(occup_groups.size());
-  for(int i = 0; i < occup_groups.size(); i++)
-  {  
-    cur_combs[i].clear();
-    if(!occup_groups[i].is_fixed())
-    {  
-      map<int, int> mvc;
-
-      for(int j = 0; j < occup_groups[i].items.size(); j++)
-        mvc[j] = occup_groups[i].items[j].num_of_atoms_sc;
-    
-      mvc[-1] = occup_groups[i].number_of_sites() - 
-                        occup_groups[i].get_total_num_occup_sites();
-    
-      cur_combs[i] = create_start_combination(mvc);
-    }
-    occup_groups[i].set_fixed_fast();
+  t_vec_comb init_cmb;
+  t_comb_descr psm;
+  t_symm_set sms;
+  std::tie(sms, init_cmb, psm) = create_init_perm_structs();
+  q_energy_reduced qrd;
+  if( calc_q_energy ) {
+    qrd = reduce_q_matrix(psm);
   }  
   
   int64_t tot_comb = total_combinations();
@@ -812,111 +766,114 @@ bool d2o_main_class::write_files(std::string output_base_name, bool dry_run, boo
       cout << "Output files was deleted successfully" << endl;
   }
   
-  int64_t combination_left = tot_comb;
-  int64_t total_index = 0;
-  int64_t index = 0;
-  bool done;
-  
   int syms_num = max<int>(occup_groups[0].symms_sets.size(), 1);
   ss_p.set_containers_prop(tot_comb, syms_num);
 
-  std::vector< t_vec_comb > cache = create_cache_for_check_comb_unique(cur_combs);
+  const int packet_size = 10000;
+  const int num_threads = 64;
 
-  OBMol cmol;
-  do
-  {
-    bool u_comb;
-    int merged_conf_num;
+  generate_comb_t gc(num_threads, tot_comb, packet_size, sms, psm.prm_indexes, init_cmb);
 
+  auto gen_f = tbb::make_filter<void, permut_process_t *>(tbb::filter::serial_in_order,
+                                                          [&gc](tbb::flow_control &fc) -> permut_process_t * {
+                                                            return gc.generator(fc);
+                                                          });
+
+  auto parr_proc_f =
+      tbb::make_filter<permut_process_t *, permut_process_t *>(
+          tbb::filter::parallel,
+          [dry_run, &qrd, merge_confs, this](permut_process_t *p) -> permut_process_t * {
     if( merge_confs )
-      u_comb = check_comb_unique(cache, cur_combs, merged_conf_num);
+              p->process_merge();
     else
-    {  
-      u_comb = true;
-      merged_conf_num = 1;
+              p->process_no_merge();
+            if (!dry_run && calc_q_energy) {
+              for (int i = 0; i < p->ps_size; i++)
+                p->ps[i].energy = qrd.calc_energy(p->ps[i].cmb);
     }
+            return p;
+          });
     
-    if( u_comb && (!dry_run) )
-    { 
-      //Constructor will zero all variables;
-      struct_info curr_struct;
+  auto ctime = std::chrono::system_clock::now();
       
-      curr_struct.index = index;
-      curr_struct.cmb = cur_combs;
-      if( merge_confs )
-        curr_struct.weight = merged_conf_num;
-  
-      if( calc_q_energy )
-      {  
-        curr_struct.energy = calculate_q_energy(cur_combs);
-        if( create_q_file ) {
-          string fname_str = str_proc.file_name(curr_struct);
-          f_q_calc << struct_processor::get_energy_line(fname_str, curr_struct) + "\n";
+  auto serial_after_proc_f = tbb::make_filter<permut_process_t *, void>(
+      tbb::filter::serial_in_order,
+      [this, &gc, dry_run, &str_proc, &psm, &ctime, tot_comb](permut_process_t *p) -> void {
+        gc.indexer(p);
+        if( !dry_run ) {
+          for (int i = 0; i < p->ps_size; i++) {
+            const auto &x = p->ps[i];
+            if ( create_q_file ) {
+              string fname_str = str_proc.file_name(x);
+              f_q_calc << struct_processor::get_energy_line(fname_str, x) + "\n";
         }
-      }
-      
-      if(ss_p.sampling_active())
-        ss_p.add_structure(curr_struct, combination_left);
-      else
-        write_struct(str_proc, curr_struct);
-    }
-    
-    if( u_comb )
-    {
-      combination_left -= merged_conf_num;
-      index++;
-    }  
-
-    if( (total_index % 20000 == 0) && (total_index != 0) && (verbose_level >= 2))
-    {  
-      cout << "Finished " << round(double(total_index) / double(tot_comb) * 1000) / 10.0 << "%. " 
-           << "Stored " << index << " configurations. Left " 
-           << combination_left << "          \r"<< std::flush;
-    }  
-
-    //Next combination
-    done = true;    
-    for(t_vec_comb::reverse_iterator rit  = cur_combs.rbegin(); 
-                                     rit != cur_combs.rend(); ++rit)
-    {
-      if( std::next_permutation(rit->begin(), rit->end()) )
-      {
-        done = false;
-        break;
+            if (ss_p.sampling_active()) {
+              ss_p.add_structure(x);
+            } else {
+              write_struct(str_proc, x, psm);
       }
     }
-    total_index++;
-  }while(!done);
+    }  
+        if( verbose_level >= 2 ) {
+          auto mt = std::chrono::system_clock::now();
+          double dt = std::chrono::duration<double>(mt - ctime).count();
+          if( dt > 1.0 ) {
+            ctime = mt;
+            constexpr double mx = 5.0;
+            double tm = double(gc.total_index()) + mx * double(tot_comb - gc.combination_left());
+            cout << "Finished " << round(1000.0 * tm / ((mx + 1) * tot_comb)) / 10.0 << "%. "
+                 << "Stored " << gc.index() << " configurations. Left "
+                 << gc.combination_left() << "          \r"<< std::flush;
+    }  
+      }
+        gc.finalizer(p);
+      });
+
+  auto pipeline_start_time = std::chrono::system_clock::now();
+  tbb::parallel_pipeline(num_threads, gen_f & parr_proc_f & serial_after_proc_f);
+  auto pipeline_finish_time = std::chrono::system_clock::now();
   
   if( verbose_level >= 2)
     cout <<  endl;
   
-  if( total_index != total_combinations() )
+  if( verbose_level >= 1 ) {
+    double dt = std::chrono::duration<double>(pipeline_finish_time - pipeline_start_time).count();
+    double dt_h = std::floor(dt / 3600.0);
+    dt -= dt_h * 3600;
+    double dt_m = std::floor( dt / 60.0);
+    dt -= dt_m * 60;
+    std::stringstream ss;
+    ss << "Total enumeration time: " << dt_h << ":"
+       << std::setfill('0') << std::setw(2) << dt_m << ":" << dt;
+    std::cout << ss.str() << std::endl;
+  }
+
+
+  if( gc.total_index() != tot_comb )
   {  
-    cerr << "ERROR: Number of combinations is not equal of total index." << endl;
+    cerr << "ERROR: Number of combinations (" << tot_comb
+         << ")  is not equal of total index (" << gc.total_index() << ")." << std::endl;
     return false;
   }  
   
   if(merge_confs && (verbose_level >= 1) )
-    cout << "Combinations after merge: " << index << endl;
+    cout << "Combinations after merge: " << gc.index() << endl;
   
-  if(combination_left != 0)
-    cerr << "ERROR: Combination left " << combination_left << " != 0 " << endl;
+  if(gc.combination_left() != 0)
+    cerr << "ERROR: Combination left " << gc.combination_left() << " != 0 " << endl;
   
   if( ss_p.sampling_active() && (!dry_run) )
-    store_sampling(output_base_name, tot_comb);
+    store_sampling(output_base_name, psm, tot_comb);
   
-  return combination_left == 0;
+  return gc.combination_left() == 0;
 }
 
-void d2o_main_class::correct_rms_range(const int total_sites, 
+std::pair<int, int> d2o_main_class::correct_rms_range(const int total_sites,
                                        const double occup, 
-                                       const double x2,
-                                       int &min_value,
-                                       int &max_value)
+                                                      const double x2)
 {
-  min_value = total_sites;
-  max_value = 0;
+  int min_value = total_sites;
+  int max_value = 0;
   double x2_min = 1E18;
   int x2_min_index = -1;
 
@@ -942,6 +899,7 @@ void d2o_main_class::correct_rms_range(const int total_sites,
   
   assert(min_value <= max_value);
   assert((min_value >= 0) && (max_value <= total_sites));
+  return {min_value, max_value};
 }
 
 std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const double x2)
@@ -960,7 +918,7 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
       rd.group_index = i;
       rd.atom_index = 0;
       rd.min_value = curr_group.number_of_sites();
-      rd.max_value = curr_group.number_of_sites();
+      rd.max_value = rd.min_value;
       rd.curr_value = rd.min_value;
       rc.push_back(rd);
     }
@@ -971,11 +929,10 @@ std::vector< d2o_main_class::rangi > d2o_main_class::get_rangi_array(const doubl
         rangi rd;
         rd.group_index = i;
         rd.atom_index = j;
-        if(!(*manual_properties)[curr_group.items[j].label].population.is_initialized())
-        {  
+        if (!(*manual_properties)[curr_group.items[j].label].population.is_initialized()) {
+          std::tie(rd.min_value, rd.max_value) =
           correct_rms_range(curr_group.number_of_sites(), 
-                            occup_groups[i].items[j].occup_target, x2,
-                            rd.min_value, rd.max_value);
+                                occup_groups[i].items[j].occup_target, x2);
           rd.curr_value = rd.min_value;
         }
         else
@@ -1068,7 +1025,7 @@ bool d2o_main_class::get_atoms_population()
       double charge = 0.0;
       for(int i = 0; i < rc.size(); i++)
       {  
-        c_occup_item cp = occup_groups[rc[i].group_index].items[rc[i].atom_index];
+        const c_occup_item &cp = occup_groups[rc[i].group_index].items[rc[i].atom_index];
         charge += cp.charge * rc[i].curr_value;
         ocp_t[rc[i].group_index] += rc[i].curr_value;
         if(verbose_level >= 5)
@@ -1120,11 +1077,8 @@ bool d2o_main_class::get_atoms_population()
       {
         for(int i = 0; i < occup_groups.size(); i++)
           cout << "Curr occup is " << ocp_t[i] << ". Total is " << occup_groups[i].number_of_sites() << endl;
-      }  
-      
-      if(verbose_level >= 5)
         cout << "charge: " << charge << endl;
-
+      }  
       
       if( (!charge_balancing || (abs(charge) < charge_tol())) && (!overoccup) && (!underoccup))
       {  
@@ -1133,7 +1087,7 @@ bool d2o_main_class::get_atoms_population()
         for(int i = 0; i < rc.size(); i++)
         {  
           double group_sites = occup_groups[rc[i].group_index].number_of_sites();
-          c_occup_item cp = occup_groups[rc[i].group_index].items[rc[i].atom_index];
+          const c_occup_item & cp = occup_groups[rc[i].group_index].items[rc[i].atom_index];
           double rms_item = pow( double(rc[i].curr_value)/group_sites - cp.occup_target ,2);
 
           rms_curr += rms_item;
@@ -1170,31 +1124,26 @@ bool d2o_main_class::get_atoms_population()
 
 bool d2o_main_class::process_charges(charge_balance cb)
 {
-  FOR_ATOMS_OF_MOL(a, mol_initial)
+  scs.clear();
+  for(const auto &a : orig_cst.atoms) {
+    if( scs.count(a.label) > 0 )
   {
-    string label = a->GetData("_atom_site_label")->GetValue();
-    double curr_input_charge = get_float_property(*a, "input_charge", NAN);
-    double curr_occup = get_atom_occupancy(*a);
-    if( scs.count(label) > 0 )
-    {  
-      if(!isnan(scs[label].input_charge) || !isnan(curr_input_charge))
-        assert(scs[label].input_charge  == curr_input_charge);
+      if(!std::isnan(scs[a.label].input_charge) || !std::isnan(a.charge))
+        assert(scs[a.label].input_charge  == a.charge);
 
-      scs[label].occup += curr_occup;
-      scs[label].cif_mult++;
-    }
-    else
-    {
-      scs[label].input_charge  = curr_input_charge;
-      scs[label].occup = curr_occup; 
-      scs[label].cif_mult = 1;
+      scs[a.label].occup += a.occupancy;
+      scs[a.label].cif_mult++;
+    } else {
+      scs[a.label].input_charge  = a.charge;
+      scs[a.label].occup = a.occupancy;
+      scs[a.label].cif_mult = 1;
     }  
   }
   
   for(std::map<std::string, site_charges>::iterator it = scs.begin(); it != scs.end(); ++it)
   {
     (*it).second.curr_charge = 0;
-    if(! isnan((*it).second.input_charge) )
+    if(! std::isnan((*it).second.input_charge) )
       (*it).second.curr_charge = (*it).second.input_charge;
 
     if( (*manual_properties)[(*it).first].charge.is_initialized())
@@ -1218,13 +1167,13 @@ bool d2o_main_class::process_charges(charge_balance cb)
   
   switch(cb)
   {
-    case cb_no:
+    case charge_balance::cb_no:
       charge_balancing = false;
     break;
-    case cb_yes:
+    case charge_balance::cb_yes:
       charge_balancing = true;
     break;
-    case cb_try:
+    case charge_balance::cb_try:
       charge_balancing = abs(total_used_charge) < charge_tol();
     break;
     default:
@@ -1266,7 +1215,7 @@ bool d2o_main_class::fix_groups()
   for(vector< c_occup_group >::iterator itg  = occup_groups.begin();
                                         itg != occup_groups.end(); ++itg)
   {
-    assert(itg->items.size() > 0);
+    assert(!itg->items.empty());
     bool fixed_status = (*manual_properties)[itg->items[0].label].fixed.get_value_or(false);
     bool wrong_status = false;
     for(vector< c_occup_item >::iterator iti  = itg->items.begin();
@@ -1293,41 +1242,30 @@ bool d2o_main_class::fix_groups()
 class ob_comb_atoms : public points_clusters 
 {
 protected:
-  OBMol * obm;
-  ob_min_dist min_dist_obm;  
+  const cryst_structure_t & cs_str;
+  cryst_tools::min_dist min_dist_obm;
 public:
-  virtual int get_points_size() const;
-  virtual double get_distance(int i, int j) const;
+  virtual int get_points_size() const override;
+  virtual double get_distance(int i, int j) const override;
 public:
-  ob_comb_atoms(OBMol * mol_v, double tolerance);
-  vector3 average_vector(const cmb_group &cbg);
-  bool total_shift(const cmb_group &cbg, int poins_num);
+  ob_comb_atoms(const cryst_structure_t & cryst_str, double tolerance) : cs_str(cryst_str) {
+    min_dist_obm.set_cell(cs_str.unit_cell.cell());
+    tol_list = tolerance;
+  }
+  Eigen::Vector3d average_vector(const cmb_group &cbg);
   void create_groups(groups_vc &vc);
 };
 
-ob_comb_atoms::ob_comb_atoms(OBMol * mol_v, double tolerance)
-{
-  obm = mol_v;
-  OBUnitCell * uc = (OBUnitCell *) obm->GetData(OBGenericDataType::UnitCell);
-  tol_list = tolerance;
-  min_dist_obm.set_cell(uc->GetCellMatrix().transpose());
-}
-
 int ob_comb_atoms::get_points_size() const
 {
-  return obm->NumAtoms();
+  return cs_str.atoms.size();
 }
 
-double ob_comb_atoms::get_distance(int i, int j) const
-{
-  vector3 dist;
-  
-  dist = obm->GetAtom(i + 1)->GetVector() - 
-         obm->GetAtom(j + 1)->GetVector();
-  
+double ob_comb_atoms::get_distance(int i, int j) const {
+  Eigen::Vector3d dist = cs_str.unit_cell.cell() * (cs_str.atoms[i].fract_pos
+      - cs_str.atoms[j].fract_pos);
   dist = min_dist_obm(dist);
-  
-  return dist.length();
+  return dist.norm();
 }
 
 void ob_comb_atoms::create_groups(groups_vc &vc)
@@ -1336,13 +1274,13 @@ void ob_comb_atoms::create_groups(groups_vc &vc)
   assign_max_dist(vc);
 }
 
-vector3 ob_comb_atoms::average_vector(const cmb_group &cbg)
+Eigen::Vector3d ob_comb_atoms::average_vector(const cmb_group &cbg)
 {
-  vector<vector3> vc;
+  vector<Eigen::Vector3d> vc;
     
   for(set<int>::const_iterator it  = cbg.indexes.begin();
                                it != cbg.indexes.end(); ++it)
-    vc.push_back( obm->GetAtom(*it + 1)->GetVector() );
+    vc.push_back(cs_str.unit_cell.cell() * cs_str.atoms[*it].fract_pos);
 
   return min_dist_obm.average_vector(vc);
 }
@@ -1350,55 +1288,18 @@ vector3 ob_comb_atoms::average_vector(const cmb_group &cbg)
 
 bool d2o_main_class::create_occup_groups()
 {
-  //Check, that all labels has the same properties
-  //and caluclate total occupation for the labels
   map<string, double> tot_occ;
-  bool same_properties = true;
-  for(int i = 0; i < mol_supercell.NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol_supercell.GetAtom(i + 1);
-    string label_i = atom_i->GetData("original_label")->GetValue();
-    double occup_i = get_atom_occupancy(*atom_i);
-
-    if ( tot_occ.count(label_i) == 0)
-       tot_occ[label_i] = occup_i;
+  for(int i = 0; i < supercell_cst.atoms.size(); i++) {
+    const auto &a = supercell_cst.atoms[i];
+    if (tot_occ.count(a.label) == 0)
+      tot_occ[a.label] = a.occupancy;
     else
-       tot_occ[label_i] += occup_i;
-
-    for(int j = i + 1; j < mol_supercell.NumAtoms(); j++)
-    {
-      OBAtom * atom_j = mol_supercell.GetAtom(j + 1);
-      string label_j = atom_j->GetData("original_label")->GetValue();
-      if(label_i == label_j)
-      {
-        if( atom_i->GetAtomicNum() != atom_j->GetAtomicNum() )
-        {
-          same_properties = false;
-          cerr << "ERROR: Label " << label_i
-               << " has 2 type of atoms " 
-               << OB_PT_GETSYMBOL(atom_i->GetAtomicNum()) << " != "
-               << OB_PT_GETSYMBOL(atom_j->GetAtomicNum()) << endl;
+      tot_occ[a.label] += a.occupancy;
         }
        
-        double occup_j = get_atom_occupancy(*atom_j);
-        if( abs(occup_i - occup_j) > occup_tol() )
-        {
-          same_properties = false;
-          cerr << "ERROR: Label " << label_i
-               << " has 2 different occupations "
-               << occup_i << " != "   
-               << occup_j << endl;
-        }
-      }
-    }
-  }
-  
-  if(!same_properties)
-    return false;
-  
   groups_vc gvc;
   
-  ob_comb_atoms obc(&mol_supercell, r_tolerance);
+  ob_comb_atoms obc(supercell_cst, r_tolerance);
   obc.create_groups(gvc);
   min_dist_between_groups = obc.min_dist_between_groups(gvc);
   
@@ -1421,19 +1322,16 @@ bool d2o_main_class::create_occup_groups()
   typedef map< set<string>, c_occup_group> cc;
   cc coc;
   
-  for(int i = 0; i < gvc.size(); i++)  
-  {
-    vector3 avg_dist = obc.average_vector(gvc[i]);
+  for(int i = 0; i < gvc.size(); i++) {
+    Eigen::Vector3d avg_dist = obc.average_vector(gvc[i]);
     set<string> sc;
     c_occup_group ocg_temp;
     ocg_temp.max_dis_within_group = 0;
     for(set<int>::const_iterator it  = gvc[i].indexes.begin();
-                                 it != gvc[i].indexes.end(); ++it)
-    {
-      OBAtom * a = mol_supercell.GetAtom(*it + 1);
-      string label = a->GetData("original_label")->GetValue();
-      if( sc.insert(label).second ) //element inserted
-        ocg_temp.add_item(a, scs[label].curr_charge);
+                                 it != gvc[i].indexes.end(); ++it) {
+      const auto &oa = supercell_cst.atoms[*it];
+      if( sc.insert(oa.label).second ) //element inserted
+        ocg_temp.add_item(oa, scs[oa.label].curr_charge);
     }
     
     if( coc.count(sc) == 0 )
@@ -1451,8 +1349,7 @@ bool d2o_main_class::create_occup_groups()
   
   array_common::delete_singles(vc);
   
-  if(vc.size() > 0)
-  {
+  if(vc.size() > 0) {
     for(int i = 0; i < vc.size(); i++)
       cerr << "ERROR: Label " << vc[i] << " belong to 2 or more groups." << endl;
     return false;
@@ -1464,8 +1361,7 @@ bool d2o_main_class::create_occup_groups()
     occup_groups.push_back(it->second);
 
   //Correct occup_target 
-  for(int i = 0; i < occup_groups.size(); i++)
-  {
+  for(int i = 0; i < occup_groups.size(); i++) {
     for(int j = 0; j < occup_groups[i].items.size(); j++)
       occup_groups[i].items[j].occup_target = 
           tot_occ[occup_groups[i].items[j].label]/double(occup_groups[i].number_of_sites());
@@ -1474,6 +1370,34 @@ bool d2o_main_class::create_occup_groups()
   return true;
 }
  
+bool d2o_main_class::check_properties_consistency() const {
+  bool same_properties = true;
+  for(int i = 0; i < supercell_cst.atoms.size(); i++)
+  {
+    const auto &atom_i = supercell_cst.atoms[i];
+    for(int j = i + 1; j < supercell_cst.atoms.size(); j++)
+    {
+      const auto &atom_j = supercell_cst.atoms[j];
+      if( atom_i.label == atom_j.label ) {
+        if( atom_i.el_num != atom_j.el_num ) {
+          same_properties = false;
+          cerr << "ERROR: Label " << atom_i.label
+               << " has 2 type of atoms "
+               << PT_GETSYMBOL(atom_i.el_num) << " != "
+               << PT_GETSYMBOL(atom_i.el_num) << endl;
+        }
+        if( std::abs(atom_i.occupancy - atom_j.occupancy) > occup_tol() ) {
+          same_properties = false;
+          cerr << "ERROR: Label " << atom_i.label
+               << " has 2 different occupations "
+               << atom_i.occupancy << " != "
+               << atom_j.occupancy << endl;
+        }
+      }
+    }
+  }
+  return same_properties;
+}
 
 bool d2o_main_class::show_groups_information()
 {
@@ -1562,91 +1486,19 @@ bool d2o_main_class::show_groups_information()
   return true;
 }
 
-void d2o_main_class::FillUnitCell_rmdup(OpenBabel::OBMol * mol)
-{
-  OBUnitCell *uc = (OBUnitCell *)mol->GetData(OBGenericDataType::UnitCell);
-  ob_min_dist obm;
-  obm.set_cell(uc->GetCellMatrix().transpose());
-  set<OBAtom*> atomsToDelete;
-  for(int i = 0; i < mol->NumAtoms(); i++)
-  {
-    OBAtom * atom_i = mol->GetAtom(i + 1);
-    string label_i = atom_i->GetData("_atom_site_label")->GetValue();
-    vector3 pos_i = atom_i->GetVector();
-    for(int j = i + 1; j < mol->NumAtoms(); j++)
-    {
-      OBAtom * atom_j = mol->GetAtom(j + 1);
-      string label_j = atom_j->GetData("_atom_site_label")->GetValue();
-      vector3 pos_j = atom_j->GetVector();
-      if(label_i == label_j)
-      {
-        if( obm(pos_i - pos_j).length() < 2E-3 )
-          atomsToDelete.insert(atom_j);
-      }
-    }
-  }
-  for(set<OBAtom*>::const_iterator i = atomsToDelete.begin(); i != atomsToDelete.end(); ++i)
-    mol->DeleteAtom(*i);
-}
-
 bool d2o_main_class::create_super_cell(int a, int b, int c)
 {
-  OBUnitCell *orig_unitcell = (OBUnitCell *)mol_initial.GetData(OBGenericDataType::UnitCell);
-  
-  vector<vector3>  cellVectors = orig_unitcell->GetCellVectors();
-  
-  OBUnitCell *super_unitcell = new OBUnitCell();
-  super_unitcell->SetData(cellVectors[0] * a, cellVectors[1] * b, cellVectors[2] * c);
-  mol_supercell.SetData(super_unitcell);
-  
-  orig_unitcell->FillUnitCell(&mol_initial);
-  // OpenBabel error workaround.
-  FillUnitCell_rmdup(&mol_initial);
-  
-  super_unitcell->SetSpaceGroup(1);
-  
-  for (int i = 0; i < a; i++) 
-  {
-    for (int j = 0; j < b; j++)  
-    {
-      for (int k = 0; k < c; k++)  
-      {
-        vector3 disp(  cellVectors[0].x() * i
-                     + cellVectors[1].x() * j
-                     + cellVectors[2].x() * k,
-                       cellVectors[0].y() * i
-                     + cellVectors[1].y() * j
-                     + cellVectors[2].y() * k,
-                       cellVectors[0].z() * i
-                     + cellVectors[1].z() * j
-                     + cellVectors[2].z() * k );
-          
-        for(OBAtomIterator it = mol_initial.BeginAtoms(); it != mol_initial.EndAtoms(); ++it)
-        {
-          OBAtom *new_atom = mol_supercell.NewAtom();
-          new_atom->Duplicate(*it);
-          
-          string label = (*it)->GetData("_atom_site_label")->GetValue();
-          
-          OBPairData *obo = new OBPairData;
-
-          obo->SetAttribute("original_label");
-          obo->SetValue(label);
-          
-          new_atom->SetData(obo);
-          
-          OBPairData *obd = (OBPairData *) new_atom->GetData("_atom_site_label");
-          
-          obd->SetAttribute("_atom_site_label");
-          obd->SetValue(label);/* + "_" +
-                            boost::lexical_cast<string>(i) + "x" +
-                            boost::lexical_cast<string>(j) + "x" +
-                            boost::lexical_cast<string>(k));*/
-          
-          //cout << new_atom->GetData("_atom_site_label")->GetValue() << endl;
-          
-          vector3 ps = (*it)->GetVector() + disp;
-          new_atom->SetVector(ps);
+  supercell_cst.unit_cell.set(orig_cst.unit_cell.cell() * Eigen::DiagonalMatrix<double, 3>(a, b, c));
+  supercell_cst.atoms.clear();
+  supercell_cst.atoms.reserve(orig_cst.atoms.size() * a * b *c);
+  for (int i = 0; i < a; i++) {
+    for (int j = 0; j < b; j++) {
+      for (int k = 0; k < c; k++) {
+        for(const auto &oa : orig_cst.atoms) {
+          supercell_cst.atoms.emplace_back(oa);
+          supercell_cst.atoms.back().fract_pos = Eigen::Vector3d((oa.fract_pos.x() + i) / a,
+                                                                 (oa.fract_pos.y() + j) / b,
+                                                                 (oa.fract_pos.z() + k) / c);
         }
       }
     }
@@ -1655,13 +1507,12 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
   if(verbose_level >= 1)
   { 
     cout << "Initial system:" << endl;
-    cout << "  Chemical Formula: " << get_formula(mol_initial) << endl;
+    cout << "  Chemical Formula: " << get_formula(orig_cst) << endl;
     cout << endl;
     
     cout << "Supercell system " << boost::format("(%1%x%2%x%3%)") %a %b %c << ":" << endl;
-    cout << boost::format("  Size a=%1%, b=%2%, c=%3%") %super_unitcell->GetA() 
-                                                        %super_unitcell->GetB() 
-                                                        %super_unitcell->GetC() << endl;    
+    Eigen::Vector3d sz = supercell_cst.unit_cell.lengths();
+    cout << boost::format("  Size a=%1%, b=%2%, c=%3%") % sz.x() % sz.y() % sz.z() << endl;
     cout << endl;
   }  
   
@@ -1669,14 +1520,17 @@ bool d2o_main_class::create_super_cell(int a, int b, int c)
 }
 
 
-bool d2o_main_class::read_molecule(std::string file_name)
+bool d2o_main_class::read_cryst_structure(std::string file_name)
 {
   bool result = true;
   
-  OBConversion obc;
-  
-  result = result && obc.SetInFormat(obc.FormatFromExt(file_name.c_str()));
-  result = result && obc.ReadFile(&mol_initial, file_name);
+  string msg;
+  result = read_cif_file(file_name, orig_cst, msg);
+  if( verbose_level >= 1 ) {
+    boost::algorithm::replace_all(msg, "\n", "\n  ");
+    std::cout << "CIF file info: " << std::endl;
+    std::cout << "  " << msg << std::endl;
+  }
   
   return result;  
 }
@@ -1696,10 +1550,8 @@ bool d2o_main_class::set_labels_to_manual()
 {
   set<string> set_lbl;
   
-  for(OBAtomIterator it = mol_initial.BeginAtoms(); it != mol_initial.EndAtoms(); ++it)
-  {
-    string label = (*it)->GetData("_atom_site_label")->GetValue();
-    set_lbl.insert(label);
+  for(const auto &a : orig_cst.atoms) {
+    set_lbl.emplace(a.label);
   }
   
   (*manual_properties).convert_properties(set_lbl);
@@ -1723,7 +1575,7 @@ bool d2o_main_class::set_labels_to_manual()
 }
 
 bool d2o_main_class::process(std::string input_file_name, bool dry_run,
-                             const std::vector<int> &scs,
+                             const std::vector<int> &supercell_shape,
                              charge_balance cb, double tolerance_v,
                              bool merge_confs, bool calc_q_energy_v, bool create_q_file_v,
                              c_man_atom_prop &manual_properties_v,
@@ -1731,7 +1583,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
                              std::string output_base_name,
                              std::string output_tar_name)
 {
-  assert(scs.size() == 3);
+  assert(supercell_shape.size() == 3);
   
   r_tolerance = max(tolerance_v, 1.0E-6);
   manual_properties = &manual_properties_v;
@@ -1739,7 +1591,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   calc_q_energy = calc_q_energy_v;
   create_q_file = create_q_file_v;
           
-  if(!read_molecule(input_file_name))
+  if(!read_cryst_structure(input_file_name))
   {
     cerr << "Input file cannot be opened." << endl;
     return false;
@@ -1752,7 +1604,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   }
   
   
-  if(!create_super_cell(scs[0], scs[1], scs[2]))
+  if(!create_super_cell(supercell_shape[0], supercell_shape[1], supercell_shape[2]))
   {
     cerr << "Supercell cannot be created." << endl;
     return false;
@@ -1761,6 +1613,12 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
   if( !process_charges(cb) )
   {
     cerr << "Charge processing fails." << endl;
+    return false;
+  }
+  
+  //Check, that all labels has the same properties
+  if( !check_properties_consistency() ) {
+    cerr << "Sites properties are not consistent." << endl;
     return false;
   }
   
@@ -1860,9 +1718,4 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     close_tar_container();
   
   return true;
-}
-
-
-d2o_main_class::~d2o_main_class()
-{
 }
