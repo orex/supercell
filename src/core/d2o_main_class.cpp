@@ -516,7 +516,7 @@ std::tuple<t_symm_set, t_vec_comb, t_comb_descr> d2o_main_class::create_init_per
     }
     assert(smpos == init_cmb.size());
   }
-  return {sm, init_cmb, psm};
+  return std::tuple<t_symm_set, t_vec_comb, t_comb_descr>(sm, init_cmb, psm);
 }
 
 q_energy_reduced d2o_main_class::reduce_q_matrix(const t_comb_descr &cd) const {

@@ -13,6 +13,7 @@
 #include <vector>
 #include <set>
 #include <cmath>
+#include <array>
 
 #include <boost/align/aligned_allocator.hpp>
 #include <boost/optional.hpp>
