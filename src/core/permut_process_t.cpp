@@ -5,7 +5,9 @@
 #include "permut_process_t.h"
 #include "science/combinatorics.h"
 
-#include <iostream>
+#define XXH_INLINE_ALL
+#define XXH_STATIC_LINKING_ONLY
+#include <xxhash.h>
 
 t_vec_comb permut_process_t::setmm_values(const t_vec_comb &vc, int start_index, bool max_value) const {
   auto it = std::upper_bound(permi.cbegin(), permi.cend(), start_index);
@@ -61,7 +63,7 @@ void permut_process_t::process_merge() {
     return memcmp(&(*first1), &(*first2), blength);
   };
   auto hash_comb = [blength](const t_vec_comb::value_type * p) -> std::size_t {
-    return std::_Hash_bytes(p, blength, 0xFA35);
+    return XXH3_64bits(p, blength);
   };
   auto eq_comb = [blength](const t_vec_comb::value_type * p1, const t_vec_comb::value_type * p2) -> bool {
     return p1 == p2 || memcmp(p1, p2, blength) == 0;

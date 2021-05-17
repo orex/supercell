@@ -4,3 +4,6 @@
 [submodule "3rd_party/gemmi"]
 	path = 3rd_party/gemmi
 	url = https://github.com/project-gemmi/gemmi.git
+[submodule "3rd_party/xxHash"]
+	path = 3rd_party/xxHash
+	url = https://github.com/Cyan4973/xxHash.git

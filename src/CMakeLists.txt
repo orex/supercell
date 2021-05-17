@@ -43,7 +43,11 @@ elseif( LINK_STATIC_LIBS )
   set_property(TARGET TBB::tbb PROPERTY IMPORTED_LOCATION_RELEASE ${pmt})
 endif()
 
-set(sc_includes ${sc_includes} ${EIGEN3_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/3rd_party/gemmi/include)
+
+set(sc_includes ${sc_includes} ${EIGEN3_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/3rd_party/gemmi/include
+        ${CMAKE_SOURCE_DIR}/3rd_party/xxHash)
+
 
 find_package(LibArchive)
 if( ${LibArchive_FOUND} )
