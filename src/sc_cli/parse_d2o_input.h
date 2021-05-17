@@ -13,8 +13,7 @@
 #include <map>
 #include <eigen3/Eigen/Core>
 
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
+#include <regex>
 
 #include "common_types.h"
 
@@ -36,8 +35,8 @@ public:
   void regex_test(std::string test_str);
   int  search_count(std::string &str, 
                     std::vector<std::string> &match,
-                    const boost::regex &rx);
-  bool get_param(std::string &right_str, const boost::regex &rx, int param_num, std::string &param);
+                    const std::regex &rx);
+  bool get_param(std::string &right_str, const std::regex &rx, int param_num, std::string &param);
   bool get_params(std::string right_str, c_man_atom_prop_item_cli &c_prop);
   
   bool get_labels(std::string left_str, 

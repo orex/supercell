@@ -8,11 +8,11 @@
 #include "parse_d2o_input.h"
 
 #include "others/string_utils.h"
-#include "d2o_main_class.h"
 
-#include <assert.h>
+#include <cassert>
 
-#include <boost/regex.hpp>
+#include <regex>
+#include <boost/lexical_cast.hpp>
 
 #include <iostream>
 
@@ -23,7 +23,7 @@ using namespace boost;
 
 int c_man_atom_prop_cli::search_count(std::string &str, 
                                       std::vector<std::string> &match,
-                                      const boost::regex &rx)
+                                      const std::regex &rx)
 {
   int result = 0;
   
@@ -63,7 +63,7 @@ void c_man_atom_prop_cli::regex_test(std::string test_str)
   }  
 }
 
-bool c_man_atom_prop_cli::get_param(std::string &right_str, const boost::regex &rx, 
+bool c_man_atom_prop_cli::get_param(std::string &right_str, const std::regex &rx,
                                     int param_num, std::string &param)
 {
   bool result = false;
@@ -177,7 +177,7 @@ bool c_man_atom_prop_cli::get_labels(std::string left_str,
     { 
       try
       { regex rx(lables_pattern[i]); }        
-      catch (boost::regex_error& e)
+      catch (std::regex_error& e)
       {  
         cerr << "Regex " << lables_pattern[i] << " is wrong." << endl;
         cerr << e.what() << endl;
