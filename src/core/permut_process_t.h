@@ -110,12 +110,25 @@ bool next_complex_permutation(Container &vc, const std::vector<int> &permi) {
 
 template<class Container, typename Index>
 Index next_k_complex_permutation(Container &vc, Container &vc_last, Index k, const std::vector<int> &permi) {
-  for(Index i = 0; i < k; i++) {
-    vc_last = vc;
-    if( !next_complex_permutation(vc, permi) )
-      return i + 1;
+  bool has_next_permutation = true;
+  Index i = 0;
+  vc_last = vc;
+  for(i = 0; i + 1 < k && has_next_permutation; i++) {
+    has_next_permutation = next_complex_permutation(vc, permi);
   }
-  return k;
+  if( has_next_permutation ) {
+    vc_last = vc;
+    next_complex_permutation(vc, permi);
+    return k;
+  } else {
+    has_next_permutation = true;
+    vc = vc_last;
+    for(i = 0; i < k && has_next_permutation; i++) {
+      vc_last = vc;
+      has_next_permutation = next_complex_permutation(vc, permi);
+    }
+    return i;
+  }
 }
 
 
