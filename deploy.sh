@@ -12,11 +12,6 @@ function deploy-exe {
   cd ${tmp_folder}
   cp ${c_path}/build/src/sc_cli/supercell* .
 
-  for i in {atomtyp.txt,bondtyp.txt,phmodel.txt,space-groups.txt,types.txt}
-  do
-    wget -nv https://github.com/openbabel/openbabel/raw/master/data/$i -O $i
-  done
-
   wget -nv https://github.com/orex/supercell/raw/deploy/README -O README
 
   if [[ "$1" == "windows" ]]; then
