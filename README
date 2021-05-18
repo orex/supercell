@@ -1,12 +1,15 @@
-Unpack all files to any folder. Below this folder will be referred as 
+Unpack the files to any folder. Below this folder will be referred as 
 <supercell_folder>.
-After that you have three options.
-1) Run supercell program from the folder.
-   ./supercell -i /path/to/input/file ... -o /path/to/output/folder
-2) Do "export BABEL_DATADIR=/full/path/to/<supercell_folder>" ones for each 
-   shell session (each login). After that, you can run supercell in any 
-   folder with command
-   /path/to/<supercell_folder>/supercell -i input_file ...
-3) Add to .bashrc (if your are using bash shell) line 
-   "export BABEL_DATADIR=/full/path/to/<supercell_folder>" and 
-   don't "export" each time you login to your system.
+Linux:
+  1) Run supercell program from the folder.
+     ./supercell -i /path/to/input/file ... -o /path/to/output/folder
+  2) You can run supercell in any folder with command
+     /path/to/<supercell_folder>/supercell -i input_file ...
+  3) Move supercell file to any system program folder in path for example:
+     /ust/bin/ /usr/local/bin or ~/bin/
+     and run supercell like a regular program from any folder
+     supercell -i /path/to/input/file ... -o /path/to/output/folder
+Windows and MacOS:
+  Remember that supercell is command line program. Follow instructions of your
+  OS, how to run command line program.
+
