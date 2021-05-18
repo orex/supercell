@@ -134,7 +134,7 @@ void c_struct_sel_containers::add_structure(const struct_info &si)
   //Random
   if(str_random_count() > 0)
   {  
-    if( std::uniform_real_distribution<double>(0.0, 1.0)(rnd) < probability )
+    if( rnd() <= probability )
       rnd_container.push_back(si);
   }
   
@@ -205,7 +205,12 @@ void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_o
   symm_op = symm_op_v;
   min_comb = max<int64_t>(total_comb / symm_op, 1);
   
-  probability = 4 * double(str_random_count()) / double(min_comb);
+  double real_prob = 4 * double(str_random_count()) / double(min_comb);
+  if( real_prob >= 1.0 ) {
+    probability = rnd_engine_t::max();
+  } else {
+    probability = static_cast<std::uint64_t>( real_prob * rnd_engine_t::max());
+  }
   
   rnd_container.clear();
   first_container.clear();
@@ -1647,7 +1652,7 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
    show_groups_information();
   
   int64_t tc = total_combinations();
-  if(tc > static_cast<int64_t>(1E15) || tc < 0 )
+  if(tc > static_cast<int64_t>(1E16) || tc < 0 )
   {
     cerr << "ERROR: Number of total combinations is too high to work with." << endl;
     return false;

@@ -125,11 +125,16 @@ private:
 
 class c_struct_sel_containers : public c_struct_sel
 {
-private:
-  std::mt19937 rnd;
+ private:
+  typedef std::mt19937_64 rnd_engine_t;
+  static_assert(rnd_engine_t::min() == 0
+                    && rnd_engine_t::max() == std::numeric_limits<std::uint64_t>::max(),
+                "Random engine error");
+ private:
+  rnd_engine_t rnd;
   int64_t min_comb;
   int symm_op;
-  double probability;
+  std::uint64_t probability;
 public:
   std::vector<struct_info> rnd_container;
   
