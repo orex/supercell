@@ -159,7 +159,8 @@ bool read_cif_file_gemmi(const std::string &file_name, cryst_structure_t& result
   const gemmi::SpaceGroup * sg = nullptr;
   {
     for (const char *tag : {"_space_group_name_H-M_alt",
-                            "_symmetry_space_group_name_H-M"}) {
+                            "_symmetry_space_group_name_H-M",
+                            "_space_group_IT_number"}) {
       if (const std::string *val = block.find_value(tag)) {
         sg = gemmi::find_spacegroup_by_name(as_string(*val), uc_supercell.alpha, uc_supercell.gamma);
         if (sg == nullptr) {
@@ -171,6 +172,11 @@ bool read_cif_file_gemmi(const std::string &file_name, cryst_structure_t& result
     }
     if( sg == nullptr ) {
       msg += "ERROR: H-M tags is not found.\n";
+      return false;
+    }
+    sg = resolve_sg_by_uc(sg, uc_supercell);
+    if( sg == nullptr ) {
+      msg += "ERROR: Spacegroup is not consistence with unitcell.\n";
       return false;
     }
     if (const std::string *val = block.find_value("_space_group_IT_number") ) {
@@ -185,13 +191,11 @@ bool read_cif_file_gemmi(const std::string &file_name, cryst_structure_t& result
             + sg->hall + ").\n";
       }
     }
-    sg = resolve_sg_by_uc(sg, uc_supercell);
   }
   if( !ops.empty() ) {
     msg += "INFO: Using direct symmetries.\n";
   } else {
-    msg += "INFO: Using symmetries from space group.\n"
-           "";
+    msg += "INFO: Using symmetries from space group.\n";
     for(const auto &x : sg->operations())
       ops.emplace_back(x);
   }
