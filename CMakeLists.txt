@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
 project(supercell)
 include(FeatureSummary)
@@ -29,7 +29,6 @@ if (BUILD_PROGRAM)
   endif ()
 
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-  add_subdirectory(libs)
   add_subdirectory(src)
 
 endif (BUILD_PROGRAM)

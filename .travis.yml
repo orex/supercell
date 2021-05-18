@@ -14,24 +14,24 @@ jobs:
  include:
    - name: "Developing build."
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build for focal (20.04)"
      dist: focal
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build for old xenial platform."
      dist: xenial
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build without LibArchive support."
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD=FALSE
           SUPERCELL_CMAKE_OPTIONS="-DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
 
@@ -39,13 +39,13 @@ jobs:
      compiler: clang
      cache: false
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD=FALSE
 
    - name: "Deploy build Linux."
      compiler: gcc
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD="linux"
           SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
@@ -54,7 +54,7 @@ jobs:
      os: osx
      osx_image: xcode12
      env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='/usr/local/opt/cmake/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="osx"
           SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DLibArchive_INCLUDE_DIR=/usr/local/opt/libarchive/include"
 
@@ -86,7 +86,7 @@ jobs:
    - name: "Deploy build documentation."
      dist: focal
      env: BUILD_TYPE=DOC
-          CMAKE_COMMAND='/usr/bin/cmake'
+          CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="doc"
      cache: false
      addons:
@@ -124,7 +124,6 @@ addons:
   homebrew:
     update: false
     packages:
-    - cmake
     - boost
     - eigen
     - libarchive
@@ -135,15 +134,8 @@ addons:
 before_install:
  - export c_path=${PWD}
  - |
-   if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo apt-key add -
-     sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -sc) main"
-     sudo apt-get update && sudo apt-get -y install cmake
-     printenv
-   fi
- - |
    if [[ ${DEPLOY_BUILD} == "linux" ]]; then
-     sudo apt purge libarchive-dev
+     sudo apt-get -y purge libarchive-dev libtbb-dev
      wget -nv https://github.com/libarchive/libarchive/releases/download/3.5.1/libarchive-3.5.1.tar.gz
      tar -xf libarchive-3.5.1.tar.gz
      cd libarchive-3.5.1
@@ -153,7 +145,7 @@ before_install:
      sudo make install
    fi
  - |
-   if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+   if [[ ${TRAVIS_OS_NAME} == "osx" || ${DEPLOY_BUILD} == "linux" ]]; then
      # Install tbb from github to link statically
      git clone --depth 1 https://github.com/wjakob/tbb.git
      cd tbb && mkdir cmake-build && cd cmake-build
