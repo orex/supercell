@@ -13,15 +13,14 @@
 #include <map>
 #include <eigen3/Eigen/Core>
 
-#include <boost/regex.hpp>
-#include <boost/lexical_cast.hpp>
+#include <regex>
 
 #include "common_types.h"
 
 class c_man_atom_prop_item_cli : public c_man_atom_prop_item
 {
 public:
-  typedef enum {ltPlain, ltWC, ltRegex} lbl_type;
+  enum class lbl_type {ltPlain, ltWC, ltRegex};
   
   std::string label;
   lbl_type l_type;
@@ -36,8 +35,8 @@ public:
   void regex_test(std::string test_str);
   int  search_count(std::string &str, 
                     std::vector<std::string> &match,
-                    const boost::regex &rx);
-  bool get_param(std::string &right_str, const boost::regex &rx, int param_num, std::string &param);
+                    const std::regex &rx);
+  bool get_param(std::string &right_str, const std::regex &rx, int param_num, std::string &param);
   bool get_params(std::string right_str, c_man_atom_prop_item_cli &c_prop);
   
   bool get_labels(std::string left_str, 
@@ -59,11 +58,7 @@ public:
   static bool get_charge_balance(std::string cb_str, charge_balance &cb);
 };
 
-class c_struct_sel_cli : public c_struct_sel
-{
-public:
-  bool parse_input(const std::vector<std::string> &inp, std::string &param_error);
-};
+bool parse_sel_input(const std::vector<std::string> &inp, c_struct_sel & out, std::string &param_error);
 
 #endif	/* PARSE_D2O_INPUT_H */
 

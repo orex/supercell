@@ -1,13 +1,13 @@
 #!/bin/bash
 
-cells=( 1x1x1 1x1x2 1x1x3 1x1x4 2x2x1 2x2x2 2x2x3 )
+cells=( 1x1x1 1x1x2 1x1x3 1x1x4 2x2x1 2x2x2 2x2x3 2x3x3 )
 
 #go through all the combination
 mkdir -p out
 for i in "${cells[@]}"
 do
   #The next line can be run in parallel (with & in the end), but for precise timing it run sequentially.
-  /usr/bin/time -o out/cell_$i.time -f "%e" supercell -d -i FeSbO4.cif -s $i -m > out/cell_$i.out 2>/dev/null 
+  /usr/bin/time -o out/cell_$i.time -f "%e" supercell -d -i FeSbO4.cif -s $i -m > out/cell_$i.out 2>/dev/null
 done
 
 #Calculating symmetry operations number. For case of huge number of permutations 

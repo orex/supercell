@@ -6,6 +6,10 @@
  */
 
 #include <cstdlib>
+#include <random>
+#include <iostream>
+#include <string>
+#include <set>
 
 #include "boost/program_options.hpp" 
 #include "boost/filesystem.hpp"
@@ -15,9 +19,6 @@
 
 #include "common_types.h"
  
-#include <iostream> 
-#include <string> 
-#include <set>
 
 namespace 
 { 
@@ -36,8 +37,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
- 
-  try 
+  try
   { 
     //std::string appName = boost::filesystem::basename(argv[0]); 
 
@@ -59,8 +59,7 @@ int main(int argc, char** argv)
     vector<string> structure_sampling;
     vector<int> supercell_mult;
     supercell_mult.resize(3);
-    
- 
+
     /** Define and parse the program options 
      */ 
     namespace po = boost::program_options; 
@@ -75,10 +74,10 @@ int main(int argc, char** argv)
       ("cell-size,s", po::value<std::string>(&cell_size_str)->default_value("1x1x1"), 
                   "Supercell size. Example: -s 2x2x5. Default is 1x1x1.")
       ("charge-balance,c", po::value<std::string>(&charge_balance_str)->default_value("try"), 
-                           (cb_names::get_name(cb_no)     + " - no charge balancing.\n" +
-                            cb_names::get_name(cb_try)    + " - Try to charge balance system, " +
+                           (cb_names::get_name(charge_balance::cb_no)     + " - no charge balancing.\n" +
+                            cb_names::get_name(charge_balance::cb_try)    + " - Try to charge balance system, " +
                                                            "if initial system is not charged.\n" +
-                            cb_names::get_name(cb_yes)  + " - Charge balance the system. ").c_str())
+                            cb_names::get_name(charge_balance::cb_yes)  + " - Charge balance the system. ").c_str())
       ("property,p", po::value<vector<string> >(&manual_properties), 
                     (string("Set properties of atoms by labels. ") +
                             "For detailed description see manual.").c_str())
@@ -89,7 +88,9 @@ int main(int argc, char** argv)
       ("coulomb-store,g", "Store electrostatic energy for all structures.")
       ("store-structures,n", po::value<vector<string> >(&structure_sampling),
                             "Generate structures according to certain criteria. See manual for details.")
-      ("archive,a", po::value<std::string>(&output_tar_file)->default_value(""), 
+      ("random-seed", po::value<std::random_device::result_type>(),
+                            "Set seed for random structure sampling.")
+      ("archive,a", po::value<std::string>(&output_tar_file)->default_value(""),
                    (string("A target archive file for all output files. If empty (default) no packing will be performed. ") +
 #ifdef LIBARCHIVE_ENABLED
                            "The option is enabled."   
@@ -108,18 +109,17 @@ int main(int argc, char** argv)
       // throws on error 
  
       /** --help option 
-       */ 
-      if ( vm.count("help")  ) 
-      { 
-	std::cout << "----------------------------------------------------" << endl;
+       */
+      if (vm.count("help")) {
+        std::cout << "----------------------------------------------------" << endl;
         std::cout << "Program generating supercells from crystal structures" << endl;
         std::cout << "with partial occupancies and/or mixed-composition sites." << endl;
         std::cout << "----------------------------------------------------" << endl;
-	std::cout << "supercell -i <INPUT_FILE> <OPTIONS>" << endl;
+        std::cout << "supercell -i <INPUT_FILE> <OPTIONS>" << endl;
         std::cout << "The values in parenthesis are default values." << endl;
         std::cout << desc << endl;
-        
-        return SUCCESS; 
+
+        return SUCCESS;
       } 
  
       po::notify(vm); // throws on error, so do after help in case 
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     if(verb_level > 0)
     {  
       cout << "-----------------------------------------------------" << endl;
-      cout << "-               Supercell program                   -" << endl;
+      cout << "-            Supercell program (v2.0)               -" << endl;
       cout << "-----------------------------------------------------" << endl;
       cout << "-      Authors:   * Kirill Okhotnikov               -" << endl;
       cout << "-                  (kirill.okhotnikov@gmail.com)    -" << endl;
@@ -155,13 +155,28 @@ int main(int argc, char** argv)
       cout << "-    J. Cheminform. 8 (2016) 17 – 33.               -" << endl;
       cout << "-----------------------------------------------------" << endl;
       cout << endl;
-    }  
-    
+    }
+
     dry_run = vm.count("dry-run") > 0;
     merge_confs = vm.count("merge-symmetric") > 0;
     calc_q = vm.count("coulomb-energy") > 0;
-    store_q_all = vm.count("coulomb-store") > 0;
-    
+    store_q_all = vm.count("coulomb-store") > 0 && calc_q;
+
+    std::random_device::result_type rnd_seed
+        = vm.count("random-seed") == 0 ? std::random_device()()
+                                       : vm["random-seed"].as<std::random_device::result_type>();
+
+    if( verb_level > 0 ) {
+      std::cout << "Command line: ";
+      for(int i = 0; i < argc; i++)
+        std::cout << argv[i] << " ";
+      std::cout << std::endl;
+    }
+
+    if( verb_level > 0 ) {
+      cout << "Random SEED: " << rnd_seed << endl;
+    }
+
     if(!parse_d2o_input::get_supercell_size(cell_size_str, supercell_mult))
     {
       cerr << "Wrong supercell format input." << endl;
@@ -186,9 +201,9 @@ int main(int argc, char** argv)
       return ERROR_IN_COMMAND_LINE;
     }
     
-    c_struct_sel_cli sampl_prop;
+    c_struct_sel sampl_prop;
 
-    if(!sampl_prop.parse_input(structure_sampling, param_error))
+    if(!parse_sel_input(structure_sampling, sampl_prop, param_error))
     {
       cerr << "Error in sampling input parameter " << param_error << endl;
       return ERROR_IN_COMMAND_LINE;
@@ -202,15 +217,15 @@ int main(int argc, char** argv)
       return ERROR_IN_COMMAND_LINE;
     }
     
-    d2o_main_class mc;
+    d2o_main_class mc(rnd_seed);
     
     mc.set_verbosity(verb_level);
     
-    bool processed = 
-    mc.process(input_file, dry_run, supercell_mult, 
-               cb, pos_tol, merge_confs, calc_q, store_q_all,
-               m_prop, sampl_prop, output_file, 
-               output_tar_file);
+    bool processed =
+        mc.process(input_file, dry_run, supercell_mult,
+                   cb, pos_tol, merge_confs, calc_q, store_q_all,
+                   m_prop, sampl_prop, output_file,
+                   output_tar_file);
     
     if(!processed)
       return ERROR_PROCESS_EXECUTION;

@@ -3,11 +3,10 @@ env:
     - COMMIT_AUTHOR_EMAIL: orex@travis-ci.org
     - TEST_PROGRAM_CMD="-d -i ../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"
 
-sudo: required
-
 group: travis_latest
 
-dist: xenial
+os: linux
+dist: bionic
 language: cpp
 cache: ccache
 
@@ -16,36 +15,31 @@ jobs:
    - name: "Developing build."
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
-   - name: "Developing build against stable OpenBabel version."
+   - name: "Developing build for focal (20.04)"
+     dist: focal
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=TRUE
           DEPLOY_BUILD=FALSE
 
-   - name: "Developing build for old trusty platform."
-     dist: trusty
+   - name: "Developing build for old xenial platform."
+     dist: xenial
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Developing build without LibArchive support."
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
           SUPERCELL_CMAKE_OPTIONS="-DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
 
    - name: "Developing build with clang."
      compiler: clang
-     dist: trusty #xenial build fails with clang
      cache: false
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
-          OB_241_STABLE=FALSE
           DEPLOY_BUILD=FALSE
 
    - name: "Deploy build Linux."
@@ -54,18 +48,15 @@ jobs:
           CMAKE_COMMAND='cmake'
           LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD="linux"
-          OB_241_STABLE=FALSE
-          OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF -DGLIBC_24_COMPATIBLE=ON"
-          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DGLIBC_24_COMPATIBLE=ON"
+          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
 
    - name: "Deploy build MacOS."
      os: osx
+     osx_image: xcode12
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="osx"
-          OB_241_STABLE=FALSE
-          OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"
-          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
+          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DLibArchive_INCLUDE_DIR=/usr/local/opt/libarchive/include"
 
    - name: "Deploy build Windows crosscompile."
      cache:
@@ -78,14 +69,12 @@ jobs:
           CMAKE_COMMAND="${CROSS_TARGET}-cmake"
           BUILD_TYPE=CROSS
           DEPLOY_BUILD="windows"
-          OB_241_STABLE=TRUE
-          OB_CMAKE_OPTIONS="-DMINIMAL_BUILD=OFF -DBUILD_GUI=OFF -DBUILD_SHARED=OFF -DWITH_INCHI=OFF -DENABLE_VERSIONED_FORMATS=OFF -DENABLE_TESTS=OFF"
-          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON -DCMAKE_DISABLE_FIND_PACKAGE_LibArchive=TRUE"
+          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
      addons:
        apt:
          update: true
          packages:
-           - wine
+           - wine-stable
            - autopoint
            - gperf
            - intltool
@@ -95,6 +84,7 @@ jobs:
            - p7zip-full
            
    - name: "Deploy build documentation."
+     dist: focal
      env: BUILD_TYPE=DOC
           CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="doc"
@@ -105,10 +95,9 @@ jobs:
          packages:
          - lmodern
          - texlive-extra-utils
-         - python
+         - python3-pygments
          - texlive-extra-utils
          - texlive-latex-extra
-         - python-pygments
          - texlive-science
          - texlive-humanities
          - texlive-pstricks
@@ -119,28 +108,52 @@ addons:
   apt:
     update: true
     packages:
+    - libarchive-dev
     - libboost-program-options-dev
     - libboost-regex-dev
     - libboost-filesystem-dev
     - libboost-random-dev
     - libboost-system-dev
+    - libtbb-dev
     - libeigen3-dev
-    - libarchive-dev
     - liblzma-dev
     - libbz2-dev
     - zlib1g-dev
     - zip
 
   homebrew:
-    update: true
+    update: false
     packages:
     - boost
     - eigen
     - libarchive
+    - zlib
+    - libxml2
 
 
 before_install:
  - export c_path=${PWD}
+ - |
+   if [[ ${DEPLOY_BUILD} == "linux" ]]; then
+     sudo apt-get -y purge libarchive-dev libtbb-dev
+     wget -nv https://github.com/libarchive/libarchive/releases/download/3.5.1/libarchive-3.5.1.tar.gz
+     tar -xf libarchive-3.5.1.tar.gz
+     cd libarchive-3.5.1
+     ./configure --without-openssl --without-libb2 --without-xml2 --without-expat --disable-bsdtar
+     sed -ir '/^.*#define HAVE_LZMA_STREAM_ENCODER_MT 1.*$/d' config.h
+     make -j 4
+     sudo make install
+   fi
+ - |
+   if [[ ${TRAVIS_OS_NAME} == "osx" || ${DEPLOY_BUILD} == "linux" ]]; then
+     # Install tbb from github to link statically
+     git clone --depth 1 https://github.com/wjakob/tbb.git
+     cd tbb && mkdir cmake-build && cd cmake-build
+     cmake ../ -DCMAKE_BUILD_TYPE=Release -DTBB_BUILD_TBBMALLOC=OFF -DTBB_BUILD_TBBMALLOC_PROXY=OFF -DTBB_BUILD_TESTS=OFF
+     make -j 4
+     sudo make install
+   fi
+
 
 install:
  - export START_TIME=`date +%s`
@@ -148,25 +161,17 @@ install:
  - |
    if [[ ${BUILD_TYPE} == CROSS ]]; then
      pushd .
-     git clone ${MXE_URL} && cd mxe
+     git clone --depth 1 ${MXE_URL} && cd mxe
      ln -s $HOME/.cache_mxe .ccache
      while(true); do sleep 9m; echo "watchdog signal"; done &
      WATCHDOG_PID=$!
-     make MXE_TARGETS=${CROSS_TARGET} boost eigen -j2
+     make MXE_TARGETS=${CROSS_TARGET} MXE_PLUGIN_DIRS=plugins/gcc9 cc --jobs=4 JOBS=2
+     if ((`date +%s`-START_TIME < 1200)); then
+       make MXE_TARGETS=${CROSS_TARGET} MXE_PLUGIN_DIRS=plugins/gcc9 intel-tbb boost eigen --jobs=4 JOBS=2
+     fi
      kill $WATCHDOG_PID
      export PATH=${PWD}/usr/bin:$PATH
      popd
-   fi
- - |
-   if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
-      git clone https://github.com/openbabel/openbabel.git && cd openbabel
-      if [[ ${OB_241_STABLE} == TRUE ]]; then git pull && git checkout openbabel-2-4-x; fi
-      mkdir build
-   fi
- - |
-   if [[ ${BUILD_TYPE} == CROSS ]]; then
-      echo "PATCH OPENBABEL"
-      sed -ir 's/#define isfinite _finite//g' src/config.h.cmake
    fi
  - |
    if [[ ${BUILD_TYPE} == DOC ]]; then
@@ -179,18 +184,8 @@ script:
  - |
    if ((FINISH_TIME-START_TIME < 1800)); then
      if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
-        cd tmp/openbabel/build
-        ${CMAKE_COMMAND} ../ -DCMAKE_BUILD_TYPE=Release `echo ${OB_CMAKE_OPTIONS}`
-        make -j 2
-        if [[ ${BUILD_TYPE} == PROGRAM ]]; then 
-          sudo make install
-        else 
-          OBDIR="-DOpenBabel2_DIR=${c_path}/tmp/openbabel/build"
-          export BABEL_LIBDIR="${c_path}/tmp/openbabel/build/lib"
-          export BABEL_DATADIR="${c_path}/tmp/openbabel/data"
-        fi
         mkdir ${c_path}/build && cd ${c_path}/build
-        ${CMAKE_COMMAND} ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release ${OBDIR} -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
+        ${CMAKE_COMMAND} ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
         make -j 2 supercell
      fi
    else

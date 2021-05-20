@@ -8,11 +8,11 @@
 #include "parse_d2o_input.h"
 
 #include "others/string_utils.h"
-#include "d2o_main_class.h"
 
-#include <assert.h>
+#include <cassert>
 
-#include <boost/regex.hpp>
+#include <regex>
+#include <boost/lexical_cast.hpp>
 
 #include <iostream>
 
@@ -23,7 +23,7 @@ using namespace boost;
 
 int c_man_atom_prop_cli::search_count(std::string &str, 
                                       std::vector<std::string> &match,
-                                      const boost::regex &rx)
+                                      const std::regex &rx)
 {
   int result = 0;
   
@@ -63,7 +63,7 @@ void c_man_atom_prop_cli::regex_test(std::string test_str)
   }  
 }
 
-bool c_man_atom_prop_cli::get_param(std::string &right_str, const boost::regex &rx, 
+bool c_man_atom_prop_cli::get_param(std::string &right_str, const std::regex &rx,
                                     int param_num, std::string &param)
 {
   bool result = false;
@@ -153,17 +153,17 @@ bool c_man_atom_prop_cli::get_labels(std::string left_str,
   if(regex_match(left_str, rx_out, left_rx))
   {
     str_lbl = rx_out[2];
-    lt = c_man_atom_prop_item_cli::ltPlain;
+    lt = c_man_atom_prop_item_cli::lbl_type::ltPlain;
     if( (rx_out[1] == "W") || (rx_out[1] == "w") )
-      lt = c_man_atom_prop_item_cli::ltWC;
+      lt = c_man_atom_prop_item_cli::lbl_type::ltWC;
     
     if( (rx_out[1] == "R") || (rx_out[1] == "r") )
-      lt = c_man_atom_prop_item_cli::ltRegex;
+      lt = c_man_atom_prop_item_cli::lbl_type::ltRegex;
   }
   else
   {
     str_lbl = left_str;
-    lt = c_man_atom_prop_item_cli::ltWC;
+    lt = c_man_atom_prop_item_cli::lbl_type::ltWC;
   }  
   
   lables_pattern.clear();
@@ -171,13 +171,13 @@ bool c_man_atom_prop_cli::get_labels(std::string left_str,
   
   bool result = lables_pattern.size() > 0;
   
-  if( lt == c_man_atom_prop_item_cli::ltRegex )
+  if( lt == c_man_atom_prop_item_cli::lbl_type::ltRegex )
   {  
     for(int i = 0; i < lables_pattern.size(); i++)
     { 
       try
       { regex rx(lables_pattern[i]); }        
-      catch (boost::regex_error& e)
+      catch (std::regex_error& e)
       {  
         cerr << "Regex " << lables_pattern[i] << " is wrong." << endl;
         cerr << e.what() << endl;
@@ -295,11 +295,11 @@ void c_man_atom_prop_cli::convert_properties(const std::set<std::string> &labels
                                                      it_p != vc_raw.end(); ++it_p)
     {
       bool the_label = false;
-      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltPlain) && 
+      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::lbl_type::ltPlain) &&
                                   (*it_lbl == it_p->label) ); 
-      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltWC) && 
+      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::lbl_type::ltWC) &&
                                   (match_wildcard(it_p->label, *it_lbl)) ); 
-      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::ltRegex) && 
+      the_label = the_label  || ( (it_p->l_type == c_man_atom_prop_item_cli::lbl_type::ltRegex) &&
                                   ( regex_match(*it_lbl, regex(it_p->label)) ) );
       if( the_label )
         data_map[*it_lbl].assign(*it_p);
@@ -339,13 +339,12 @@ bool parse_d2o_input::get_charge_balance(std::string cb_str, charge_balance &cb)
 }
 
 
-bool c_struct_sel_cli::parse_input(const std::vector<std::string>& inp, std::string& param_error)
+bool parse_sel_input(const std::vector<std::string>& inp, c_struct_sel & out, std::string& param_error)
 {
   bool result = true;
   param_error = "";
  
-  scanf_pp::regex_scanf rp("^([farlh])([0-9]+)$");  
-  
+  scanf_pp::regex_scanf rp("^([farlhw])([0-9]+)$");
   for(int i = 0; i < inp.size(); i++)
   {
     if( rp.regex_match(inp[i]) )
@@ -353,8 +352,8 @@ bool c_struct_sel_cli::parse_input(const std::vector<std::string>& inp, std::str
       string s;
       int cnt;
       rp >> s >> cnt;
-      sp[s] = cnt;
-    }  
+      out.set_sampling(s.front(), cnt);
+    }
     else
     {
       result = false;
