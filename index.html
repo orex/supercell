@@ -82,6 +82,105 @@ ga('require', 'pageVisibilityTracker');
   <hr>
   <div class="row">
     <div class="text-right col-xs-4 col-sm-3 col-md-2 col-xl-1">
+      <h4><b>20-05-2021</b></h4>
+    </div>
+    <div class="text-left col-xs-8 col-sm-9 col-md-10 col-xl-11">
+      <h4> <b>Supercell v2.0</b> </h4>
+      <p>A new version of supercell program with major improvements: performance, portability and new parameters.
+      Please check <a data-toggle="modal" data-target="#whats-new-2-0">changelog</a> and <a data-toggle="modal" data-target="#bench-v2-0" >benchmark.</a>
+      </p>
+      <!-- Modal -->
+
+      <div id="whats-new-2-0" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal-whatsnew" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <h3 class="modal-title">What's new in v2.0</h3>
+            </div>
+            <div class="modal-body">
+              <p>I'm proud to present you a new version of supercell program. This is a major release with several significant changes:</p>
+              <ul class="list-changelog">
+                <li><b>Performance boost:</b> Almost half of the code was changed in the release to achieve a performance improvement. Algorithms for symmetry search, electrostatic calculation, file I/O and, of course, structures enumeration became 4-10 times faster then previously.</li>
+                <li><b>Multi threading:</b> Enumeration algorithm can run in parallel on shared memory architectures. No extra programs (like MPI) are needed. In this release, you can gain from parallelization on up to 16 cores. The limit will be overcome with next release.</li>
+                <li><b>Additional scenarios:</b> Supercell program can be used now for searching of high symmetry disorder supercell (<i>-n w</i> option). Randomness of output structures can be controlled by <i>random-seed</i> option.
+                <li><b>New I/O module:</b> Supercell program doesn't use OpenBabel library for I/O and structures processing anymore. Reading and writing of CIF files now is done internally (thanks to gemmi library for cif parsing and spacegroup information). Such approach allows to increase performance and treat ambiguous spacegroup information and inconsistency in CIF files much better.</li>
+                <li><b>New C++ standard:</b> Supercell code were updated to C++14 standard. Support for old compilers has been dropped.</li>
+                <li><b>Dependency update:</b> Supercell v1.x code binaries (from the site) can be run successfully on Linux distribution from 2008 year up to now and support all x86_64 processors younger than year 2005. New version is compiled with relatively recent compilers and does not support obsolete Linux. It supports, for example: Ubuntu 14.04 and newer; Debian 8 and newer; CentOS 7 and newer etc. The CPU should be SSE2 compatible.</li>
+                <li><b>Windows version improvement:</b> Performance of Windows version is significantly improved by using modern build chains. Archive output is now also supported.</li>
+              </ul>
+              <p>Old version binaries are available <a href="https://github.com/orex/supercell/tree/gh-pages/v1.2">here</a>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="bench-v2-0" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal-benchmark" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+              <h3 class="modal-title">Benchmark</h3>
+            </div>
+            <div class="modal-body">
+              <p>The same benchmark as in supercell paper (the same as fcc in disorder paper). Time in seconds.
+                "Binaries" are compiled program which is available on this site, "native" program was built to run optimally on the test machine.</p>
+              <p>The tests were run ones each on such configuration:</p>
+              <ul>
+                <li>KVM Intel<sup>&reg;</sup> Xeon<sup>&reg;</sup> 3.1 GHz (8 cores).</li>
+                <li>Ubuntu 20.04 LTS</li>
+                <li>"Native" executables were built with default compilers, build-toolchain etc in Ubuntu 20.04. OpenBabel 2.4.x version vere used for v1.2</li>
+                <li>Test command line: <i>supercell -i PbSnTe2.cif -m -d -s 2x2x2</i></li>
+              </ul>
+              <table class="table">
+                <thead>
+                <tr>
+                  <th scope="col"></th>
+                  <th scope="col">binaries</th>
+                  <th scope="col">native</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <th scope="row">v1.2 (1 core)</th>
+                  <td>372.28</td>
+                  <td>307.58</td>
+                </tr>
+                <tr>
+                  <th scope="row">v2.0 (1 core)</th>
+                  <td>32.93</td>
+                  <td>32.65</td>
+                </tr>
+                <tr>
+                  <th scope="row">v2.0 (8 cores)</th>
+                  <td>12.27</td>
+                  <td>14.62</td>
+                </tr>
+                </tbody>
+              </table>
+              <p>Compiled v1.2 shows slower performance due to compatibility with very old platforms.
+                Surprisingly slower performance of "native" binaries with 8 cores can be most probably explained by another TBB library, which was used for compiling the code.
+              </p>
+              <p>Some recommendation for optimal supercell performance:</p>
+              <ul>
+                <li>Use Linux.</li>
+                <li>Prefer to run supercell on modern Workstation/Desktop rather than on old HPC.</li>
+                <li>For regular users binaries are a preferable option. Now, with drop of old platforms support, they showed a good performance.
+                  If you would like to install supercell on cluster, try to compile it by yourself with different compilers and options.
+                  Probably Intel compiler can improve the program performance.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>   
+  <div class="row">
+    <div class="text-right col-xs-4 col-sm-3 col-md-2 col-xl-1">
     <h4><b>23-05-2019</b></h4>
     </div>
     <div class="text-left col-xs-8 col-sm-9 col-md-10 col-xl-11">
