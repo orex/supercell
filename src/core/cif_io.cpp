@@ -15,7 +15,8 @@
 
 #include <cryst_tools/cryst_tools.h>
 
-cif_output::cif_output(std::ostream &output_stream, const cryst_structure_t &cs_struct, const std::string &title) :
+cif_output::cif_output(std::ostream &output_stream, const cryst_structure_t &cs_struct,
+                       const std::string &title, const std::vector<std::pair<std::string, double>> &charges) :
     cs(cs_struct), so(output_stream) {
 
   auto l = cs.unit_cell.lengths();
@@ -32,11 +33,25 @@ cif_output::cif_output(std::ostream &output_stream, const cryst_structure_t &cs_
       << "_cell_angle_alpha " << a.x() << std::endl
       << "_cell_angle_beta " << a.y() << std::endl
       << "_cell_angle_gamma " << a.z() << std::endl
+      << "_space_group_IT_number 1" << std::endl
       << "_space_group_name_H-M_alt 'P 1'" << std::endl
       << "_space_group_name_Hall 'P 1'" << std::endl
       << "loop_" << std::endl
       << "    _space_group_symop_operation_xyz" << std::endl
-      << "    x,y,z" << std::endl
+      << "    x,y,z" << std::endl;
+  if( !charges.empty()) {
+    char buffer[64];
+    so
+      << "loop_ " << std::endl
+      << "    _atom_type_symbol" << std::endl
+      << "    _atom_type_oxidation_number" << std::endl;
+    for(const auto &p : charges) {
+      snprintf(buffer, sizeof(buffer), "    %-8s%+.3g\n", p.first.c_str(), p.second);
+      so << buffer;
+    }
+  }
+
+  so
       << "loop_" << std::endl
       << "    _atom_site_label" << std::endl
       << "    _atom_site_type_symbol" << std::endl
@@ -61,7 +76,7 @@ void cif_output::add_atom(int el_num, const std::string &label, const Eigen::Vec
       v[i] = 0.0;
   }
 
-  snprintf(buffer, 256, "    %-8s%-5s%.5f%10.5f%10.5f%8.3f\n",
+  snprintf(buffer, sizeof(buffer), "    %-8s%-5s%.5f%10.5f%10.5f%8.3f\n",
            label.c_str(),  gemmi::Element(el_num).name(),
            v.x(), v.y(), v.z(), occupancy);
 

@@ -16,7 +16,8 @@ class cif_output {
   cryst_structure_t cs;
   std::ostream &so;
  public:
-  cif_output(std::ostream &output_stream, const cryst_structure_t &cs_struct, const std::string &title);
+  cif_output(std::ostream &output_stream, const cryst_structure_t &cs_struct,
+             const std::string &title, const std::vector<std::pair<std::string, double>> &charges);
   void add_atom(int el_num, const std::string &label, const Eigen::Vector3d &pos, double occupancy);
 };
 

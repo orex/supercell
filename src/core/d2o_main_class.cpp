@@ -593,8 +593,13 @@ bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info 
   bool result = true;
   
   stringstream ss;
+  std::vector<std::pair<std::string, double>> ch;
+  for(const auto &p : scs) {
+    if( p.second.curr_charge != 0 )
+      ch.emplace_back(p.first, p.second.curr_charge);
+  }
   cif_output co(ss, supercell_cst,
-                std::string("E_e = ") + struct_processor::get_energy_str(si, 10));
+                std::string("E_e = ") + struct_processor::get_energy_str(si, 10), ch);
   
   add_confs_to_mol(co, cd, si.cmb);
 
