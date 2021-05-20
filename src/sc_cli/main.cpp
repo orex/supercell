@@ -141,7 +141,7 @@ int main(int argc, char** argv)
     if(verb_level > 0)
     {  
       cout << "-----------------------------------------------------" << endl;
-      cout << "-               Supercell program                   -" << endl;
+      cout << "-            Supercell program (v2.0)               -" << endl;
       cout << "-----------------------------------------------------" << endl;
       cout << "-      Authors:   * Kirill Okhotnikov               -" << endl;
       cout << "-                  (kirill.okhotnikov@gmail.com)    -" << endl;
