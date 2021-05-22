@@ -1,0 +1,60 @@
+data_
+_cell_length_a                           10.28
+_cell_length_b                           10.28
+_cell_length_c                           10.28
+_cell_angle_alpha                        90
+_cell_angle_beta                         90
+_cell_angle_gamma                        90
+_cell_volume                             1086.374
+_cell_formula_units_Z                    2
+_symmetry_space_group_name_H-M           'P 41 3 2'
+_symmetry_Int_Tables_number              213
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+  1	'x,y,z'
+  2	'1/2-x,-y,1/2+z'
+  3	'1/2+x,1/2-y,-z'
+  4	'-x,1/2+y,1/2-z'
+  5	'z,x,y'
+  6	'y,z,x'
+  7	'1/2-z,-x,1/2+y'
+  8	'-y,1/2+z,1/2-x'
+  9	'1/2+z,1/2-x,-y'
+ 10	'1/2-y,-z,1/2+x'
+ 11	'-z,1/2+x,1/2-y'
+ 12	'1/2+y,1/2-z,-x'
+ 13	'3/4-y,3/4-x,3/4-z'
+ 14	'3/4+y,1/4+x,1/4-z'
+ 15	'1/4+y,1/4-x,3/4+z'
+ 16	'1/4-y,3/4+x,1/4+z'
+ 17	'3/4-x,3/4-z,3/4-y'
+ 18	'3/4-z,3/4-y,3/4-x'
+ 19	'3/4+x,1/4+z,1/4-y'
+ 20	'1/4-z,3/4+y,1/4+x'
+ 21	'1/4+x,1/4-z,3/4+y'
+ 22	'3/4+z,1/4+y,1/4-x'
+ 23	'1/4-x,3/4+z,1/4+y'
+ 24	'1/4+z,1/4-y,3/4+x'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Al1	+3
+Al2	+3
+Ca1	+2
+Te1	-2
+Te2	-2
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_occupancy
+Al1      Al1      24 .      0.272      0.953     0.1205       0.25
+Al2      Al2      24 .     0.7426     0.7134     0.4445       0.25
+Ca1      Ca1       4 .      0.375      0.375      0.375        0.5
+Te1      Te1      12 .      0.125     0.1989     0.4489        1.0
+Te2      Te2       8 .     0.0521     0.0521     0.0521        1.0
