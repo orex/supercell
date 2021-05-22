@@ -170,6 +170,7 @@ ga('require', 'pageVisibilityTracker');
               <ul>
                 <li>Use Linux.</li>
                 <li>Prefer to run supercell on modern Workstation/Desktop rather than on old HPC.</li>
+                <li>The example above is a "special" example which is used to compare different enumeration approaches. It does not include practical aspects like sampling. Use more practical scenarios to check supercell code performance. For example <i>supercell -i data/examples/CaAl6Te10/CaAl6Te10.cif -m -q -n r10 -n l10 -v 2</i> run includes electrostatic calculation and random sampling, which is needed in almost all practical cases. During this run 10<sup>11</sup> structures process in 43 minutes on the same system as above. 
                 <li>For regular users binaries are a preferable option. Now, with drop of old platforms support, they showed a good performance.
                   If you would like to install supercell on cluster, try to compile it by yourself with different compilers and options.
                   Probably Intel compiler can improve the program performance.</li>
