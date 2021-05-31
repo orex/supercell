@@ -75,6 +75,14 @@ public:
   { _fixed = fix; };
   inline bool is_fixed() const
   { return _fixed || (get_number_of_combinations() == 1); }
+  inline bool is_empty() const {
+    int numa = 0;
+    for(const auto &itm : items) {
+      numa += itm.num_of_atoms_sc;
+    }
+    return numa == 0;
+  }
+
   inline bool is_fixed_fast() const
   { return _fixed_fast; }
   inline void set_fixed_fast()

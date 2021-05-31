@@ -389,20 +389,20 @@ bool d2o_main_class::create_symmetry_operations_groups()
   Eigen::Matrix3d m_cell = supercell_cst.unit_cell.cell().inverse();
 
   vc_sets vc;
-  vc.resize(occup_groups.size());
+  vc.reserve(occup_groups.size());
   
-  vector<bool> bc;
-  bc.resize(occup_groups.size());
   for(int i = 0; i < occup_groups.size(); i++)
   {
-    vc[i].resize(occup_groups[i].positions.size());
-    bc[i] = occup_groups[i].is_fixed();
-    for(int j = 0; j < occup_groups[i].positions.size(); j++)
-    {  
-      vc[i][j] = m_cell * occup_groups[i].positions[j];
+    if( !occup_groups[i].is_empty() ) {
+      vc.emplace_back();
+      vc.back().resize(occup_groups[i].positions.size());
+      for (int j = 0; j < occup_groups[i].positions.size(); j++) {
+        vc.back()[j] = m_cell * occup_groups[i].positions[j];
+      }
     }
   }
-  
+  vector<bool> bc(vc.size(), true);
+
   vector_Affine3d syms;
   
   syms = get_all_symmetries(supercell_cst.unit_cell.cell(), vc, bc, symm_tol());
@@ -419,7 +419,7 @@ bool d2o_main_class::create_symmetry_operations_groups()
     {  
       occup_groups[i].symms_sets[j] = index_symmetries(supercell_cst.unit_cell.cell(), syms[j],
                                       occup_groups[i].positions);
-      if( occup_groups[i].is_fixed() )
+      if( !occup_groups[i].is_empty() )
       {  
         good_set = find(occup_groups[i].symms_sets[j].begin(), 
                         occup_groups[i].symms_sets[j].end(), -1) == 
