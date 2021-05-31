@@ -1,13 +1,18 @@
-You can find a compiled program for all 64 bits Linux and MacOS at https://orex.github.io/supercell/ site. 
+You can find a compiled program for recent 64 bits Linux, MacOS and Windows at https://orex.github.io/supercell/ site.
 
-IMPORTANT!!! Please note, that not all version of OpenBabel support partial occupancies. Please, use the version from https://github.com/openbabel/openbabel. UPD: OB release 2.4.x is fully compatible with supercell program. You can install and use it instead of the latest master.
+Users of ArchLinux can install the program from package
+https://aur.archlinux.org/packages/supercell-git/
+but the package from 2021-02-10 contains an old version of supercell program.  
 
-Superquick installation.
+Superquick installation (Ubuntu 18.04 or higher).
 
-  1) Install openbabel from official site. https://github.com/openbabel/openbabel
-
+  1) (To compile program itself) sudo apt install libarchive-dev libboost-program-options-dev libboost-filesystem-dev \
+                                                  libboost-random-dev libboost-system-dev libtbb-dev libeigen3-dev
+  2) (To compile manual and tutorial). sudo apt install lmodern texlive-extra-utils python3-pygments texlive-extra-utils \
+                                                        texlive-latex-extra texlive-science texlive-humanities texlive-pstricks \
+                                                        texlive-fonts-recommended
   2) git clone --recursive https://github.com/orex/supercell.git && cd supercell && \
   mkdir build && cd build && cmake ../ && make && sudo make install
 
-Dependencies: C++ compiler and linker, Boost 1.46 or higher, CMAKE 2.6 or higher, OpenBabel, Eigen 3.x, LibArchive (optionally). Perl and \LaTeX\ are needed to compile manual.
+Dependencies: C++ compiler and linker, Boost 1.46 or higher, CMAKE 3.6 or higher, OpenBabel, Eigen 3.x, LibArchive (optionally). Perl and \LaTeX\ are needed to compile manual.
 It is good idea to check .travis.yml file, if you are working on Ubuntu/Debian.
