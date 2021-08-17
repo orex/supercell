@@ -102,7 +102,7 @@ jobs:
          - texlive-humanities
          - texlive-pstricks
          - texlive-fonts-recommended
-
+         - texlive-pictures
 
 addons:
   apt:
