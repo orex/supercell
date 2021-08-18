@@ -182,7 +182,7 @@ install:
 script:
  - export FINISH_TIME=`date +%s`
  - |
-   if ((FINISH_TIME-START_TIME < 1800)); then
+   if ((FINISH_TIME-START_TIME < 2400)); then
      if [[ ${BUILD_TYPE} == PROGRAM ]] || [[ ${BUILD_TYPE} == CROSS ]]; then
         mkdir ${c_path}/build && cd ${c_path}/build
         ${CMAKE_COMMAND} ../ -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF `echo ${SUPERCELL_CMAKE_OPTIONS}`
