@@ -39,7 +39,7 @@ ga('require', 'pageVisibilityTracker');
     <div class="navbar-header">
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span> </button>
       <a class="navbar-brand" href="#">Supercell</a> </div>
-    
+
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
@@ -49,15 +49,15 @@ ga('require', 'pageVisibilityTracker');
         <li><a href="#download">Download</a> </li>
         <li><a href="#publications">Publications</a> </li>
         <li><a href="#useful-links">Useful Links</a> </li>
-      </ul>
+        </ul>
       <ul class="nav navbar-nav navbar-right">
         <li><a href="#about">About</a> </li>
-      </ul>
-    </div>
+        </ul> 
+      </div>
     <!-- /.navbar-collapse --> 
-  </div>
+    </div>
   <!-- /.container-fluid --> 
-</nav>
+  </nav>
 <div class="container">
   <div class="row">
     <div class="col-lg-12">
@@ -79,7 +79,7 @@ ga('require', 'pageVisibilityTracker');
 </div>
 
 <div id="news" class="container">
-  <h1>News</h1>
+  <h2>News</h2>
   <hr>
   <div class="row">
     <div class="text-right col-xs-4 col-sm-3 col-md-2 col-xl-1">
@@ -208,9 +208,8 @@ ga('require', 'pageVisibilityTracker');
 </div>
 <br>
 
-
 <div id="introduction" class="container">
-  <h1>Introduction</h1>
+  <h2>Introduction</h2>
   <hr>
   <div class="container"> <img class="img-responsive center-block" src="images/Supercell_170418.png" alt="supercell program workflow"> </div>
   <br>
@@ -222,7 +221,7 @@ ga('require', 'pageVisibilityTracker');
 <br>
 
 <div class="container" id="read-more">
-  <h1>Getting started</h1>
+  <h2>Getting started</h2>
   <hr>
   <div class="row">
     <div class="text-center col-sm-3">
@@ -258,7 +257,64 @@ ga('require', 'pageVisibilityTracker');
 </div>  
 <br>
 <div id="publications" class="container">
-  <h1>Publications</h1>
+  <h2>FAQ</h2>
+  <hr>
+  <ol>
+    <li class="h4 cbold"><a href="#faq-help-research" data-toggle="collapse">Does supercell program can help me in my research? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-help-research" class="collapse">
+       Most probably it can help you a lot if:
+       <ul>
+         <li>You do some solid state calculations. Mostly DFT, but also MD or XRD analysis.</li>
+         <li>You work with disordered materials: partial or/and mixed occupations structures.</li>
+         <li>You have a very basic knowledge of CIF file structure and command line interface.</li>
+       <ul>
+    </div>
+    <li class="h4 cbold"><a href="#faq-benefits" data-toggle="collapse">What are the benefits of supercell software compare to any other solutions? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-benefits" class="collapse">
+       <ul>
+         <li>All in one approach, instant start! You can work directly with CIF file within a few seconds.</li>
+         <li>Powerful CLI with good verbosity.</li>
+         <li>Electrostatic sampling method.</li>
+         <li>Perfect performance.</li>
+         <li>Integration with other software.</li>
+         <li>A lot of useful examples in tutorial.</li>
+         <li>Widely used by scientific community (more than 100 citations) in different materials.</li>
+       <ul>
+    </div>
+    <li class="h4 cbold"><a href="#faq-non-diag" data-toggle="collapse">But supercell program can’t work with non-diagonal supercells, can it? Should I use another code for the task? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-non-diag" class="collapse">
+      <p>NO and NO. Supercell program can work with any supercells. Half of example supercell in the tutorial  have a conventional cell, thus such structures are non-diagonal supercells of a primitive cell. Unique internal algorithms calculates symmetry operations using universal math approach, which does not rely on spacegroup information. But you can’t create a non-diagonal supercell with the program CLI. This is a conscious choice to leave program as simple as possible. Are you ready to write down “primitive to fcc” transformation matrix just by memory? I am not. If you would like to use non-diagonal supercells with supercell, create it with, for example, VESTA GUI (<a href="https://www.youtube.com/watch?v=Aw7goppiUHk">video guide</a>) or cif2cell CLI (<a href="https://www-users.york.ac.uk/~mijp1/teaching/grad_FPMM/files/cif2cell.pdf">PDF</a> page 10) and use it in the program.</p>
+    </div>
+    <li class="h4 cbold"><a href="#faq-conv-out" data-toggle="collapse">I need to calculate the output structures in DFT code (VASP, CASTEP, Wien2k etc), but supercell produce cif files only…? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-conv-out" class="collapse">
+      <p>Don’t worry! You can use excellent programs like cif2cell or OpenBabel to convert output cif files to any other structures. And you can use the result in VASP, ABINIT, CPMD, CRYSTAL, Quantum espresso, Elk etc</p>
+    </div>
+    <li class="h4 cbold"><a href="#faq-not-working" data-toggle="collapse">What should I do, if supercell code is not working? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-not-working" class="collapse">
+      <p>This is top one question. I wrote a special section (“What to do if supercell program is not working?”) in the <a href="#read-more">tutorial</a>. Please check it.</p>
+    </div>
+    <li class="h4 cbold"><a href="#faq-license" data-toggle="collapse">What does really a supercell GPL license mean? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-license" class="collapse">
+      <p>If you are a researcher, it gives you a full freedom for your research. You can use the program in public, private or commercial research without any limitation. I appreciate, of course, if you put a reference to supercell paper in your work. If you would like to use supercell code in your program, please check the license carefully to use it in a legal way. For example, I’ll be not happy if you take the program, change something and start earning money, selling this as your code.</p>
+    </div>    
+    <li class="h4 cbold"><a href="#faq-help" data-toggle="collapse">How can I help supercell project? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
+    <div id="faq-help" class="collapse">
+      <p>To be honest, nobody has ever asked me the question, but I would like to answer it so much, that I’ve decided to include it here. Now supercell is my hobby. Therefore, unfortunately, I don’t have much time to work with it. That’s why your help is very important for the project to stay alive. If you have anything valuable for other users, please share this. It can be, for example:</p>
+      <ul>
+      <li>well prepared bug report, of course.</li>
+      <li>benchmark tests and performance suggestions.</li>
+      <li>any input structures with description from your paper. I can put it to example folder.</li>
+      <li>fair comparison with other similar programs. For example, share your story of switching to supercell from other program or vice versa.</li>
+      <li>sharing your negative experience with supercell as well. It will help other users to avoid similar problems.</li>
+      <li>anything else, that you think will be useful to share.</li>
+    </div>
+  </ol>
+</div>
+
+<br>
+
+<div id="publications" class="container">
+  <h2>Publications</h2>
   <hr>
   <h3>Please cite the following paper, if you use supercell program:</h3>
   <div class="row">
@@ -458,7 +514,7 @@ ga('require', 'pageVisibilityTracker');
 </div>
 <br>
 <div id="download" class="container">
-  <h1>Download</h1>
+  <h2>Download</h2>
   <hr>
   <div class="row">
     <div class="text-center col-sm-6">
@@ -483,7 +539,7 @@ ga('require', 'pageVisibilityTracker');
 </div>
 <br>
 <div id="useful-links" class="container">
-  <h1>Useful Links</h1>
+  <h2>Useful Links</h2>
   <hr>
   <div class="row">
     <div class="col-lg-12">
@@ -502,7 +558,7 @@ ga('require', 'pageVisibilityTracker');
 <div id="about" class="container">
   <div class="row">
 <div class="col-lg-4 col-md-6 col-sm-6">
-      <h2>Contact Us</h2>
+      <h3>Contact Us</h3>
       <address>
       <strong>Dr. Kirill Okhotnikov</strong><br>
       <a href="mailto:kirill.okhotnikov@gmail.com">kirill.okhotnikov@gmail.com</a><br>
@@ -517,7 +573,7 @@ ga('require', 'pageVisibilityTracker');
       </address>
     </div>
     <div class="col-lg-4 col-md-6 col-sm-6">
-      <h2>Notes</h2>
+      <h3>Notes</h3>
       <div class="media">
         <div class="media-left" style="min-width:55px;"><a href="#"> <i class="fa fa-balance-scale fa-2x" aria-hidden="true"></i> </a> </div>
         <div class="media-body">
@@ -532,7 +588,7 @@ ga('require', 'pageVisibilityTracker');
       </div>
     </div>
     <div class="col-lg-4 col-sm-12">
-      <h2>About Us</h2>
+      <h3>About Us</h3>
     </div>
   </div>
 </div>
