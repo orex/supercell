@@ -11,6 +11,7 @@
 %\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
 \usepackage{multirow}
 \usepackage{graphicx}
+\usepackage{placeins}
 \usepackage{array}
 \usepackage[version=3]{mhchem}
 \usepackage{enumitem}
@@ -22,8 +23,11 @@
 \usepackage{color, soul}
 \usepackage{hyperref}
 \usepackage{siunitx}
+\usepackage{tikz}
+\usetikzlibrary{shapes,positioning}
 
 %%% Put your definitions there:
+\renewcommand\thesubsubsection{\arabic{subsubsection}}
 
 %opening
 %\title{\textbf{Supplimentary materials.} \linebreak \linebreak Supercell program: a combinatorial structure-generation approach for the local-level modeling of atomic substitutions and partial occupancies in crystals.}
@@ -110,14 +114,25 @@ The output of the command will be
 \begin{minted}[linenos, breaklines]{shell-session}
 kirill@asus-laptop:~/supercell/data/examples$ supercell -d -i Ca2Al2SiO7.cif -m 
 -----------------------------------------------------
--               Supercell program                   -
+-            Supercell program (v2.0)               -
 -----------------------------------------------------
 -      Authors:   * Kirill Okhotnikov               -
 -                  (kirill.okhotnikov@gmail.com)    -
 -                 * Sylvian Cadars                  -
 -                  (sylvian.cadars@cnrs-imn.fr)     -
+-                 * Thibault Charpentier            -
+-                  (Thibault.Charpentier@cea.fr)    -
+-----------------------------------------------------
+-  please cite:                                     -
+-    K. Okhotnikov, T. Charpentier and S. Cadars    -
+-    J. Cheminform. 8 (2016) 17 - 33.               -
 -----------------------------------------------------
 
+Command line: supercell -d -i Ca2Al2SiO7.cif -m 
+Random SEED: 1452874625
+CIF file info: 
+  INFO: Using symmetries from space group.
+  
 Initial system:
   Chemical Formula: Al4 Ca4 O14 Si2
 
@@ -126,8 +141,8 @@ Supercell system (1x1x1):
 
 Current charge balance option is "try"
 Total charge oxidation state (cif):  0
-Total charge used:   0
-
+Total charge cell:   0
+Charge balancing:   yes
 ----------------------------------------------------------------
 | Atom Label    |       charge          | mult  | occup x mult
 |               | Ox. state     | Used  | (cif) |                
@@ -174,12 +189,14 @@ Minimal distance between atoms of two distinct groups: 1.68147 A.
 The total number of combinations is 6
 -------------------------------------------------
 8 symmetry operation found for supercell.
+Total enumeration time: 0:00:0.000507297
 Combinations after merge: 2
 \end{minted}
 
-The program output gives information about the initial and supercell system sizes, the total charge, and the chemical formula. The information about atomic species properties in the system are summarized in the table (lines 21-32). The multiplicity parameter is calculated using the symmetry information and atomic positions. The total charge is calculated using \path{_atom_type_oxidation_number} data in the CIF file or user-defined charges, specified with commands of the type:
+The output header provides a technical information about the program. Random seed (line 18) stores information about seed, using for random numbers calculation in the run. By default, it changes from run to run, but you can specify it explicitly in command line to reproduce the run later. 
+Next lines of the output give information about the initial and supercell system sizes, the total charge, and the chemical formula. The information about atomic species properties in the system are summarized in the table (lines 32-43). The multiplicity parameter is calculated using the symmetry information and atomic positions. The total charge is calculated using \path{_atom_type_oxidation_number} data in the CIF file or user-defined charges, specified with commands of the type:
 \clic{-p "Ca1:c=+2" -p "O1:c=-2"...}
-See the manual and other examples below for more information on the \clic{-p} option. The information about the total number of combinations is presented in line 64. The last two lines (66-67) appear only when the \clic{-m} option is present in the command line. 
+See the manual and other examples below for more information on the \clic{-p} option. The information about the total number of combinations is presented in line 75. The last three lines (77-79) appear only when the \clic{-m} option is present in the command line. 
 
 To generate structures for cell $1\times1\times2$ (the example presented in the main paper), the \sups{} program should be run with the following parameters:
 \begin{Verbatim}[breaklines]
@@ -275,7 +292,7 @@ It is important to keep in mind that the output text file \clic{cell123_coulomb_
 \begin{Verbatim}[breaklines]
   supercell -i Fe2O3-P4332.cif -s 1x2x3 -m -q -v 2 -o Fe2O3/cell123 -a Fe2O3_cell123.zip
 \end{Verbatim}
-This run of \sups{} compresses all the output files (except \clic{cell123_coulomb_energy.txt}) to \path{Fe2O3_cell123.zip} archive. The files will be located in the folder \path{Fe2O3} within this archive. The name of the files will start from \path{cell123}. The possible file formats \path{.zip}, \path{.tar}, \path{.tgz}, \path{.tar.gz}, \path{.tar.bz2} and \path{.tar.xz} should be specified like an extension of archive file. The parameter is optional and requires \textit{libarchive} installed, during program compilation.
+This run of \sups{} packs all the output files (except \clic{cell123_coulomb_energy.txt}) to \path{Fe2O3_cell123.zip} archive. The files will be located in the folder \path{Fe2O3} within this archive. The name of the files will start from \path{cell123}. The possible file formats \path{.zip}, \path{.tar}, \path{.tgz}, \path{.tar.gz}, \path{.tar.bz2} and \path{.tar.xz} should be specified like an extension of archive file. The parameter is optional and requires \textit{libarchive} installed, during program compilation.
 
 
 \subsection*{\Sups{} program verification on the $\alpha$-\ce{Si_xGe_{1-x}O2} system}
@@ -398,6 +415,196 @@ The run generates text file with electrostatic energy of all possible structures
 
 The \clic{RB-PST-1-DEHY_1_new.cif} file and script (\clic{df_cfg.bash}) for structure generation you can find in \path{supercell/data/example/Rb-PST-1} folder. The structure generation will take around one hour on 8 cores workstation and up to ten hours on netbook. It will also require a several gigabytes of storage space to write Coulomb energy for all possible structures.
 
+\section*{\Sups{} program good practices.}
+\subsection*{Basic}
+The pieces of advice in the section are recommended for all \sups{} users. It is always safe to follow them.
+\subsubsection{Save program output.}
+In case of production run, it is always good to save program output. You can do this just by coping the screen manually or redirecting output to a file. For example
+\begin{Verbatim}[breaklines]
+supercell -d -i Ca2Al2SiO7.cif -m > <supercell log file name> 
+\end{Verbatim}
+or
+\begin{Verbatim}[breaklines]
+supercell -d -i Ca2Al2SiO7.cif -m | tee <supercell log file name> 
+\end{Verbatim}
+Both of the examples store the output to file, but the second one also duplicates the output to your screen.
+
+\subsubsection{Check input CIF files.}
+CIF files, in general, can have a variety of different problems. If you get \sups{} program crash for $99\%$ it is because of wrong or corrupted input file. For example, \sups{} users tried to process html files, instead of CIF, files with ``glued'' coordination values or to use partially downloaded file with some data missing. Even if you are 100\% sure that the file is OK, try to open it with text editor, another crystallographic program or, if possible, use enCIFer to prepare a bugfree input.
+
+\subsubsection{Visualize input and output structures.}
+Visualization is the most powerful approach to get the information about structure. Please use visualization software to check input and output structure. It can give you a lot of information about your compound, type of disorder etc. \Sups{} and VESTA programs are good friends, but try to avoid Material Studio, as its output can be not compatible with \sups{}.
+Basic functionality: \ce{Ca2Al2SiO7}.
+\subsubsection{Convert an input structure to \textit{P1}. }
+Spacegroups are quite complex mathematical objects, so it is difficult to find a simple representation of it. Currently space group can be represented by a number, a Hermann–Mauguin notation, a Hall notation, a symmetry operations list etc. Symmetry operations notation is the most unambiguous one, but it is very often wrong in real CIF files. I'm trying to do my best in the program algorithms and correct the input, but it is not always possible.
+
+The good news is that \sups{} program is not using the spacegroup information directly. It has its own algorithms, which can find symmetry operations of the input structure purely mathematicaly. Therefore it uses symmetry information from input file only to convert the structure to \textit{P1} structure. After that internal algorithms will find proper symmetries. So, if you suspect spacegroup problem, just convert the structure to \textit{P1} with external tool. Visualize the result structure and check that it correctly represents the initial one. And use the structure as \sups{} input. Don't worry, you will not loose any symmetry information. For example, you can find a video tutorial for structure conversion in VESTA program \href{https://www.youtube.com/watch?v=LCdb6LrD24E}{here}.
+
+\subsubsection{ Check supporting materials }
+I did my best to prepare all supporting materials for \sups{} program: paper, tutorial, manual and example. For example, we (authors) tried to prepare the paper as user-friendly as possible. We skip a long boring algorithm descriptions, but concentrate on impact of the algorithm implementation to user and underline some important conceptions like supercell itself, groups, charge balancing etc. This tutorial concentrates on practical aspects of using supercell with both very simple and very complex examples from different areas of material science. Manual describes all the parameters you can use with \sups{}. Check it, if you have doubts what the parameter exactly means.
+
+\subsubsection{ Work interactively }
+Don't concentrate only on the tasks you need to do. Try different parameters: supercell size and shape, occupation, charge balancing, consider to use primitive and conventional cells, if applicable etc. Check the results and try again. It will give you more confidence about the result and probably hints about other approaches.
+
+\subsubsection{ Performance }
+The best performance you can achieve with modern hi-end workstation with Linux OS.
+
+\subsection*{Advanced}
+The piece of advice in the section requires deep understanding of specific technologies.
+
+\subsubsection{ Edit CIF file manually }
+\textit{Deep knowledge about spacegroups and CIF file structure are required.} By editing the file you can:
+\begin{itemize}
+ \item exclude all unnecessary information, thus make the file better readable.
+ \item add charges information (can be added by command line as well).
+ \item add new elements to existing site.
+ \item delete some sites. Don't worry about possible symmetry changes. \Sups{} sorts it out.
+ \item remove displacement disorder, if needed.
+ \item resolve ambiguity in spacegroup notation.
+\end{itemize}
+
+\subsubsection{ Use special CLI programs to prepare input for DFT calculation }
+\textit{Command line interface skills required } I can recommend to use \mbox{\textit{cif2cell}}\cite{cif2cell} or \mbox{\textit{OpenBabel}}\cite{OpenBabel} programs to convert the output CIF files to DFT programs input. Automatic conversion approach is very useful when you process many output files in the same way. 
+
+\subsubsection{ Performance }
+\textit{Deep knowledge about modern CPU  are required.} Use \mbox{\textit{taskset}} command to attach CPU cores to \sups{} program. Try to find an optimal numbers of cores for \sups{} run. My experience shows that Intel\textregistered Hyper-Threading Technology gives anything neither for DFT calculation nor for \sups{} program. Therefore try to switch it off, or assign \sups{} threads to real cores.
+
+\subsection*{Expert}
+To implement suggestions below, you have to have a solid knowledge of specific technologies.
+
+\subsubsection{Combine \sups{} with other approaches }
+\Sups{} program was developed for DFT calculations, but currently it can be used within many different approaches like machine learning\cite{Dieb2018, Midgley2021}, genetic\cite{Han2018} algorithms. You can also perform advance structure selection (beyond random and electric) with such frameworks like \mbox{\textit{ASE}} or \mbox{\textit{pymatgen}}. \Sups{} is Free and open-source software (FOSS), therefore you can change the code to fit your project needs.
+
+\subsubsection{ Performance }
+\textit{Excellent skills in compiling programs with different compilers.} Try to compile \sups{} for specific platform with different compilers and compiler parameters. The compiler should support C++14 standard. Be careful with \mbox{\textit{fast-math}} option, as it can produce unexpected results.
+
+\begin{figure}[h!]
+  \caption{ An approximate algorithm for \sups{} problems resolving. }   
+  
+\begin{center}
+ 
+\begin{tikzpicture}[font=\small,thick, inner sep=6pt]
+ 
+% Start block
+\node[draw,
+    rounded rectangle,
+    minimum width=2.5cm,
+    minimum height=1cm] (bStart) {\Sups{} is not working};
+\node[draw,
+    below=of bStart,
+    minimum width=3.5cm,
+    minimum height=1cm
+] (bRunCa) { Run program with \ce{Ca2Al2SiO7} example\footnotesize{\textsuperscript{a)}}};
+\node[draw,
+    diamond,
+    below=of bRunCa,
+    minimum width=2.5cm,
+    text width=2.0cm, align=center,
+    inner sep=0] (bifCa) { Working as expected? };
+\node[draw,
+    diamond,
+    left=of bifCa,
+    minimum width=2.5cm,
+    minimum height=1cm,
+    text width=2.3cm, align=center,
+    inner sep=2pt] (bIsSSNorm) { Is the program standard?\footnotesize{\textsuperscript{b)}}};
+\node[draw,
+    below=of bIsSSNorm,
+    minimum width=2.5cm,
+    text width=2.3cm, align=center,
+    minimum height=1.2cm] (bCheckSSNorm) { Check standard configuration. };
+\node[coordinate, left = 0.5 of bIsSSNorm] (c1) {};    
+\node[coordinate, below = 3.0 of bifCa] (c2) {};
+\node[draw,
+    right=of bifCa,
+    minimum width=4.0cm,
+    minimum height=1.0cm] (bGoodPract) { Read good practices \footnotesize{\textsuperscript{c)}}};
+\node[draw,
+    below=0.5 of bGoodPract,
+    minimum width=4.0cm] (bCheckCIF) { Check CIF file };
+\node[draw,
+    below=0.5 of bCheckCIF,
+    minimum width=4.0cm] (bCheckVESTA) { Check structure };
+\node[draw,
+    below=0.5 of bCheckVESTA,
+    minimum width=4.0cm] (bCheckP1) { Convert structure to P1 };
+\node[draw,
+    below = 0.5 of c2,
+    minimum width=2.5cm,
+    minimum height=1cm] (bCheckIssues) { Check \sups{} issues\footnotesize{\textsuperscript{d)}}};
+\node[draw,
+    diamond,
+    below = 0.5 of bCheckIssues,
+    text width=1.3cm, align=center,
+    minimum width=2.5cm,
+    minimum height=1cm] (bSolved) { Problem solved? };
+\node[draw,
+    circle,
+    left = of bSolved] (bLeftA) { A };
+\node[draw,
+    circle,
+    right = of bSolved] (bRightA) { A };
+\node[draw,
+    below = 0.7 of bSolved,
+    minimum width=4.0cm] (bCheckV12) { Compare with version 1.2 };    
+\node[draw,
+    circle,
+    left = of bCheckV12] (bLeftB) { B };
+\node[draw,
+    circle,
+    right = of bCheckV12] (bRightC) { C };    
+
+% Arrows
+\draw[-latex] (bStart) edge (bRunCa)
+    (bRunCa) edge (bifCa);
+\draw[-latex] (bifCa) -- (bIsSSNorm)
+    node[pos=0.35,fill=white,inner sep=2pt]{No};
+\draw[-latex] (bifCa) -- (bGoodPract)
+    node[pos=0.35,fill=white,inner sep=2pt]{Yes};
+\draw[-latex] (bIsSSNorm) -- (bCheckSSNorm) 
+    node[pos=0.4,fill=white,inner sep=2pt]{No};
+\draw[-latex] (bIsSSNorm.west) |- (c1) |- (c2)
+    node[pos=0.25,fill=white,inner sep=2pt]{Yes};
+\draw[-latex] (bCheckSSNorm) |- (c2);    
+\draw[-latex] (bGoodPract) -- (bCheckCIF);
+\draw[-latex] (bCheckCIF) -- (bCheckVESTA);
+\draw[-latex] (bCheckVESTA) -- (bCheckP1);
+\draw[-latex] (bCheckP1) |- (c2);
+\draw[-latex] (c2) -- (bCheckIssues);
+\draw[-latex] (bCheckIssues) -- (bSolved);
+\draw[-latex] (bSolved) -- (bLeftA) node[pos=0.35,fill=white,inner sep=2pt]{Yes};
+\draw[-latex] (bSolved) -- (bRightA) node[pos=0.35,fill=white,inner sep=2pt]{Yes};
+\draw[-latex] (bSolved) -- (bCheckV12) node[pos=0.35,fill=white,inner sep=2pt]{No};
+\draw[-latex] (bCheckV12) -- (bLeftB);
+\draw[-latex] (bCheckV12) -- (bRightC);
+   
+\end{tikzpicture}
+\end{center}
+
+\label{fig:algo}
+
+\begin{tabular}{l}
+\footnotesize{\textsuperscript{a)} Subsection ``Basic functionality: \ce{Ca2Al2SiO7}.'' in the tutorial. } \\
+\footnotesize{\textsuperscript{b)} Standard configuration is \sups{}~v2.0 Linux binary from supercell site. } \\
+\footnotesize{\textsuperscript{c)} Section ``\Sups{} program good practices'' above. } \\
+\footnotesize{\textsuperscript{d)} Check open and closed issues on this page \href{https://github.com/orex/supercell/issues?q=is\%3Aissue+is\%3Aclosed+is\%3Aopen}{https://github.com/orex/supercell/issues}.} \\
+\end{tabular}
+\begin{description}
+  \item[A] Awesome! You solved your problem by yourself. Probably you spent a lot of time on it and found some useful information which can help other users to prevent the problem? Don't hesitate to share this experience with others by opening an issue on github with detailed description of the problem and your solution. 
+  \item[B] You have a general problem of \sups{}. Open an issue on github page (\href{https://github.com/orex/supercell/issues/new/choose}{link}) and describe as much as possible your environment, including system information, hardware etc. and, of course, \sups{} program output.
+  \item[C] You have a problem only with your structure. Open an issue on github page (\href{https://github.com/orex/supercell/issues/new/choose}{link}) and describe your problem as much as possible. Please include the input file (rename to ``.txt'' to attach), the structure figure, supercell program output and results of ``good practices'' which you applied.
+\end{description}
+\end{figure}
+
+\section*{What to do if supercell program is not working? }
+This is a very common question from \sups{} program users. And the answer can be very different. Summarizing the problems of users, I create an approximate algorithm of solving such problems, which I sketched in fig.~\ref{fig:algo}. It consists of two main branches, when the program itself is not working (fig.~\ref{fig:algo}, left branch) and your input structure cannot be processed (fig.~\ref{fig:algo}, right branch). During the early days of \sups{} program, the left branch was much more problematic than now. A lot of effort was applied to make \sups{} program installation as easy as possible. Today, I think, that you can hardly have general problems with \sups{} binaries from site, if you follow the requirements.
+
+Version 2 of \sups{} code is a breakthrough release in terms of CIF file support. \mbox{\textit{OpenBabel}} library has been replaced in favor of \mbox{\textit{gemmi}} library. Now \sups{} program have full control over parsing and processing, using \mbox{\textit{gemmi}} specific ``low level'' functions. Output is performed fully internally.
+
+Although such changes solved many problems (with monoclinic lattices, for example) there are many problems which can still appear. Please, try to follow the good practices described above. Even if described practices will not solve your problem, they provide a lot of useful information for bug report.
+
+\FloatBarrier
+
 
 \section*{\Sups{} program integration to research process.}
 Our program is ``link in chain'' and the efficiency of the research process, obviously, depends on another links and connection between them. Below, there is a list of the programs/resources (in addition to discussed in the main paper), which can be possibly used with supercell program in disorder compound research.
@@ -407,6 +614,7 @@ Our program is ``link in chain'' and the efficiency of the research process, obv
   \item[COD] (\url{http://www.crystallography.net}). Open-access  structural database with more than \num{473520} records (May 2021). 
   \item[GULP] (\url{http://gulp.curtin.edu.au/}). GULP is a force-field program for performing a variety of tasks on a range of system types. It can be useful for optimizations, energy calculation and analysis of the structure.
   \item[EnCIFer] (\url{http://www.ccdc.cam.ac.uk/Community/freeservices/encifer/}). A GUI tool for validating of \sups{} input structures. Useful for draft structures.
+  \item[OpenBabel] (\url{http://openbabel.org/}). Open Babel is a chemical toolbox designed to speak many languages of chemical data. It's an open, collaborative project allowing anyone to search, convert, analyze, or store data from molecular modeling, chemistry, solid-state materials, biochemistry, or related areas. Over 110 formats are supported.
   \item[VESTA] (\url{http://jp-minerals.org/vesta/}). A powerful tool for visualization and editing of crystallographic structures. It supports many input/output formats (including cif) and can visualize partially occupied sites.
 \end{description}
 
