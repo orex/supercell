@@ -287,7 +287,7 @@ ga('require', 'pageVisibilityTracker');
     </div>
     <li class="h4 cbold"><a href="#faq-conv-out" data-toggle="collapse">I need to calculate the output structures in DFT code (VASP, CASTEP, Wien2k etc), but supercell produce cif files only…? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
     <div id="faq-conv-out" class="collapse">
-      <p>Don’t worry! You can use excellent programs like cif2cell or OpenBabel to convert output cif files to any other structures. And you can use the result in VASP, ABINIT, CPMD, CRYSTAL, Quantum espresso, Elk etc</p>
+      <p>Don’t worry! You can use excellent programs (see below) like cif2cell, OpenBabel or AiiDA to convert output cif files to any other structures. And you can use the result in VASP, ABINIT, CPMD, CRYSTAL, Quantum espresso, Elk etc</p>
     </div>
     <li class="h4 cbold"><a href="#faq-not-working" data-toggle="collapse">What should I do, if supercell code is not working? <p class="fa fa-arrow-down" aria-hidden="true"></p></a></li>
     <div id="faq-not-working" class="collapse">
@@ -544,11 +544,13 @@ ga('require', 'pageVisibilityTracker');
   <div class="row">
     <div class="col-lg-12">
     <dl class="dl-horizontal">
+      <dt><a href="https://www.aiida.net/">AiiDA</a></dt><dd>A scalable computational infrastructure for automated reproducible workflows and data provenance. Supercell <a href="https://github.com/pzarabadip/aiida-supercell">plugin(<i class="fa fa-download" aria-hidden="true"></i>)</a> is in active development by Dr. Pezhman Zarabadi-Poor.</dd>
       <dt><a href="https://wiki.fysik.dtu.dk/ase/">ASE</a></dt><dd>Atomic Simulation Environment is another set of python tool for setting up, manipulating, running, visualizing and analyzing atomistic simulations. Support many calculation software, both classical and <i>ab-initio</i>, including CASTEP and VASP.</dd>
       <dt><a href="http://sourceforge.net/projects/cif2cell/">cif2cell</a></dt><dd>Cif2cell is a tool to generate an input structure in different formats, like CASTEP, CP2K, CRYSTAL09, Quantum Espresso, VASP and many more.</dd> 
       <dt><a href="http://www.crystallography.net/">COD</a></dt><dd>Open-access  structural database with more than 473 520 records (May 2021).</dd>
-      <dt><a href="http://gulp.curtin.edu.au/">GULP</a></dt><dd>GULP is a force-field program for performing a variety of tasks on a range of system types. It can be useful for optimizations, energy calculation and analysis of the structure.</dd> 
+      <dt><a href="http://gulp.curtin.edu.au/">GULP</a></dt><dd>GULP is a force-field program for performing a variety of tasks on a range of system types. It can be useful for optimizations, energy calculation and analysis of the structure.</dd>
       <dt><a href="http://www.ccdc.cam.ac.uk/Community/freeservices/encifer/">EnCIFer</a></dt><dd>A GUI tool for validating of <i>supercell</i> input structures. Useful for draft structures.</dd> 
+      <dt><a href="http://openbabel.org/">OpenBabel</a></dt><dd>Open Babel is a chemical toolbox designed to speak many languages of chemical data. It's an open, collaborative project allowing anyone to search, convert, analyze, or store data from molecular modeling, chemistry, solid-state materials, biochemistry, or related areas. Over 110 formats are supported.</dd>
       <dt><a href="http://jp-minerals.org/vesta/">VESTA</a></dt><dd>A powerful tool for visualization and editing of crystallographic structures. It supports many input/output format (including cif) and can visualize partially occupied sites.</dd> 
     </dl>
     </div>  
