@@ -165,8 +165,8 @@ install:
      ln -s $HOME/.cache_mxe .ccache
      while(true); do sleep 9m; echo "watchdog signal"; done &
      WATCHDOG_PID=$!
-     make MXE_TARGETS=${CROSS_TARGET} MXE_PLUGIN_DIRS=plugins/gcc9 cc --jobs=4 JOBS=2
-     if ((`date +%s`-START_TIME < 1200)); then
+     make MXE_TARGETS=${CROSS_TARGET} MXE_PLUGIN_DIRS=plugins/gcc9 cc cmake --jobs=4 JOBS=2
+     if ((`date +%s`-START_TIME < 1800)); then
        make MXE_TARGETS=${CROSS_TARGET} MXE_PLUGIN_DIRS=plugins/gcc9 intel-tbb boost eigen --jobs=4 JOBS=2
      fi
      kill $WATCHDOG_PID
