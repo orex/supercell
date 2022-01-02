@@ -1,0 +1,114 @@
+body
+{
+  background: #FFFFFF
+}
+.titlehead
+{
+  text-align: center;
+  color: maroon;
+}
+.datehead
+{
+  text-align: center;
+  color: maroon;
+  font-size: 12pt;
+}
+.authorhead
+{
+  text-align: center;
+  color: maroon;
+  font-size: 14pt;
+}
+.versionhead
+{
+  text-align: center;
+  color: maroon;
+  font-size: 12pt;
+}
+.sectionname
+{
+  color: #0077EE;
+  font-variant: small-caps;
+}
+.subsectionname
+{
+  color: #1111EE;
+}
+.subsubsectionname
+{
+  color: #3333EE;
+}
+.progname
+{
+  font-family: "monospace";
+}
+.filename
+{
+  font-family: "monospace";
+  color: blue;
+}
+.commandname
+{
+  font-family: "monospace";
+  color: green;
+}
+.textstyle
+{
+  font-size: 9pt;
+}
+.optstyle
+{
+  font-weight: bold;
+}
+.argstyle
+{
+  font-style: italic;
+}
+.urlstyle
+{
+  color: #0033BB;
+  font-weight: bold;
+  text-decoration: none;
+}
+.urlstyle.link
+{
+}
+.urlstyle:visited
+{
+  color: #BB3300;
+}
+.urlstyle:hover
+{
+  background-color: #C0C0C0;
+  padding: 0.1em 0em 0.1em 0em;
+}
+.emailstyle
+{
+  color: #0033BB;
+  font-weight: bold;
+  text-decoration: none;
+}
+.emailstyle.link
+{
+}
+.emailstyle.visited
+{
+  color: #BB3300;
+}
+.emailstyle.hover
+{
+  background-color: #C0C0C0;
+  padding: 0.1em 0em 0.1em 0em;
+}
+.tablestyle
+{
+  border: 1px solid green;
+}
+.rowstyle
+{
+  background: #DDEEFF;
+}
+.cellstyle
+{
+  padding: 5px 7px 0px 0px;
+}
