@@ -34,7 +34,7 @@ fi
 # Save some useful information
 DEPLOY_REPO="git@github.com:orex/orex.github.io.git"
 DEPLOY_BRANCH="master"
-DEPLOY_DIR="supercell"
+DEPLOY_DIR="supercell/external"
 COMMIT_SHA=`git rev-parse --verify HEAD`
 
 ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
