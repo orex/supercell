@@ -49,6 +49,15 @@ jobs:
           LIBARCHIVE_OFF=FALSE
           DEPLOY_BUILD="linux"
           SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"
+          
+   - name: "Deploy build Linux."
+     arch: arm64
+     compiler: gcc
+     env: BUILD_TYPE=PROGRAM
+          CMAKE_COMMAND='cmake'
+          LIBARCHIVE_OFF=FALSE
+          DEPLOY_BUILD="linux-arm64"
+          SUPERCELL_CMAKE_OPTIONS="-DLINK_STATIC_LIBS=ON"          
 
    - name: "Deploy build MacOS."
      os: osx
@@ -133,7 +142,7 @@ addons:
 before_install:
  - export c_path=${PWD}
  - |
-   if [[ ${DEPLOY_BUILD} == "linux" ]]; then
+   if [[ ${DEPLOY_BUILD} =~ linux.* ]]; then
      sudo apt-get -y purge libarchive-dev libtbb-dev
      wget -nv https://github.com/libarchive/libarchive/releases/download/v3.5.1/libarchive-3.5.1.tar.gz
      tar -xf libarchive-3.5.1.tar.gz
@@ -144,7 +153,7 @@ before_install:
      sudo make install
    fi
  - |
-   if [[ ${TRAVIS_OS_NAME} == "osx" || ${DEPLOY_BUILD} == "linux" ]]; then
+   if [[ ${TRAVIS_OS_NAME} == "osx" || ${DEPLOY_BUILD} =~ linux.* ]]; then
      # Install tbb from github to link statically
      git clone --depth 1 https://github.com/wjakob/tbb.git
      cd tbb && mkdir cmake-build && cd cmake-build
