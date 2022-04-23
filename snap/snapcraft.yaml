@@ -1,0 +1,58 @@
+name: supercell
+version: "2.0.2"
+license: GPL-2.0-only
+issues: https://github.com/orex/supercell/issues
+contact: kirill.okhotnikov@gmail.com
+website: https://orex.github.io/
+source-code: https://github.com/orex/supercell
+summary: Disordered crystal structures transformation software.
+description: |
+  A a combinatorial structure-generation approach for the local-level 
+  modeling of atomic substitutions and partial occupancies in crystals. 
+  It uses supercell approximation and enumeration algorithm to convert 
+  structures with vacancies and/or substitution to "binary" occupied.
+  The program mostly uses to prepare DFT calculations of battery matrials,
+  semiconductors etc.
+
+base: core20
+grade: stable
+confinement: strict
+type: app
+
+architectures:
+  - build-on: [amd64, arm64]
+
+parts:
+  supercell:
+    plugin: cmake
+    cmake-parameters:
+      - '-DCMAKE_INSTALL_PREFIX='
+    source-type: local
+    source: .
+    build-packages:
+      - build-essential
+      - cmake
+      - libarchive-dev
+      - libboost-program-options1.71-dev
+      - libboost-filesystem1.71-dev
+      - libboost-random1.71-dev
+      - libboost-system1.71-dev
+      - libtbb-dev
+      - libeigen3-dev
+      - liblzma-dev
+      - libbz2-dev
+      - zlib1g-dev
+    stage-packages:
+      - libarchive13
+      - libtbb2
+      - libboost-program-options1.71.0
+      - libboost-filesystem1.71.0
+      - libboost-random1.71.0
+      - libboost-system1.71.0
+      - liblzma5
+      - zlib1g
+
+apps:
+  supercell:
+    command: bin/supercell
+    plugs: [home, removable-media]
