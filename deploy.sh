@@ -38,7 +38,11 @@ DEPLOY_DIR="supercell/external"
 COMMIT_SHA=`git rev-parse --verify HEAD`
 
 ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
-echo "${DEPLOY_KEY}" > ~/.ssh/id_rsa 2>/dev/null
+
+wget -nv https://github.com/orex/supercell/raw/deploy/id_rsa-orex.io.enc
+openssl enc -aes-256-cbc -salt -d -in id_rsa-orex.io.enc -out - -k "${DEPLOY_CRYPT_KEY}" > ~/.ssh/id_rsa 2>/dev/null
+rm id_rsa-orex.io.enc
+chmod 400 ~/.ssh/id_rsa
 
 # Clone the existing gh-pages for this repo into out/
 # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
@@ -77,3 +81,5 @@ git commit -m "Deploy to GitHub Pages $TRAVIS_OS_NAME: ${COMMIT_SHA}"
 
 # Now that we're all set up, we can push.
 git push $DEPLOY_REPO $DEPLOY_BRANCH
+
+rm -rf ~/.ssh
