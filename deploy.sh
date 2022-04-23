@@ -38,7 +38,7 @@ DEPLOY_DIR="supercell/external"
 COMMIT_SHA=`git rev-parse --verify HEAD`
 
 wget -v https://github.com/orex/supercell/raw/deploy/id_rsa-orex.io.enc -O id_rsa-orex.io.enc
-openssl enc -aes-256-cbc -salt -d -in id_rsa-orex.io.enc -out id_rsa-orex.io -k "${DEPLOY_CRYPT_KEY}" 2>&1 > /dev/null
+openssl enc -aes-256-cbc -salt -d -in id_rsa-orex.io.enc -out id_rsa-orex.io -k "${DEPLOY_CRYPT_KEY}" -md sha256 2>&1 > /dev/null
 chmod 600 id_rsa-orex.io
 eval `ssh-agent -s`
 ssh-add id_rsa-orex.io
