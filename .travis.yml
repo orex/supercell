@@ -52,7 +52,7 @@ jobs:
 
    - name: "Deploy build MacOS."
      os: osx
-     osx_image: xcode12
+     osx_image: xcode12.2
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
           DEPLOY_BUILD="osx"
@@ -110,7 +110,6 @@ addons:
     packages:
     - libarchive-dev
     - libboost-program-options-dev
-    - libboost-regex-dev
     - libboost-filesystem-dev
     - libboost-random-dev
     - libboost-system-dev
@@ -136,7 +135,7 @@ before_install:
  - |
    if [[ ${DEPLOY_BUILD} == "linux" ]]; then
      sudo apt-get -y purge libarchive-dev libtbb-dev
-     wget -nv https://github.com/libarchive/libarchive/releases/download/3.5.1/libarchive-3.5.1.tar.gz
+     wget -nv https://github.com/libarchive/libarchive/releases/download/v3.5.1/libarchive-3.5.1.tar.gz
      tar -xf libarchive-3.5.1.tar.gz
      cd libarchive-3.5.1
      ./configure --without-openssl --without-libb2 --without-xml2 --without-expat --disable-bsdtar
@@ -211,8 +210,9 @@ before_deploy:
 
 deploy:
   provider: script
-  script: ${c_path}/deploy.sh
+  script: bash ${c_path}/deploy.sh
   skip_cleanup: true
+  edge: true
   on:
     all_branches: true
     condition: ${DEPLOY_BUILD} != FALSE && ${DEPLOY_BUILD} != ""
