@@ -43,7 +43,7 @@
 \newcolumntype{M}[1]{>{\centering\arraybackslash}m{\dimexpr#1\linewidth-2\tabcolsep}}
 \newcommand{\sups}{\mbox{\textit{supercell}}}
 \newcommand{\Sups}{\mbox{\textit{Supercell}}}
-\newcommand{\clic}[1]{\mintinline[breaklines]{text}{#1}}
+\newcommand{\clic}[1]{\Verb^#1^}
 
 \overfullrule=2cm
 
@@ -228,7 +228,7 @@ The first \sups{} execution generates one random structure (with \clic{-n r1}) w
 
 The \ce{FeSbO4} system was explored with the SOD program in ref. \cite{Grau2007}. This compound has cation disorder on a single octahedral \ce{MO6} site. The results of the SOD program reported in ref. \cite{Grau2007} are reproduced here in table~\ref{tab:FeSbO4}. Applying the \sups{} program with the symmetry-merging (\clic{-m}) option for the same supercell sizes gives exactly the same number of symmetry operations, total number of combinations and number of independent configurations as with the SOD code.
 
-\begin{table}[t!]
+\begin{table}[ht!]
 \caption{Total number of possible combination of atoms for different supercell sizes of \ce{FeSbO4} for comparison with the results published in ref. \cite{Grau2007}.}
 \renewcommand{\arraystretch}{1.7}
 \newcolumntype{x}[1]{>{\centering\arraybackslash}m{#1}}
@@ -270,12 +270,12 @@ As mentioned above this example does not generate output structures. To do so, t
 
 \subsection*{Coulomb energy calculations in $\gamma$-\ce{Fe2O3}.}
 
-The case of the $\gamma$-\ce{Fe2O3} system, investigated in ref. \cite{Grau2010}, was also examined. The input structure with name \clic{Fe2O3-P4332.cif} can be found in folder \path{supercell/data/examples/gamma-Fe2O3/}. Detailed information about the configurations and their degeneracies was presented therein for a supercell $1\times1\times3$ of $\gamma$-\ce{Fe2O3}, all of which were perfectly reproduced by the \sups{} program.\footnote{Table~2 in~\cite{Grau2010} has a mistyping: L1L3L5L10 degeneracy should be 24 and space group for configuration L1L2L4L5 should be \textit{C2}.}. Among other things, the correlation between total and Coulomb energies was examined in their paper. It was shown that, at least for this particular system, a quite strong correlation is obtained, such that Coulomb energy can be used to approximate the total energy with a reasonable precision. Electrostatic energies can be calculated directly with \sups{}, provided charges are specified for all sites in the CIF input file (with tag \clic{_atom_type_oxidation_number}) and/or in the command line. The following command should be used to calculate the electrostatic energy of all explored unique configurations for supercell size $1\times1\times3$ (examined in ref. \cite{Grau2010}):
+The case of the $\gamma$-\ce{Fe2O3} system, investigated in ref. \cite{Grau2010}, was also examined. The input structure with name \clic{Fe2O3-P4332.cif} can be found in folder \path{supercell/data/examples/gamma-Fe2O3/}. Detailed information about the configurations and their degeneracies was presented therein for a supercell $1\times1\times3$ of $\gamma$-\ce{Fe2O3}, all of which were perfectly reproduced by the \sups{} program.\footnote{Table~2 in~\cite{Grau2010} has a mistyping: L1L3L5L10 degeneracy should be 24 and space group for configuration L1L2L4L5 should be \textit{C2}.}. Among other things, the correlation between total and Coulomb energies was examined in their paper. It was shown that, at least for this particular system, a quite strong correlation is obtained, such that Coulomb energy can be used to approximate the total energy with a reasonable precision. Electrostatic energies can be calculated directly with \sups{}, provided charges are specified for all sites in the CIF input file (with tag \clic{_atom_type_oxidation_number}) and/or in the command line. The following command should be used to calculate the electrostatic energy of all explored unique configurations for supercell size $1\times1\times3$ (examined in ref. \cite{Grau2010})\footnote{Please create folder \path{cell113_out} before running the command. Option \clic{-g} will not work without the folder.}
 \begin{Verbatim}[breaklines]
   mkdir cell113_out/
-  supercell -i Fe2O3-P4332.cif -s 1x1x3 -m -q -v 2 -o cell113_out/cell113 
+  supercell -i Fe2O3-P4332.cif -s 1x1x3 -m -q -g -v 2 -o cell113_out/cell113 
 \end{Verbatim}
-where the \clic{-q} activates electrostatic energy calculations. This option requires the cell to be charge-balanced, and the calculation of all electrostatic energies will take approximately 5 min. A new file named \path{cell113_out/cell113_coulomb_energy.txt} is generated, which contains the electrostatic energy of each structure processed. The \clic{_chemical_name_common} parameter value in each output CIF file also contains the energy value.
+where the \clic{-q} activates electrostatic energy calculations. This option requires the cell to be charge-balanced, and the calculation of all electrostatic energies will take up to 1 min. Option \clic{-g} generates file named \path{cell113_out/cell113_coulomb_energy.txt}, which contains the electrostatic energy of each structure processed. The \clic{_chemical_name_common} parameter value in each output CIF file also contains the energy value.
 
 We can go further and explore the cell $1\times2\times3$ of $\gamma$-\ce{Fe2O3}. A fast dry-run of \sups{} program:
 \begin{Verbatim}[breaklines]
@@ -384,7 +384,7 @@ Let's run \sups{} program with several extra options (see Table~\ref{tab:Rb-PST-
 \end{Verbatim}
 
 
-\begin{table}[t!]
+\begin{table}[ht!]
 \caption{\Sups{} program run for Rb-PST-1 structure.}
 \renewcommand{\arraystretch}{1.7}
 \newcolumntype{x}[1]{>{\centering\arraybackslash}m{#1}}
@@ -478,7 +478,7 @@ To implement suggestions below, you have to have a solid knowledge of specific t
 \subsubsection{ Performance }
 \textit{Excellent skills in compiling programs with different compilers.} Try to compile \sups{} for specific platform with different compilers and compiler parameters. The compiler should support C++14 standard. Be careful with \mbox{\textit{fast-math}} option, as it can produce unexpected results.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \caption{ An approximate algorithm for \sups{} problems resolving. }   
   
 \begin{center}
