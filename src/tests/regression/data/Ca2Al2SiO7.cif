@@ -1,0 +1,1 @@
+../../../../data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif

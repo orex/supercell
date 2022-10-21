@@ -10,6 +10,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include "containers/hash_unique.h"
+#include "science/combinatorics.h"
 
 #include "common_types.h"
 
@@ -108,29 +109,32 @@ bool next_complex_permutation(Container &vc, const std::vector<int> &permi) {
   return false;
 }
 
-template<class Container, typename Index>
-Index next_k_complex_permutation(Container &vc, Container &vc_last, Index k, const std::vector<int> &permi) {
-  bool has_next_permutation = true;
-  Index i = 0;
+template <class Container, typename Index>
+Index next_k_complex_permutation(Container &vc, Container &vc_last, Index k,
+                                 const std::vector<int> &permi) {
+  if (k == 0)
+    return k;
+
   vc_last = vc;
-  for(i = 0; i + 1 < k && has_next_permutation; i++) {
-    has_next_permutation = next_complex_permutation(vc, permi);
+  Index km = k - 1;
+  for (auto it = --permi.cend(); it != permi.cbegin() && km != 0; --it) {
+    km = next_k_permutations(vc.begin() + *(it - 1), vc.begin() + *it, km);
   }
-  if( has_next_permutation ) {
+
+  if (km == 0) {
     vc_last = vc;
     next_complex_permutation(vc, permi);
     return k;
   } else {
-    has_next_permutation = true;
+    bool has_next_permutation = true;
     vc = vc_last;
-    for(i = 0; i < k && has_next_permutation; i++) {
+    Index i;
+    for (i = 0; i < k && has_next_permutation; i++) {
       vc_last = vc;
       has_next_permutation = next_complex_permutation(vc, permi);
     }
     return i;
   }
 }
-
-
 
 #endif //SUPERCELL_SRC_CORE_PERMUT_PROCESS_T_H_
