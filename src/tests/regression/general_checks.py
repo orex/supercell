@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import itertools
 import re
-import math
+import numpy as np
+import scipy.stats as stats
 from collections import OrderedDict
 import argparse
 import pathlib
@@ -10,7 +11,7 @@ import os
 import subprocess
 import copy
 from pymatgen.core import Structure
-from pymatgen.analysis.ewald import EwaldSummation, compute_average_oxidation_state
+from pymatgen.analysis.ewald import EwaldSummation
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 
 general_format='-i {cif} -s {cell} -v 1 -q -m -n l{smp} -n h{smp} -n r{smp}'
@@ -20,24 +21,32 @@ run_cases = [
      "params": OrderedDict([
          ("cif", ["RB-PST-1-DEHY_1_new.cif"]),
          ("cell", ["1x1x1"]),
-         ("smp", ["30"])]),
-     "checks": {"sort", "es", "syms"}
+         ("smp", ["1", "30", "100", "1000"])]),
+     "checks": {"es", "syms", "rand"}
      },
     {"format": general_format + " -g",
      "params": OrderedDict([
          ("cif", ["SrSiAlO_1x2x1.cif"]),
          ("cell", ["1x1x1"]),
          ("smp", ["100"])]),
-     "checks": {"sort", "es", "syms"}
+     "checks": {"sort", "es", "syms", "rand"}
      },
-    # Very long
-    #     {"format": general_format,
-    #      "params": OrderedDict([
-    #          ("cif", ["CaAl6Te10.cif"]),
-    #          ("cell", ["1x1x1"]),
-    #          ("smp", ["500"])]),
-    #      "checks": {"es", "syms"}
-    #      }
+    {"format": general_format + " --random-seed {seed}",
+     "params": OrderedDict([
+         ("cif", ["PbSnTe2.cif"]),
+         ("cell", ["2x2x2"]),
+         ("seed", ["1546733744", "538425541", "92928180", "2074289474"]),
+         ("smp", ["300", "3000"])]),
+     "checks": {"syms", "rand"}
+     },
+    #  Very long
+    # {"format": general_format,
+    #  "params": OrderedDict([
+    #      ("cif", ["CaAl6Te10.cif"]),
+    #      ("cell", ["1x1x1"]),
+    #      ("smp", ["2000"])]),
+    #  "checks": {"es", "syms", "rand"}
+    #  }
 ]
 
 def run_supercell(cmd, params, outdir):
@@ -49,8 +58,9 @@ def run_supercell(cmd, params, outdir):
         print(result.stderr)
         return None, None
 
-    m = re.search("([0-9]+) +symmetry operation found for supercell.*", result.stdout)
-    return outdir, int(m.group(1))
+    tot_syms = re.search("([0-9]+) +symmetry operation found for supercell.*", result.stdout)
+    tot_comb = re.search("Combinations after merge: ([0-9]+)", result.stdout)
+    return outdir, int(tot_syms.group(1)), int(tot_comb.group(1))
 
 def check_case(checks, cmd, fmt, params, data_folder, tmpdir):
     fosuffix = "test_electro"+fmt.format(**params).replace(" ", "_").replace(".", "_").replace("-", "")
@@ -58,7 +68,7 @@ def check_case(checks, cmd, fmt, params, data_folder, tmpdir):
     os.mkdir(workdir.resolve())
     p=copy.deepcopy(params)
     p["cif"]=(data_folder / p["cif"]).resolve()
-    outdir, tot_syms=run_supercell(cmd, fmt.format(**p), workdir)
+    outdir, tot_syms, tot_comb=run_supercell(cmd, fmt.format(**p), workdir)
 
     cm = {}
     result=True
@@ -75,7 +85,7 @@ def check_case(checks, cmd, fmt, params, data_folder, tmpdir):
 
             cm.setdefault(m.group(1), []).append(int(m.group(2)))
             if "es" in checks:
-                ew = EwaldSummation(structure, acc_factor=10.0)
+                ew = EwaldSummation(structure, acc_factor=5.0)
                 t = ew.total_energy
                 # The difference is due to coordinate rounding in cif file.
                 if abs(se - t) > 1E-2:
@@ -104,14 +114,20 @@ def check_case(checks, cmd, fmt, params, data_folder, tmpdir):
             print("Bad energies sorting")
             result = False
 
+    if "rand" in checks:
+        if len(cm["r"]) != int(p["smp"]):
+            print("Failed number of random structures")
+        if stats.kstest(np.array(cm["r"]) / (tot_comb - 1), stats.uniform.cdf).pvalue < 0.03:
+            print("Bad randomness of structures")
+
     return result
 
 def main(args):
     tmpdir = pathlib.Path(tempfile.mkdtemp())
 
     for c in run_cases:
-        for t in itertools.product(*[l for l in c["params"].values()]):
-            fv = OrderedDict([(k, v) for k, v in zip(c["params"].keys(), t)])
+        for t in itertools.product(*[l for l in reversed(c["params"].values())]):
+            fv = OrderedDict([(k, v) for k, v in zip(reversed(c["params"].keys()), t)])
             check_case(c["checks"], args.supercell_cmd, c["format"], fv, args.data_folder, tmpdir)
 
 

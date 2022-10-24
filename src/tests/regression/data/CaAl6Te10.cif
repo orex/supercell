@@ -1,0 +1,1 @@
+../../../../data/examples/CaAl6Te10/CaAl6Te10.cif
