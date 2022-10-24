@@ -167,7 +167,7 @@ public:
 
 struct q_energy_reduced {
  private:
-  static constexpr double to_eV = 14.4;
+   static constexpr double to_eV = 14.39964547842567205854;
  public:
   Eigen::MatrixXd qf;
   Eigen::VectorXd vf;
