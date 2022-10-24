@@ -134,15 +134,7 @@ private:
 class c_struct_sel_containers : public c_struct_sel
 {
  private:
-  typedef std::mt19937_64 rnd_engine_t;
-  static_assert(rnd_engine_t::min() == 0
-                    && rnd_engine_t::max() == std::numeric_limits<std::uint64_t>::max(),
-                "Random engine error");
- private:
-  rnd_engine_t rnd;
-  int64_t min_comb;
-  int symm_op;
-  std::uint64_t probability;
+   rnd_indexer_t rnd_indexer;
 public:
   std::vector<struct_info> rnd_container;
   
@@ -155,11 +147,11 @@ public:
   std::vector<struct_info> weight_container;
   
 public:
-  c_struct_sel_containers(std::random_device::result_type seed) : rnd(seed) {};
+  c_struct_sel_containers(std::random_device::result_type seed) : rnd_indexer(seed) {};
   //symm_op 1 for non-merging
   bool sampling_active() const
   { return !save_all();  };
-  void set_containers_prop(int64_t total_comb, int symm_op_v);  
+  void set_containers_prop(int64_t total_comb, int symm_op);
   void add_structure(const struct_info &si);
   void prepare_to_store();
 };

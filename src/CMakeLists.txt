@@ -13,3 +13,4 @@ set(sc_sources ${core_sources}
         ${CMAKE_SOURCE_DIR}/libs/common_utils/cryst_tools/comb_points.cpp)
 
 add_subdirectory(sc_cli)
+add_subdirectory(tests)

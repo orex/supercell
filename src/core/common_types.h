@@ -19,6 +19,8 @@
 #include <boost/optional.hpp>
 
 #include <Eigen/Core>
+#include <random>
+#include <deque>
 
 enum class charge_balance {cb_no, cb_yes, cb_try};
 
@@ -164,6 +166,69 @@ class unit_cell_t {
     return _cell;
   }
 };
+
+class rnd_indexer_t {
+public:
+  enum class sampling_method_t {
+    DISABLED,
+    BY_INDEXES,
+    ALL
+  };
+private:
+  typedef std::mt19937_64 rnd_engine_t;
+  static_assert(rnd_engine_t::min() == 0
+                    && rnd_engine_t::max() == std::numeric_limits<std::uint64_t>::max(),
+                "Random engine error");
+private:
+  sampling_method_t method;
+  std::random_device::result_type initial_seed;
+  int random_count;
+  int64_t total_comb;
+  int64_t total_samples;
+  int64_t base_index;
+  int64_t index_step;
+  std::deque<int64_t> indexes;
+  void create_indexes();
+public:
+  rnd_indexer_t(std::random_device::result_type seed): initial_seed(seed) {};
+  void set_properties(int random_count, int64_t total_comb, int symm_op);
+  inline sampling_method_t get_mode() const {
+    return method;
+  }
+
+  inline void reserve_indexes(int64_t index) {
+    while( method == sampling_method_t::BY_INDEXES
+           && index >= base_index + index_step) {
+      base_index += index_step;
+      create_indexes();
+    }
+  }
+  inline int64_t get_current_index() const {
+    return indexes.empty() ? total_comb : indexes.front();
+  }
+  inline int64_t has_next_index() const {
+    return !indexes.empty();
+  }
+  inline void pop_index()  {
+    if(!indexes.empty())
+      indexes.pop_front();
+  }
+  inline std::size_t reserve_size() {
+    switch (method) {
+    case sampling_method_t::DISABLED:
+      return 0;
+    case sampling_method_t::BY_INDEXES:
+      return indexes.size();
+    case sampling_method_t::ALL:
+      return total_comb;
+    default:
+      assert(false); // "Wrong sampling method"
+      return 0;
+    };
+  }
+  void postprocess_rnd_container(std::vector<struct_info> &rnd_container);
+};
+
 
 struct atom_t {
   int el_num;

@@ -131,11 +131,17 @@ std::string struct_processor::file_name(const struct_info &si, const std::string
 
 void c_struct_sel_containers::add_structure(const struct_info &si)
 {
-  //Random
-  if(str_random_count() > 0)
-  {  
-    if( rnd() <= probability )
+  // Random
+  if (rnd_indexer.get_mode() != rnd_indexer_t::sampling_method_t::DISABLED) {
+    if( rnd_indexer.get_mode() == rnd_indexer_t::sampling_method_t::BY_INDEXES ) {
+      rnd_indexer.reserve_indexes(si.index);
+      if( rnd_indexer.get_current_index() == si.index ) {
+        rnd_container.push_back(si);
+        rnd_indexer.pop_index();
+      }
+    } else {
       rnd_container.push_back(si);
+    }
   }
   
   //First  
@@ -188,29 +194,22 @@ void c_struct_sel_containers::add_structure(const struct_info &si)
 
 void c_struct_sel_containers::prepare_to_store()
 {
-  assert(str_first_count() >= first_container.size());
-  assert(str_last_count()  >= last_container.size());
-  assert(str_high_count()  >= high_container.size());
-  assert(str_low_count()   >= low_container.size());  
+  rnd_indexer.postprocess_rnd_container(rnd_container);
   
-  random_thin_to(rnd_container, str_random_count(), rnd);
+  assert(str_first_count()  >= first_container.size());
+  assert(str_last_count()   >= last_container.size());
+  assert(str_high_count()   >= high_container.size());
+  assert(str_low_count()    >= low_container.size());
+  assert(str_random_count() >= rnd_container.size());
+
   std::sort(low_container.begin(), low_container.end());
   std::sort(high_container.begin(), high_container.end());
-
 }
 
 
-void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_op_v)
+void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_op)
 {
-  symm_op = symm_op_v;
-  min_comb = max<int64_t>(total_comb / symm_op, 1);
-  
-  double real_prob = 4 * double(str_random_count()) / double(min_comb);
-  if( real_prob >= 1.0 ) {
-    probability = rnd_engine_t::max();
-  } else {
-    probability = static_cast<std::uint64_t>( real_prob * rnd_engine_t::max());
-  }
+  rnd_indexer.set_properties(str_random_count(), total_comb, symm_op);
   
   rnd_container.clear();
   first_container.clear();
@@ -219,12 +218,11 @@ void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_o
   low_container.clear();
   weight_container.clear();
   
-  rnd_container.reserve(5 * str_random_count());
+  rnd_container.reserve(rnd_indexer.reserve_size());
   first_container.reserve(str_first_count());
   last_container.set_capacity(str_last_count());
   high_container.reserve(str_high_count() + 1);
   low_container.reserve(str_low_count() + 1);
-
 }
 
 double c_occup_group::get_total_occup_input() const
@@ -784,58 +782,63 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
 
   generate_comb_t gc(num_threads, tot_comb, packet_size, sms, psm.prm_indexes, init_cmb);
 
-  auto gen_f = tbb::make_filter<void, permut_process_t *>(tbb::filter::serial_in_order,
-                                                          [&gc](tbb::flow_control &fc) -> permut_process_t * {
-                                                            return gc.generator(fc);
-                                                          });
+  auto gen_f = tbb::make_filter<void, permut_process_t *>(
+      tbb::filter::serial_in_order,
+      [&gc](tbb::flow_control &fc) -> permut_process_t * {
+        return gc.generator(fc);
+      });
 
-  auto parr_proc_f =
-      tbb::make_filter<permut_process_t *, permut_process_t *>(
-          tbb::filter::parallel,
-          [dry_run, &qrd, merge_confs, this](permut_process_t *p) -> permut_process_t * {
-    if( merge_confs )
-              p->process_merge();
-    else
-              p->process_no_merge();
-            if (!dry_run && calc_q_energy) {
-              for (int i = 0; i < p->ps_size; i++)
-                p->ps[i].energy = qrd.calc_energy(p->ps[i].cmb);
-    }
-            return p;
-          });
-    
+  auto parr_proc_f = tbb::make_filter<permut_process_t *, permut_process_t *>(
+      tbb::filter::parallel,
+      [dry_run, &qrd, merge_confs,
+       this](permut_process_t *p) -> permut_process_t * {
+        if (merge_confs)
+          p->process_merge();
+        else
+          p->process_no_merge();
+        if (!dry_run && calc_q_energy) {
+          for (int i = 0; i < p->ps_size; i++)
+            p->ps[i].energy = qrd.calc_energy(p->ps[i].cmb);
+        }
+        return p;
+      });
+
   auto ctime = std::chrono::system_clock::now();
-      
+
   auto serial_after_proc_f = tbb::make_filter<permut_process_t *, void>(
       tbb::filter::serial_in_order,
-      [this, &gc, dry_run, &str_proc, &psm, &ctime, tot_comb](permut_process_t *p) -> void {
+      [this, &gc, dry_run, &str_proc, &psm, &ctime,
+       tot_comb](permut_process_t *p) -> void {
         gc.indexer(p);
-        if( !dry_run ) {
+        if (!dry_run) {
           for (int i = 0; i < p->ps_size; i++) {
             const auto &x = p->ps[i];
-            if ( create_q_file ) {
+            if (create_q_file) {
               string fname_str = str_proc.file_name(x);
-              f_q_calc << struct_processor::get_energy_line(fname_str, x) + "\n";
-        }
+              f_q_calc << struct_processor::get_energy_line(fname_str, x) +
+                              "\n";
+            }
             if (ss_p.sampling_active()) {
               ss_p.add_structure(x);
             } else {
               write_struct(str_proc, x, psm);
-      }
-    }
-    }  
-        if( verbose_level >= 2 ) {
+            }
+          }
+        }
+        if (verbose_level >= 2) {
           auto mt = std::chrono::system_clock::now();
           double dt = std::chrono::duration<double>(mt - ctime).count();
-          if( dt > 1.0 ) {
+          if (dt > 1.0) {
             ctime = mt;
             constexpr double mx = 5.0;
-            double tm = double(gc.total_index()) + mx * double(tot_comb - gc.combination_left());
-            cout << "Finished " << round(1000.0 * tm / ((mx + 1) * tot_comb)) / 10.0 << "%. "
+            double tm = double(gc.total_index()) +
+                        mx * double(tot_comb - gc.combination_left());
+            cout << "Finished "
+                 << round(1000.0 * tm / ((mx + 1) * tot_comb)) / 10.0 << "%. "
                  << "Stored " << gc.index() << " configurations. Left "
-                 << gc.combination_left() << "          \r"<< std::flush;
-    }  
-      }
+                 << gc.combination_left() << "          \r" << std::flush;
+          }
+        }
         gc.finalizer(p);
       });
 
