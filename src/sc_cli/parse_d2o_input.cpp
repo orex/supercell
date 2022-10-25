@@ -13,13 +13,14 @@
 
 #include <regex>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 
 #include <iostream>
 
 #include <scanf_pp/base.hpp>
 
 using namespace std;
-using namespace boost;  
+using namespace boost;
 
 int c_man_atom_prop_cli::search_count(std::string &str, 
                                       std::vector<std::string> &match,
@@ -339,7 +340,8 @@ bool parse_d2o_input::get_charge_balance(std::string cb_str, charge_balance &cb)
 }
 
 
-bool parse_sel_input(const std::vector<std::string>& inp, c_struct_sel & out, std::string& param_error)
+bool parse_d2o_input::parse_sel_input(const std::vector<std::string>& inp,
+                                      c_struct_sel & out, std::string& param_error)
 {
   bool result = true;
   param_error = "";
@@ -363,4 +365,23 @@ bool parse_sel_input(const std::vector<std::string>& inp, c_struct_sel & out, st
   }
 
   return result;  
+}
+
+bool parse_d2o_input::check_adjust_output_name(std::string &out_name,
+                                               bool archive_enabled,
+                                               std::string &err_msg) {
+  namespace bfs = boost::filesystem;
+  err_msg = "";
+
+  const bfs::path p_suffix = bfs::path(out_name);
+
+  if( p_suffix.is_absolute() && archive_enabled ) {
+    err_msg = "Absolute path can't be used in archive.";
+    return false;
+  }
+  if( p_suffix.filename_is_dot() ) {
+     out_name = (p_suffix / "supercell").generic_string();
+  }
+
+  return true;
 }

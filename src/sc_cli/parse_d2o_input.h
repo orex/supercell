@@ -51,14 +51,17 @@ public:
   virtual void convert_properties(const std::set<std::string> &labels);
 };
 
-class parse_d2o_input 
-{
+class parse_d2o_input {
 public:
-  static bool get_supercell_size(const std::string &sc_size_str, std::vector<int> &scs);
+  static bool get_supercell_size(const std::string &sc_size_str,
+                                 std::vector<int> &scs);
   static bool get_charge_balance(std::string cb_str, charge_balance &cb);
+  static bool parse_sel_input(const std::vector<std::string> &inp,
+                              c_struct_sel &out, std::string &param_error);
+  static bool check_adjust_output_name(std::string &out_name,
+                                       bool archive_enabled,
+                                       std::string &err_msg);
 };
-
-bool parse_sel_input(const std::vector<std::string> &inp, c_struct_sel & out, std::string &param_error);
 
 #endif	/* PARSE_D2O_INPUT_H */
 

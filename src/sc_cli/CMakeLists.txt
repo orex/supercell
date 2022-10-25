@@ -1,5 +1,5 @@
 set(Boost_USE_STATIC_LIBS ${LINK_STATIC_LIBS})
-find_package(Boost 1.46 REQUIRED COMPONENTS program_options filesystem system)
+find_package(Boost 1.63 REQUIRED COMPONENTS program_options filesystem system)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(PkgConfig)
