@@ -203,12 +203,18 @@ int main(int argc, char** argv)
     
     c_struct_sel sampl_prop;
 
-    if(!parse_sel_input(structure_sampling, sampl_prop, param_error))
+    if(!parse_d2o_input::parse_sel_input(structure_sampling, sampl_prop, param_error))
     {
       cerr << "Error in sampling input parameter " << param_error << endl;
       return ERROR_IN_COMMAND_LINE;
     }
-    
+
+    if (!parse_d2o_input::check_adjust_output_name(
+            output_file, !output_tar_file.empty(), param_error)) {
+      cerr << "Error in output suffix: " << param_error << endl;
+      return ERROR_IN_COMMAND_LINE;
+    }
+
     charge_balance cb;
     
     if(!parse_d2o_input::get_charge_balance(charge_balance_str, cb))

@@ -104,12 +104,13 @@ struct site_charges
 
 class struct_processor {
 public:
+  static const std::string coulomb_energy_suffix;
   struct_processor(const std::string &prefix_, int64_t tot_comb_) : prefix(prefix_),
   index_length(boost::lexical_cast<std::string>(tot_comb_).length()) {};
   std::string file_name(const struct_info &si, const std::string &sampl_type = "") const;
   std::string get_q_file_name(const std::string &suffix = "") const
   {
-    return prefix + "_coulomb_energy" + ( suffix.empty() ? std::string("") : std::string("_") ) + suffix + ".txt";
+    return prefix + coulomb_energy_suffix + ( suffix.empty() ? std::string("") : std::string("_") ) + suffix + ".txt";
   }
 
   static std::string get_energy_str( const struct_info &si, int prec = 3) {

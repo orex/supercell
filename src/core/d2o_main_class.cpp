@@ -12,15 +12,15 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <algorithm>
 #include <cmath>
 #include <chrono>
+#include <regex>
 #include <gemmi/elem.hpp>
-#define PT_GETSYMBOL(atomic_num) gemmi::Element(atomic_num).name()
 
 #include "science/combinatorics.h"
 
-#include "others/rnd_utils.h"
 #include "others/string_utils.h"
 #include "containers/array_common.hpp"
 #include "containers/hash_unique.h"
@@ -30,7 +30,6 @@
 #include "cryst_tools/comb_points.h"
 #include "cryst_tools/cryst_tools.h"
 
-#include <Eigen/Dense>
 #include <tbb/pipeline.h>
 #include <tbb/concurrent_queue.h>
 
@@ -38,7 +37,7 @@
 #include <archive_entry.h>
 #endif
 
-
+#define PT_GETSYMBOL(atomic_num) gemmi::Element(atomic_num).name()
 using namespace std;
 
 #if defined(LIBARCHIVE_ENABLED) && (!defined(LIBARCHIVE_PATCH_DISABLE))
@@ -114,6 +113,7 @@ bool d2o_main_class::close_tar_container()
   #endif
 }
 
+const std::string struct_processor::coulomb_energy_suffix = "_coulomb_energy";
 
 std::string struct_processor::file_name(const struct_info &si, const std::string &sampl_type) const
 {
@@ -768,10 +768,37 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
 
   if(!dry_run && !tar_enabled() )
   {
-    string del_command = "rm -f " + output_base_name + "*.cif";
-    int rc = system(del_command.c_str());
-    if( (verbose_level >= 2) && (rc == 0) )
-      cout << "Output files was deleted successfully" << endl;
+    namespace bfs = boost::filesystem;
+    const bfs::path p_suffix = bfs::path(output_base_name);
+    const std::regex cif_file_filter(p_suffix.filename().string() + "_i.[0-9]+.*\\.cif");
+    const std::regex eng_file_filter(p_suffix.filename().string() +
+                                     struct_processor::coulomb_energy_suffix +
+                                     ".*\\.txt");
+
+    bfs::directory_iterator end_itr; // Default ctor yields past-the-end
+    bfs::directory_iterator
+      i(p_suffix.is_absolute() ? p_suffix.parent_path() : (bfs::current_path() / p_suffix.parent_path()));
+
+    int del_file_count = 0;
+    for( ; i != end_itr; ++i )
+    {
+      // Skip if not a file
+      if( !bfs::is_regular_file( i->status() ) ) continue;
+
+      std::smatch what;
+
+      std::string fname = i->path().filename().string();
+
+      if (std::regex_match(fname, what, cif_file_filter) ||
+          std::regex_match(fname, what, eng_file_filter)) {
+        bfs::remove(i->path());
+        del_file_count++;
+      }
+    }
+
+    if( (verbose_level >= 2) && (del_file_count > 0) )
+      cout << "Total " << del_file_count
+           << " output files was deleted successfully" << endl;
   }
   
   int syms_num = max<int>(occup_groups[0].symms_sets.size(), 1);
