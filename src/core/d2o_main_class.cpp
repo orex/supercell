@@ -30,8 +30,12 @@
 #include "cryst_tools/comb_points.h"
 #include "cryst_tools/cryst_tools.h"
 
-#include <tbb/pipeline.h>
-#include <tbb/concurrent_queue.h>
+#include <tbb/tbb.h>
+#ifdef ONETBB_SPEC_VERSION
+  using tbb_filter_mode = tbb::filter_mode;
+#else
+  using tbb_filter_mode = tbb::filter;
+#endif
 
 #ifdef LIBARCHIVE_ENABLED
 #include <archive_entry.h>
@@ -115,82 +119,150 @@ bool d2o_main_class::close_tar_container()
 
 const std::string struct_processor::coulomb_energy_suffix = "_coulomb_energy";
 
-std::string struct_processor::file_name(const struct_info &si, const std::string &sampl_type) const
+std::string struct_processor::file_name(const std::int64_t index,
+                                        const int weight,
+                                        const std::string &sampl_type) const
 {
   stringstream result;
 
-  result << prefix + "_i" + sampl_type << std::setfill('0') << std::setw(index_length) << std::internal << si.index;
+  result << prefix + "_i" + sampl_type << std::setfill('0') << std::setw(index_length) << std::internal << index;
 
-  if( si.weight > 0 )
-    result << "_w" << si.weight;
+  if(weight > 0 )
+    result << "_w" << weight;
   
   result << ".cif";
   
   return result.str();
 }
 
-void c_struct_sel_containers::add_structure(const struct_info &si)
-{
-  // Random
-  if (rnd_indexer.get_mode() != rnd_indexer_t::sampling_method_t::DISABLED) {
-    if( rnd_indexer.get_mode() == rnd_indexer_t::sampling_method_t::BY_INDEXES ) {
-      rnd_indexer.reserve_indexes(si.index);
-      if( rnd_indexer.get_current_index() == si.index ) {
-        rnd_container.push_back(si);
-        rnd_indexer.pop_index();
-      }
-    } else {
-      rnd_container.push_back(si);
-    }
-  }
-  
-  //First  
-  if( first_container.size() < str_first_count() )
-    first_container.push_back(si);
-  
-  //Last
-  if( str_last_count() > 0 ) {
-    last_container.push_back(si);
-  }  
-  
-  //Low
-  if(str_low_count() > 0) {
-    if (low_container.size() < str_low_count()) {
-      low_container.push_back(si);
-      std::push_heap(low_container.begin(), low_container.end());
-    } else {
-      if (si < low_container.front()) {
-        low_container.push_back(si);
-        std::push_heap(low_container.begin(), low_container.end());
-        std::pop_heap(low_container.begin(), low_container.end());
-        low_container.pop_back();
-      }
-    }  
-  }  
-  
-  //High
-  if(str_high_count() > 0) {
-    auto cmp = [](const auto &a, const auto &b) -> bool {
-      return b < a;
-    };
+void c_struct_sel_containers::add_electrostatic_high(
+    const std::int64_t base_index, const permut_process_t *p) {
+  auto cmp = [](const struct_info_index_t &a, const struct_info_index_t &b) -> bool {
+    return b.energy < a.energy;
+  };
 
-    if (high_container.size() < str_high_count()) {
-      high_container.push_back(si);
+  if (high_container.size() < str_high_count()) {
+    int i = 0;
+    for (; i < p->ps_size && high_container.size() < str_high_count(); i++) {
+      struct_info_index_t x(p->ps[i], base_index + i);
+      high_container.emplace_back(x);
       std::push_heap(high_container.begin(), high_container.end(), cmp);
-    } else {
-      if ( high_container.front() < si ) {
-        high_container.push_back(si);
+    }
+    for (; i < p->ps_size; i++) {
+      if (high_container.front().energy < p->ps[i].energy ) {
+        struct_info_index_t x(p->ps[i], base_index + i);
+        high_container.emplace_back(x);
         std::push_heap(high_container.begin(), high_container.end(), cmp);
         std::pop_heap(high_container.begin(), high_container.end(), cmp);
         high_container.pop_back();
       }
-    }  
-  }  
-   
-  //Weight
-  if( si.weight <= str_weight_limit() )
-    weight_container.push_back(si);
+    }
+  } else if( high_container.front().energy < p->minmax_energy.second ) {
+    for (int i = 0; i < p->ps_size; i++) {
+      if (high_container.front().energy < p->ps[i].energy) {
+        struct_info_index_t x(p->ps[i], base_index + i);
+        high_container.emplace_back(x);
+        std::push_heap(high_container.begin(), high_container.end(), cmp);
+        std::pop_heap(high_container.begin(), high_container.end(), cmp);
+        high_container.pop_back();
+      }
+    }
+  }
 }
+
+void c_struct_sel_containers::add_electrostatic_low(
+    const std::int64_t base_index, const permut_process_t *p) {
+
+  auto cmp = [](const struct_info_index_t &a, const struct_info_index_t &b) -> bool {
+    return a.energy < b.energy;
+  };
+
+  if (low_container.size() < str_low_count()) {
+    int i = 0;
+    for (; i < p->ps_size && low_container.size() < str_low_count(); i++) {
+      struct_info_index_t x(p->ps[i], base_index + i);
+      low_container.emplace_back(x);
+      std::push_heap(low_container.begin(), low_container.end(), cmp);
+    }
+    for (; i < p->ps_size; i++) {
+      if (low_container.front().energy > p->ps[i].energy ) {
+        struct_info_index_t x(p->ps[i], base_index + i);
+        low_container.emplace_back(x);
+        std::push_heap(low_container.begin(), low_container.end(), cmp);
+        std::pop_heap(low_container.begin(), low_container.end(), cmp);
+        low_container.pop_back();
+      }
+    }
+  } else if( low_container.front().energy > p->minmax_energy.first ) {
+    for (int i = 0; i < p->ps_size; i++) {
+      if (low_container.front().energy > p->ps[i].energy ) {
+        struct_info_index_t x(p->ps[i], base_index + i);
+        low_container.emplace_back(x);
+        std::push_heap(low_container.begin(), low_container.end(), cmp);
+        std::pop_heap(low_container.begin(), low_container.end(), cmp);
+        low_container.pop_back();
+      }
+    }
+  }
+}
+
+void c_struct_sel_containers::add_random(const std::int64_t base_index,
+                const permut_process_t *p) {
+  using sm = rnd_indexer_t::sampling_method_t;
+  auto mode = rnd_indexer.get_mode();
+
+  if (p->ps_size == 0 || mode == sm::DISABLED)
+    return;
+
+  if( mode == sm::BY_INDEXES ) {
+    rnd_indexer.reserve_indexes(base_index + p->ps_size);
+    while(rnd_indexer.get_current_index() < base_index + p->ps_size) {
+      int i = rnd_indexer.get_current_index() - base_index;
+      struct_info_index_t x(p->ps[i], base_index + i);
+      rnd_container.emplace_back(x);
+      rnd_indexer.pop_index();
+    }
+  } else if( mode == sm::ALL ) {
+    for (int i = 0; i < p->ps_size; i++) {
+      struct_info_index_t x(p->ps[i], base_index + i);
+      rnd_container.emplace_back(x);
+    }
+  }
+}
+
+void c_struct_sel_containers::add_first_last(
+    const std::int64_t base_index, const permut_process_t *p,
+    const std::int64_t combinations_left) {
+  // First
+  for (int i = 0; first_container.size() < str_first_count()
+                  && i < p->ps_size; i++) {
+    struct_info_index_t x(p->ps[i], base_index + i);
+    first_container.emplace_back(x);
+  }
+
+  //Last: highly inefficient, but rarely used, so OK.
+  if( str_last_count() > 0 ) {
+    if( combinations_left < 2 * symm_op * (p->ps_size + str_last_count())) {
+      for (int i = 0; i < p->ps_size; i++) {
+        struct_info_index_t x(p->ps[i], base_index + i);
+        last_container.push_back(x);
+      }
+    }
+  }
+}
+
+void c_struct_sel_containers::add_weight(const std::int64_t base_index,
+                                         const permut_process_t *p) {
+  if( p->min_weight <= str_weight_limit() ) {
+    for (int i = 0; i < p->ps_size; i++) {
+      if( p->ps[i].weight <= str_weight_limit() ) {
+        struct_info_index_t x(p->ps[i], base_index + i);
+        weight_container.push_back(x);
+      }
+    }
+  }
+}
+
 
 void c_struct_sel_containers::prepare_to_store()
 {
@@ -202,14 +274,21 @@ void c_struct_sel_containers::prepare_to_store()
   assert(str_low_count()    >= low_container.size());
   assert(str_random_count() >= rnd_container.size());
 
-  std::sort(low_container.begin(), low_container.end());
-  std::sort(high_container.begin(), high_container.end());
+  auto cmp = [](const struct_info_index_t &a, const struct_info_index_t &b) {
+    return ( a.energy == b.energy ) ? (a.index < b.index) : (a.energy < b.energy);
+  };
+
+  std::sort(low_container.begin(), low_container.end(), cmp);
+  std::sort(high_container.begin(), high_container.end(), cmp);
 }
 
 
-void c_struct_sel_containers::set_containers_prop(int64_t total_comb, int symm_op)
+void c_struct_sel_containers::set_containers_prop(int64_t total_comb_v, int symm_op_v)
 {
-  rnd_indexer.set_properties(str_random_count(), total_comb, symm_op);
+  total_comb = total_comb_v;
+  symm_op = symm_op_v;
+
+  rnd_indexer.set_properties(str_random_count(), total_comb_v, symm_op_v);
   
   rnd_container.clear();
   first_container.clear();
@@ -585,9 +664,10 @@ q_energy_reduced d2o_main_class::reduce_q_matrix(const t_comb_descr &cd) const {
   return result;
 }
 
-bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info &si, const t_comb_descr & cd,
-                                  const std::string &sampl_type)
-{
+bool d2o_main_class::write_struct(const struct_processor &sp,
+                                  const struct_info_index_t &si,
+                                  const t_comb_descr &cd,
+                                  const std::string &sampl_type) {
   bool result = true;
   
   stringstream ss;
@@ -601,9 +681,9 @@ bool d2o_main_class::write_struct(const struct_processor &sp, const struct_info 
   
   add_confs_to_mol(co, cd, si.cmb);
 
-  string f_name = sp.file_name(si, sampl_type);
+  string f_name = sp.file_name(si.index, si.weight, sampl_type);
   
-      add_file_to_tar(f_name, ss);
+  add_file_to_tar(f_name, ss);
   
   if( !result )
     cerr << "An error occurred during storing of \"" << f_name << "\" file." << endl;
@@ -726,16 +806,12 @@ class generate_comb_t {
     return result;
   }
 
-  permut_process_t *indexer(permut_process_t *pp) {
-    for(int i = 0; i < pp->ps_size; i++) {
-      auto &x = pp->ps[i];
-      x.index = _index++;
-      _combination_left -= x.weight;
-    }
-    return pp;
+  inline void indexer(const permut_process_t *pp) {
+    _index += pp->ps_size;
+    _combination_left -= pp->total_combination_chunk;
   }
     
-  void finalizer(permut_process_t *pp) {
+  inline void finalizer(permut_process_t *pp) {
     prc_queue.push(pp);
   }
     
@@ -804,19 +880,18 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
   int syms_num = max<int>(occup_groups[0].symms_sets.size(), 1);
   ss_p.set_containers_prop(tot_comb, syms_num);
 
-  const int packet_size = 10000;
-  const int num_threads = 64;
-
-  generate_comb_t gc(num_threads, tot_comb, packet_size, sms, psm.prm_indexes, init_cmb);
+  const int packet_size = 49999; //prime number
+  const int num_tokens = 2 * tbb::this_task_arena::max_concurrency() + 4;
+  generate_comb_t gc(num_tokens, tot_comb, packet_size, sms, psm.prm_indexes, init_cmb);
 
   auto gen_f = tbb::make_filter<void, permut_process_t *>(
-      tbb::filter::serial_in_order,
+      tbb_filter_mode::serial_in_order,
       [&gc](tbb::flow_control &fc) -> permut_process_t * {
         return gc.generator(fc);
       });
 
   auto parr_proc_f = tbb::make_filter<permut_process_t *, permut_process_t *>(
-      tbb::filter::parallel,
+      tbb_filter_mode::parallel,
       [dry_run, &qrd, merge_confs,
        this](permut_process_t *p) -> permut_process_t * {
         if (merge_confs)
@@ -824,36 +899,38 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
         else
           p->process_no_merge();
         if (!dry_run && calc_q_energy) {
-          for (int i = 0; i < p->ps_size; i++)
-            p->ps[i].energy = qrd.calc_energy(p->ps[i].cmb);
+          for (int i = 0; i < p->ps_size; i++) {
+            double eng = qrd.calc_energy(p->ps[i].cmb);
+            p->ps[i].energy = eng;
+            p->minmax_energy =
+                (i == 0) ? std::make_pair(eng, eng)
+                         : std::minmax({p->minmax_energy.first, eng,
+                                        p->minmax_energy.second});
+          }
         }
         return p;
       });
 
-  auto ctime = std::chrono::system_clock::now();
+  auto ctime = std::chrono::steady_clock::now();
 
   auto serial_after_proc_f = tbb::make_filter<permut_process_t *, void>(
-      tbb::filter::serial_in_order,
+      tbb_filter_mode::serial_in_order,
       [this, &gc, dry_run, &str_proc, &psm, &ctime,
        tot_comb](permut_process_t *p) -> void {
-        gc.indexer(p);
-        if (!dry_run) {
-          for (int i = 0; i < p->ps_size; i++) {
-            const auto &x = p->ps[i];
-            if (create_q_file) {
-              string fname_str = str_proc.file_name(x);
-              f_q_calc << struct_processor::get_energy_line(fname_str, x) +
-                              "\n";
-            }
-            if (ss_p.sampling_active()) {
-              ss_p.add_structure(x);
-            } else {
-              write_struct(str_proc, x, psm);
-            }
+        if (p->ps_size > 0 && !dry_run) {
+          if (create_q_file)
+            write_full_electrostatic(gc.index(), str_proc, p);
+
+          if(ss_p.sampling_active()) {
+            store_sampled_structures(gc.index(), p, gc.combination_left());
+          } else {
+            write_structures_direct(gc.index(), str_proc, p, psm);
           }
         }
+        gc.indexer(p);
+
         if (verbose_level >= 2) {
-          auto mt = std::chrono::system_clock::now();
+          auto mt = std::chrono::steady_clock::now();
           double dt = std::chrono::duration<double>(mt - ctime).count();
           if (dt > 1.0) {
             ctime = mt;
@@ -869,9 +946,9 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
         gc.finalizer(p);
       });
 
-  auto pipeline_start_time = std::chrono::system_clock::now();
-  tbb::parallel_pipeline(num_threads, gen_f & parr_proc_f & serial_after_proc_f);
-  auto pipeline_finish_time = std::chrono::system_clock::now();
+  auto pipeline_start_time = std::chrono::steady_clock::now();
+  tbb::parallel_pipeline(num_tokens, gen_f & parr_proc_f & serial_after_proc_f);
+  auto pipeline_finish_time = std::chrono::steady_clock::now();
   
   if( verbose_level >= 2)
     cout <<  endl;
@@ -907,6 +984,39 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
   
   return gc.combination_left() == 0;
 }
+
+void d2o_main_class::store_sampled_structures(
+    const std::int64_t base_index, const permut_process_t *p,
+    const std::int64_t combinations_left) {
+  if( calc_q_energy )
+    ss_p.add_electrostatic(base_index, p);
+
+  ss_p.add_random(base_index, p);
+  ss_p.add_first_last(base_index, p, combinations_left);
+  ss_p.add_weight(base_index, p);
+}
+
+void d2o_main_class::write_structures_direct(const std::int64_t base_index,
+                                             const struct_processor &str_proc,
+                                             const permut_process_t *p,
+                                             const t_comb_descr &psm) {
+  for (int i = 0; i < p->ps_size; i++) {
+    struct_info_index_t x(p->ps[i], base_index + i);
+    write_struct(str_proc, x, psm);
+  }
+}
+
+void d2o_main_class::write_full_electrostatic(const std::int64_t base_index,
+                                              const struct_processor &str_proc,
+                                              const permut_process_t *p) {
+  for (int i = 0; i < p->ps_size; i++) {
+    const auto &x = p->ps[i];
+      string fname_str = str_proc.file_name(base_index + i, x.weight, "");
+      f_q_calc << struct_processor::get_energy_line(fname_str, x) +
+                      "\n";
+  }
+}
+
 
 std::pair<int, int> d2o_main_class::correct_rms_range(const int total_sites,
                                        const double occup, 

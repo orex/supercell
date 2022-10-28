@@ -6,6 +6,7 @@
  */
 
 #include "common_types.h"
+#include <iostream>
 
 constexpr charge_balance cb_names::__cbt[__psize];
 constexpr const char * cb_names::__cbn[__psize];
@@ -54,14 +55,14 @@ void rnd_indexer_t::create_indexes() {
   indexes.erase(std::unique(indexes.begin(), indexes.end()), indexes.end());
 }
 
-void rnd_indexer_t::postprocess_rnd_container(std::vector<struct_info> &rnd_container) {
+void rnd_indexer_t::postprocess_rnd_container(std::vector<struct_info_index_t> &rnd_container) {
   if( rnd_container.size() <= random_count )
     return;
   rnd_engine_t rnd(new_seed(initial_seed, 1));
   std::shuffle(rnd_container.begin(), rnd_container.end(), rnd);
   rnd_container.resize(random_count);
   std::sort(rnd_container.begin(), rnd_container.end(),
-            [](const struct_info a, const struct_info b) -> bool {
+            [](const struct_info_index_t a, const struct_info_index_t b) -> bool {
               return a.index < b.index;
             });
 }
