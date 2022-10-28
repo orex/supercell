@@ -123,24 +123,25 @@ public:
   };
 };
 
-typedef int base_prm_t;
+typedef std::uint32_t base_prm_t;
 
 typedef std::vector<base_prm_t, boost::alignment::aligned_allocator<base_prm_t, 32>> t_vec_comb;
 
-class struct_info
-{
- public:
+struct struct_info_t {
   t_vec_comb cmb;
   double energy;
-  int64_t index;
   //weight should be equal 0 for non-merge run.
   int weight;
 
-  struct_info(): energy(0), index(0), weight(0) {};
+  struct_info_t(): energy(0), weight(0) {};
+};
 
-  bool operator < (const struct_info &right ) const  {
-    return ( energy == right.energy ) ? (index < right.index) : (energy < right.energy);
-  }
+struct struct_info_index_t : public struct_info_t {
+  int64_t index;
+  struct_info_index_t(): struct_info_t(), index(0) {};
+  struct_info_index_t(const struct_info_t &base_info,
+                      int64_t index_v): struct_info_t(base_info),
+                                         index(index_v) {};
 };
 
 class unit_cell_t {
@@ -226,7 +227,7 @@ public:
       return 0;
     };
   }
-  void postprocess_rnd_container(std::vector<struct_info> &rnd_container);
+  void postprocess_rnd_container(std::vector<struct_info_index_t> &rnd_container);
 };
 
 

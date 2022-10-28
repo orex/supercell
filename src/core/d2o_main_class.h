@@ -107,24 +107,21 @@ public:
   static const std::string coulomb_energy_suffix;
   struct_processor(const std::string &prefix_, int64_t tot_comb_) : prefix(prefix_),
   index_length(boost::lexical_cast<std::string>(tot_comb_).length()) {};
-  std::string file_name(const struct_info &si, const std::string &sampl_type = "") const;
+  std::string file_name(const std::int64_t index, const int weight,
+                        const std::string &sampl_type) const;
   std::string get_q_file_name(const std::string &suffix = "") const
   {
     return prefix + coulomb_energy_suffix + ( suffix.empty() ? std::string("") : std::string("_") ) + suffix + ".txt";
   }
 
-  static std::string get_energy_str( const struct_info &si, int prec = 3) {
+  static std::string get_energy_str( const struct_info_t &si, int prec = 3) {
     std::stringstream result;
     result << std::fixed << std::setprecision(prec) << si.energy << " eV";
     return result.str();
   }
 
-  static std::string get_energy_line(const std::string &file_name, const struct_info &si, int prec = 3) {
+  static std::string get_energy_line(const std::string &file_name, const struct_info_t &si, int prec = 3) {
     return file_name + "\t" + get_energy_str(si, prec);
-  }
-
-  static std::string get_struct_title(const struct_info &si) {
-    return std::string("Supercell generated structure. E_col = ") + get_energy_str(si, 10);
   }
 
 private:
@@ -132,31 +129,50 @@ private:
   int index_length;
 };
 
-class c_struct_sel_containers : public c_struct_sel
-{
- private:
-   rnd_indexer_t rnd_indexer;
-public:
-  std::vector<struct_info> rnd_container;
-  
-  std::vector<struct_info> low_container;
-  std::vector<struct_info> high_container;
+class c_struct_sel_containers : public c_struct_sel {
+private:
+  std::int64_t total_comb;
+  int symm_op;
+  rnd_indexer_t rnd_indexer;
 
-  std::vector<struct_info> first_container;
-  boost::circular_buffer<struct_info> last_container;
+  void add_electrostatic_low(const std::int64_t base_index,
+                             const permut_process_t *p);
+  void add_electrostatic_high(const std::int64_t base_index,
+                              const permut_process_t *p);
 
-  std::vector<struct_info> weight_container;
-  
 public:
-  c_struct_sel_containers(std::random_device::result_type seed) : rnd_indexer(seed) {};
-  //symm_op 1 for non-merging
-  bool sampling_active() const
-  { return !save_all();  };
-  void set_containers_prop(int64_t total_comb, int symm_op);
-  void add_structure(const struct_info &si);
+  std::vector<struct_info_index_t> rnd_container;
+
+  std::vector<struct_info_index_t> low_container;
+  std::vector<struct_info_index_t> high_container;
+
+  std::vector<struct_info_index_t> first_container;
+  boost::circular_buffer<struct_info_index_t> last_container;
+
+  std::vector<struct_info_index_t> weight_container;
+
+public:
+  c_struct_sel_containers(std::random_device::result_type seed)
+      : rnd_indexer(seed){};
+  // symm_op 1 for non-merging
+  bool sampling_active() const { return !save_all(); };
+  void set_containers_prop(int64_t total_comb_v, int symm_op_v);
+  inline void add_electrostatic(const std::int64_t base_index,
+                                const permut_process_t *p) {
+    if (p->ps_size > 0) {
+      if (str_low_count() > 0)
+        add_electrostatic_low(base_index, p);
+
+      if (str_high_count() > 0)
+        add_electrostatic_high(base_index, p);
+    }
+  }
+  void add_random(const std::int64_t base_index, const permut_process_t *p);
+  void add_first_last(const std::int64_t base_index, const permut_process_t *p,
+                      const std::int64_t combinations_left);
+  void add_weight(const std::int64_t base_index, const permut_process_t *p);
   void prepare_to_store();
 };
-
 
 struct q_energy_reduced {
  private:
@@ -260,14 +276,14 @@ private:
     std::string qfname = sp.get_q_file_name(sampl_type);
     for(ConstIterator it = begin; it != end; it++)
     {
-      std::string fname_str = sp.file_name(*it, sampl_type);
+      std::string fname_str = sp.file_name(it->index, it->weight, sampl_type);
       fq << struct_processor::get_energy_line(fname_str, *it) + "\n";
     }
     add_file_to_tar(qfname, fq);
   }
 
-  bool write_struct(const struct_processor &sp, const struct_info &si, const t_comb_descr & cd,
-                    const std::string &sampl_type = "");
+  bool write_struct(const struct_processor &sp, const struct_info_index_t &si,
+                    const t_comb_descr &cd, const std::string &sampl_type = "");
 
   bool store_sampling(const std::string &output_base_name, const t_comb_descr &cd, int64_t tot_comb);
   bool write_files(const std::string &output_base_name, bool dry_run, bool merge_confs);
@@ -277,6 +293,17 @@ private:
   static std::string get_formula(const cryst_structure_t &cs);
   std::string get_formula_by_groups();
   bool set_labels_to_manual();
+  void store_sampled_structures(const std::int64_t base_index,
+                                const permut_process_t *p,
+                                const std::int64_t combinations_left);
+  void write_structures_direct(const std::int64_t base_index,
+                               const struct_processor &str_proc,
+                               const permut_process_t *p,
+                               const t_comb_descr &psm);
+  void write_full_electrostatic(const std::int64_t base_index,
+                                const struct_processor &str_proc,
+                                const permut_process_t *p);
+
 public:
   static inline double charge_tol() { return 1E-1; };
   static inline double occup_tol() { return 2E-3; };

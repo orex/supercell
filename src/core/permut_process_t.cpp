@@ -5,9 +5,7 @@
 #include "permut_process_t.h"
 #include "science/combinatorics.h"
 
-#define XXH_INLINE_ALL
-#define XXH_STATIC_LINKING_ONLY
-#include <xxhash.h>
+#include <cstring>
 
 t_vec_comb permut_process_t::setmm_values(const t_vec_comb &vc, int start_index, bool max_value) const {
   auto it = std::upper_bound(permi.cbegin(), permi.cend(), start_index);
@@ -49,25 +47,24 @@ void permut_process_t::process_no_merge() {
     else
       break;
   }
+  total_combination_chunk = ps_size;
 }
 
-void permut_process_t::process_merge() {
+void permut_process_t::process_merge() noexcept {
   ps_size = 0;
+  total_combination_chunk = 0;
   int blength = first_cmb.size() * sizeof(t_vec_comb::value_type);
   int syms_num = syms.rows();
   int start_index = 0;
 
-  for(start_index = 0; start_index < first_cmb.size() && first_cmb[start_index] == last_cmb[start_index] ; start_index++) {};
+  for(start_index = 0;
+       start_index < first_cmb.size()
+       && first_cmb[start_index] == last_cmb[start_index] ; start_index++) {};
 
   auto fmcomp = [blength](const auto & first1, const auto &first2) -> int {
-    return memcmp(&(*first1), &(*first2), blength);
+    return std::memcmp(&(*first1), &(*first2), blength);
   };
-  auto hash_comb = [blength](const t_vec_comb::value_type * p) -> std::size_t {
-    return XXH3_64bits(p, blength);
-  };
-  auto eq_comb = [blength](const t_vec_comb::value_type * p1, const t_vec_comb::value_type * p2) -> bool {
-    return p1 == p2 || memcmp(p1, p2, blength) == 0;
-  };
+
   bool has_lower_syms = false;
   t_vec_comb vmax = setmm_values(first_cmb, start_index, true);
   for(int i = 0; i < syms_num && !has_lower_syms; i++) {
@@ -79,7 +76,6 @@ void permut_process_t::process_merge() {
     has_lower_syms = fmcomp(itc, first_cmb.cbegin()) < 0;
   }
   if( has_lower_syms ) {
-    // std::cout << "Lower syms " << std::endl;
     return;
   }
   t_vec_comb vmin = setmm_values(first_cmb, start_index, false);
@@ -93,29 +89,28 @@ void permut_process_t::process_merge() {
     always_higher[i] = fmcomp(itc, last_cmb.cbegin()) > 0;
   }
 
-  hash_set<t_vec_comb::value_type *, decltype(hash_comb), decltype(eq_comb)> hs(syms_num, hash_comb, eq_comb);
-
   auto vc = first_cmb;
 
   while(true) {
     has_lower_syms = false;
-    for(int i = 0; i < syms_num && !has_lower_syms; i++) {
+    auto itc = allcmb.get_iterator(0, 0);
+    auto its = syms.get_iterator(0, 0);
+    for(int i = 0; i < syms_num && !has_lower_syms; i++,
+             itc = allcmb.next_row(itc), its = syms.next_row(its)) {
       if( always_higher[i] )
         continue;
-      auto itc = allcmb.get_iterator(i, 0);
-      auto its = syms.get_iterator(i, 0);
       for(int j = start_index; j < vc.size(); j++) {
         *(itc + *(its + j)) = vc[j];
       }
       has_lower_syms = fmcomp(itc, vc.cbegin()) < 0;
     }
-    // std::cout << (!has_lower_syms ? "*" : "" )  << std::endl;
     if( !has_lower_syms ) {
       hs.clear();
-      for(int i = 0; i < syms_num; i++) {
-        auto itc = allcmb.get_iterator(i, 0);
+      auto itc = allcmb.get_iterator(0, 0);
+      auto its = syms.get_iterator(0, 0);
+      for(int i = 0; i < syms_num; i++, itc = allcmb.next_row(itc),
+               its = syms.next_row(its)) {
         if( always_higher[i] ) {
-          auto its = syms.get_iterator(i, 0);
           for (int j = start_index; j < vc.size(); j++) {
             *(itc + *(its + j)) = vc[j];
           }
@@ -124,6 +119,8 @@ void permut_process_t::process_merge() {
       }
       ps[ps_size].weight = hs.size();
       ps[ps_size].cmb = vc;
+      total_combination_chunk += hs.size();
+      min_weight = (hs.size() < min_weight) ? hs.size() : min_weight;
       ps_size++;
       assert(ps_size <= ps.size());
     }
@@ -133,4 +130,3 @@ void permut_process_t::process_merge() {
       break;
   }
 }
-

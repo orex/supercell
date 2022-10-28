@@ -209,6 +209,11 @@ int main(int argc, char** argv)
       return ERROR_IN_COMMAND_LINE;
     }
 
+    if( !merge_confs && sampl_prop.str_weight_limit() > 0 ) {
+      cerr << "Weight can be enabled only for merge configuration run." << endl;
+      return ERROR_IN_COMMAND_LINE;
+    }
+
     if (!parse_d2o_input::check_adjust_output_name(
             output_file, !output_tar_file.empty(), param_error)) {
       cerr << "Error in output suffix: " << param_error << endl;

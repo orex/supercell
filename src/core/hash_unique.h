@@ -1,8 +1,0 @@
-//
-// Created by kirill on 4/18/21.
-//
-
-#ifndef SUPERCELL_SRC_CORE_HASH_UNIQUE_H_
-#define SUPERCELL_SRC_CORE_HASH_UNIQUE_H_
-
-#endif //SUPERCELL_SRC_CORE_HASH_UNIQUE_H_

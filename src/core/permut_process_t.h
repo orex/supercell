@@ -9,6 +9,13 @@
 #include <boost/optional.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+
+#define XXH_INLINE_ALL
+#define XXH_STATIC_LINKING_ONLY
+#define XXH_NO_STREAM
+#define XXH_NO_STDLIB
+#include <xxhash.h>
+
 #include "containers/hash_unique.h"
 #include "science/combinatorics.h"
 
@@ -64,6 +71,13 @@ class t_proc_prm {
     return arr2d.begin() + r * row_size + c;
   }
 
+  const_iterator next_row(const_iterator it) const {
+    return it + row_size;
+  }
+
+  iterator next_row(iterator it) {
+    return it + row_size;
+  }
 
 };
 
@@ -79,15 +93,40 @@ class permut_process_t {
   t_vec_comb last_cmb;
   t_vec_comb setmm_values(const t_vec_comb &vc, int start_index, bool max_value) const;
   bool next_comb(t_vec_comb &vc) const;
+ private:
+   class hash_comb {
+   private:
+     const int b_length;
+   public:
+     hash_comb(int cmb_size) : b_length(cmb_size * sizeof(t_vec_comb::value_type)) {};
+     std::size_t operator()(const t_vec_comb::value_type * p) const {
+       return XXH3_64bits(p, b_length);
+     }
+   };
+   class eq_comb {
+   private:
+     const int b_length;
+   public:
+     eq_comb(int cmb_size) : b_length(cmb_size * sizeof(t_vec_comb::value_type)) {};
+     inline bool operator()(const t_vec_comb::value_type * p1, const t_vec_comb::value_type * p2) const {
+       return p1 == p2 || std::memcmp(p1, p2, b_length) == 0;
+     };
+   };
+   hash_set<t_vec_comb::value_type *, hash_comb, eq_comb> hs;
  public:
   int ps_size;
-  std::vector<struct_info> ps;
+  std::vector<struct_info_t> ps;
+  std::int64_t total_combination_chunk;
+  std::pair<double, double> minmax_energy;
+  int min_weight;
 
   permut_process_t(const t_symm_set &symmetries, const std::vector<int> &perm_indexes,
                    int max_proc_struct) :
       syms(symmetries), permi(perm_indexes),
       allcmb(symmetries.rows(), symmetries.cols()),
-      ps_size(0), ps(max_proc_struct) {
+      ps_size(0), ps(max_proc_struct), min_weight(0),
+      hs(symmetries.rows(), hash_comb(symmetries.cols()), eq_comb(symmetries.cols()))
+  {
     assert(perm_indexes.back() == symmetries.cols());
   };
   inline void set_proc_range(const t_vec_comb &first, const t_vec_comb &last) {
@@ -95,7 +134,7 @@ class permut_process_t {
     last_cmb = last;
   }
 
-  void process_merge();
+  void process_merge() noexcept;
   void process_no_merge();
 };
 
