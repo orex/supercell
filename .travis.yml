@@ -23,12 +23,6 @@ jobs:
           CMAKE_COMMAND='cmake'
           DEPLOY_BUILD=FALSE
 
-   - name: "Developing build for old xenial platform."
-     dist: xenial
-     env: BUILD_TYPE=PROGRAM
-          CMAKE_COMMAND='cmake'
-          DEPLOY_BUILD=FALSE
-
    - name: "Developing build without LibArchive support."
      env: BUILD_TYPE=PROGRAM
           CMAKE_COMMAND='cmake'
@@ -91,6 +85,8 @@ jobs:
            - libtool-bin
            - lzip
            - p7zip-full
+           - python3
+           - python3-mako
            
    - name: "Deploy build documentation."
      dist: focal
@@ -122,6 +118,7 @@ addons:
     - libboost-filesystem-dev
     - libboost-random-dev
     - libboost-system-dev
+    - libboost-test-dev
     - libtbb-dev
     - libeigen3-dev
     - liblzma-dev
