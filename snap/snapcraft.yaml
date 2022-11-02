@@ -1,5 +1,5 @@
 name: supercell
-version: "2.0.2"
+version: "2.1.0"
 license: GPL-2.0-only
 issues: https://github.com/orex/supercell/issues
 contact: kirill.okhotnikov@gmail.com
@@ -14,29 +14,32 @@ description: |
   The program mostly uses to prepare DFT calculations of battery matrials,
   semiconductors etc.
 
-base: core20
+base: core22
 grade: stable
 confinement: strict
 type: app
 
 architectures:
-  - build-on: [amd64, arm64]
+  - build-on: amd64
+    build-for: amd64
+  - build-on: arm64
+    build-for: arm64
 
 parts:
   supercell:
     plugin: cmake
     cmake-parameters:
-      - '-DCMAKE_INSTALL_PREFIX='
+      - '-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='
     source-type: local
     source: .
     build-packages:
       - build-essential
       - cmake
       - libarchive-dev
-      - libboost-program-options1.71-dev
-      - libboost-filesystem1.71-dev
-      - libboost-random1.71-dev
-      - libboost-system1.71-dev
+      - libboost-program-options1.74-dev
+      - libboost-filesystem1.74-dev
+      - libboost-test1.74-dev
+      - libboost-system1.74-dev
       - libtbb-dev
       - libeigen3-dev
       - liblzma-dev
@@ -44,11 +47,10 @@ parts:
       - zlib1g-dev
     stage-packages:
       - libarchive13
-      - libtbb2
-      - libboost-program-options1.71.0
-      - libboost-filesystem1.71.0
-      - libboost-random1.71.0
-      - libboost-system1.71.0
+      - libtbb12
+      - libboost-program-options1.74.0
+      - libboost-filesystem1.74.0
+      - libboost-system1.74.0
       - liblzma5
       - zlib1g
 
