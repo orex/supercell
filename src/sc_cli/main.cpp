@@ -141,7 +141,8 @@ int main(int argc, char** argv)
     if(verb_level > 0)
     {  
       cout << "-----------------------------------------------------" << endl;
-      cout << "-            Supercell program (v2.0)               -" << endl;
+      cout << "-            Supercell program (v2.1)               -" << endl;
+      cout << "-         https://orex.github.io/supercell/         -" << endl;
       cout << "-----------------------------------------------------" << endl;
       cout << "-      Authors:   * Kirill Okhotnikov               -" << endl;
       cout << "-                  (kirill.okhotnikov@gmail.com)    -" << endl;
@@ -252,42 +253,3 @@ int main(int argc, char** argv)
   return SUCCESS; 
   
 }
-
-/*
-  CB_combination::num_map mp;
-  CB_combination cbc;
-  
-  mp[0] = 2;
-  mp[1] = 2;
-  mp[2] = 2;  
-  mp[3] = 2;    
-  
-  vector<int> fc;
-
-  cout << cbc.create_first_combination(mp, fc) << endl;
-  
-  int i = 1;
-  while(cbc.get_next_combination(fc))
-  {  
-    for(int j = 0; j < fc.size(); j++)
-      cout << fc[j] << " - ";
-    cout << endl;    
-    i++;
-  }
-
-  //sleep(1);  
-  
-  cout << i << endl;
-  
-  return 0; 
- 
-   c_man_atom_prop_cli cit;
-  
-  cit.regex_test(" c= 0 c = 2 fixed p=4 charge=1.2 ");
-  cit.regex_test("c=-1.2");
-  //cit.parse_input_item("r(La(    M):p");
-  
-  return 0;
-
- 
- */
