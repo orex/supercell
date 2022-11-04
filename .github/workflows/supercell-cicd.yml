@@ -257,6 +257,7 @@ jobs:
             if [[ "$OS" == "windows" ]]; then
               zip -9 supercell-$OS.zip README supercell.exe
             else
+              chmod +x supercell
               tar czvf supercell-$OS.tar.gz README supercell
             fi
             rm -f supercell supercell.exe
