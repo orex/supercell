@@ -124,8 +124,8 @@ class permut_process_t {
                    int max_proc_struct) :
       syms(symmetries), permi(perm_indexes),
       allcmb(symmetries.rows(), symmetries.cols()),
-      ps_size(0), ps(max_proc_struct), min_weight(0),
-      hs(symmetries.rows(), hash_comb(symmetries.cols()), eq_comb(symmetries.cols()))
+      hs(symmetries.rows(), hash_comb(symmetries.cols()), eq_comb(symmetries.cols())),
+      ps_size(0), ps(max_proc_struct), min_weight(0)
   {
     assert(perm_indexes.back() == symmetries.cols());
   };

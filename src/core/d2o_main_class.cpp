@@ -44,10 +44,6 @@
 #define PT_GETSYMBOL(atomic_num) gemmi::Element(atomic_num).name()
 using namespace std;
 
-#if defined(LIBARCHIVE_ENABLED) && (!defined(LIBARCHIVE_PATCH_DISABLE))
-#include "archive_extent_patch.h"
-#endif
-
 bool d2o_main_class::create_tar_container(const std::string &fname)
 {
   bool result = true;
@@ -1638,6 +1634,8 @@ bool d2o_main_class::show_groups_information()
 
 bool d2o_main_class::create_super_cell(int a, int b, int c)
 {
+  supercell_cst.block_name = orig_cst.block_name;
+  supercell_cst.chem_name = orig_cst.chem_name;
   supercell_cst.unit_cell.set(orig_cst.unit_cell.cell() * Eigen::DiagonalMatrix<double, 3>(a, b, c));
   supercell_cst.atoms.clear();
   supercell_cst.atoms.reserve(orig_cst.atoms.size() * a * b *c);
@@ -1864,8 +1862,13 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     return false;
   }
   
-  if(!dry_run)
+  if(!dry_run) {
+    if(f_q_calc.is_open())
+      f_q_calc.close();
+
     close_tar_container();
+  }
   
   return true;
 }
+
