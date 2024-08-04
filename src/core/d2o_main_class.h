@@ -310,7 +310,7 @@ public:
   static inline double symm_tol() { return 1E-2; };
 public:
   d2o_main_class() = delete;
-  d2o_main_class(std::random_device::result_type seed) : ss_p(seed), charge_balancing(false) {};
+  d2o_main_class(std::random_device::result_type seed) : charge_balancing(false), ss_p(seed) {};
   void set_verbosity(int vb)
   { verbose_level = vb; };
   bool process(std::string input_file_name, bool dry_run,

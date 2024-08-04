@@ -1,5 +1,5 @@
 name: Build jobs
-run-name: 
+run-name:
 on:
   push:
     paths:
@@ -7,71 +7,88 @@ on:
       - 'lib/**'
       - '3rd_party/**'
   pull_request:
-    branches:    
+    branches:
       - master
   release:
     types: [published]
-    
+
 jobs:
   build-develop-linux:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
-        compiler: [gcc-9, gcc-10, clang-11, clang-12, clang-13]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+        compiler: [gcc, gcc-9, gcc-10, gcc-11, gcc-12, gcc-13, clang]
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+          - os: ubuntu-20.04
+            compiler: clang-11
+          - os: ubuntu-22.04
+            compiler: clang-13
+          - os: ubuntu-24.04
+            compiler: gcc-14
+        exclude:
+          - os: ubuntu-20.04
+            compiler: gcc-12
+          - os: ubuntu-20.04
+            compiler: gcc-13
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Setup C++
-        uses: aminya/setup-cpp@v0.21.0
+        uses: aminya/setup-cpp@v0.37.0
         with:
           compiler: ${{ matrix.compiler }}
           cmake: true
           make: true
       - name: "Install dependencies"
-        run: "sudo apt update && sudo apt install -y 
-          cmake build-essential libboost-test-dev libtinfo5 libtbb-dev 
-          libarchive-dev libboost-program-options-dev libboost-filesystem-dev 
-          libboost-system-dev libeigen3-dev liblzma-dev libbz2-dev zlib1g-dev zip"
+        run: |
+          sudo apt update && sudo apt install -y \
+          cmake build-essential libboost-test-dev libtbb-dev \
+          libarchive-dev libboost-program-options-dev libboost-filesystem-dev \
+          libboost-system-dev libeigen3-dev liblzma-dev libbz2-dev zlib1g-dev zip
       - name: "Compile supercell."
-        run: cmake . -DCMAKE_BUILD_TYPE=Release && make supercell -j 2          
+        run: cmake . -DCMAKE_BUILD_TYPE=Release && make supercell -j 4
       - name: "Check supercell"
         run: 'src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
   deploy-build-macos:
     strategy:
       fail-fast: false
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master          
+        uses: Homebrew/actions/setup-homebrew@master
       - name: "Install brew dependencies"
         run: |
           brew install boost eigen libarchive zlib
       - name: "Get TBB"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: oneapi-src/oneTBB
-          ref: v2021.7.0
+          ref: v2021.13.0
           path: ./tbb
           submodules: true
       - name: "Compile and install tbb"
         working-directory: ./tbb
         run: |
           cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
-          make -j 2
+          make -j 4
           sudo make install
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: ./supercell
           submodules: true
       - name: "Compile supercell."
         working-directory: ./supercell
-        run: | 
+        run: |
           export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig"
-          cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON -DLibArchive_INCLUDE_DIR=/usr/local/opt/libarchive/include && make supercell -j 2
+          cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON -DLibArchive_INCLUDE_DIR=/usr/local/opt/libarchive/include && make supercell -j 4
       - name: "Check supercell"
         working-directory: ./supercell
         run: 'src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
@@ -79,96 +96,84 @@ jobs:
         working-directory: ./supercell
         run: 'otool -l src/sc_cli/supercell'
       - name: Upload Supercell
-        uses: actions/upload-artifact@v3.1.1
+        uses: actions/upload-artifact@v4
         with:
           name: macos-bin
-          path: ./supercell/src/sc_cli/supercell          
+          path: ./supercell/src/sc_cli/supercell
   deploy-build-linux:
     strategy:
       fail-fast: false
-    runs-on: ubuntu-latest
-    container: ubuntu:18.04
+    runs-on: ubuntu-20.04
     steps:
-      - name: "Install dependencies"
-        run: |
-          apt-get update && apt-get full-upgrade -y          
-          apt-get install -y software-properties-common wget tar cmake build-essential \
-          ccache libboost-program-options-dev libboost-filesystem-dev libboost-test-dev \
-          libarchive-dev liblzma-dev libbz2-dev zlib1g-dev zip libboost-system-dev
-          add-apt-repository ppa:git-core/ppa
-          add-apt-repository ppa:ubuntu-toolchain-r/test
-          apt-get update
-          apt-get install -y git gcc-9 g++-9
-      - name: Cache
-        uses: pat-s/always-upload-cache@v3.0.11
-        with:
-          path: /github/home/.ccache
-          key: linux-deploy-cache-${{ github.run_id }} # Can use time based key as well
-          restore-keys: |
-            linux-deploy-cache-
-      - name: "Compile and install dependencies"
-        run: |
-          ccache -s
-          export CC=gcc-9
-          export CXX=g++-9          
-          export PATH="/usr/lib/ccache:$PATH"
-          export BASE_DIR=${PWD}
-          mkdir eigen && cd eigen
-          wget -nv https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O - | tar -zxf -
-          mkdir build && cd build
-          cmake ../eigen-3.4.0
-          make install
-          cd $BASE_DIR
-          git clone https://github.com/oneapi-src/oneTBB.git
-          cd oneTBB && git checkout v2021.7.0 
-          mkdir cmake-build && cd cmake-build
-          cmake ../ -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
-          make -j 2 && make install
-          cd $BASE_DIR
-          wget -nv https://github.com/libarchive/libarchive/releases/download/v3.6.1/libarchive-3.6.1.tar.gz -O - | tar -zxf -
-          cd libarchive-3.6.1
-          ./configure --without-openssl --without-libb2 --without-xml2 --without-expat --disable-bsdtar
-          sed -ir '/^.*#define HAVE_LZMA_STREAM_ENCODER_MT 1.*$/d' config.h
-          make -j 2
-          make install
-          cd $BASE_DIR
       - name: "Clone supercell"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./supercell
           submodules: true
-      - name: "Compile and install supercell"
-        run: |
-          export CC=gcc-9
-          export CXX=g++-9          
-          export PATH="/usr/lib/ccache:$PATH"
-          cd supercell
-          cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON && make supercell -j 2
-          ccache -s
-      - name: "Test supercell"
-        run: |          
-          supercell/src/sc_cli/supercell -d -i supercell/data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"         
-      - name: Upload Supercell 
-        uses: actions/upload-artifact@v3.1.1
+      - name: "Clone oneTBB"
+        uses: actions/checkout@v4
+        with:
+          repository: oneapi-src/oneTBB
+          ref: v2021.13.0
+          path: ./oneTBB
+          submodules: true
+      - name: "Compile supercell with deps"
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ubuntu:18.04
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            apt-get update && apt-get full-upgrade -y
+            apt-get install -y software-properties-common wget tar cmake build-essential \
+            libboost-program-options-dev libboost-filesystem-dev libboost-test-dev \
+            libarchive-dev liblzma-dev libbz2-dev zlib1g-dev zip libboost-system-dev
+            add-apt-repository ppa:git-core/ppa
+            add-apt-repository ppa:ubuntu-toolchain-r/test
+            apt-get update
+            apt-get install -y git gcc-9 g++-9
+            export CC=gcc-9
+            export CXX=g++-9
+            export BASE_DIR="/work"
+            mkdir ${BASE_DIR}/eigen && cd ${BASE_DIR}/eigen
+            wget -nv https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O - | tar -zxf -
+            mkdir build && cd build
+            cmake ../eigen-3.4.0
+            make install
+            cd $BASE_DIR/oneTBB
+            mkdir cmake-build && cd cmake-build
+            cmake ../ -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
+            make -j 4 && make install
+            wget -nv https://github.com/libarchive/libarchive/releases/download/v3.7.4/libarchive-3.7.4.tar.gz -O - | tar -zxf -
+            cd libarchive-3.7.4
+            ./configure --without-openssl --without-libb2 --without-xml2 --without-expat --disable-bsdtar
+            sed -ir '/^.*#define HAVE_LZMA_STREAM_ENCODER_MT 1.*$/d' config.h
+            make -j 4
+            make install
+            cd $BASE_DIR/supercell
+            cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON && make supercell -j 4
+            $BASE_DIR/supercell/src/sc_cli/supercell -d -i $BASE_DIR/supercell/data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"
+      - name: Upload Supercell
+        uses: actions/upload-artifact@v4
         with:
           name: linux-bin
           path: ./supercell/src/sc_cli/supercell
   deploy-build-windows:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: "Install dependencies"
         run: |
           sudo apt update && sudo apt -y full-upgrade
           sudo apt install -y gcc cmake build-essential wine-stable autopoint gperf intltool libtool libtool-bin lzip p7zip-full python3 python3-mako
       - name: "Download MXE"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: mxe/mxe
           path: ./mxe
           submodules: true
       - name: Cache
-        uses: pat-s/always-upload-cache@v3.0.11
+        uses: actions/cache@v4
         with:
+          save-always: true
           path: ./mxe/.ccache
           key: win-cache-${{ github.run_id }} # Can use time based key as well
           restore-keys: |
@@ -177,14 +182,14 @@ jobs:
         working-directory: ./mxe
         run: |
           sed -i -r 's/ nettle / /g' src/libarchive.mk && sed -i -r 's/with-nettle/without-nettle --without-openssl --without-iconv /g' src/libarchive.mk
-          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc10 ccache
+          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc13 ccache
           echo 'max_size = 15.0G' > .ccache/ccache/ccache.conf
-          .ccache/bin/ccache -s          
-          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc10 ccache cc cmake intel-tbb boost eigen libarchive --jobs=4 JOBS=2
+          .ccache/bin/ccache -s 
+          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc13 ccache cc cmake intel-tbb boost eigen libarchive --jobs=4 JOBS=4
           .ccache/bin/ccache -s
           echo "${PWD}/usr/bin" >> $GITHUB_PATH
       - name: "Clone supercell"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ./supercell
           submodules: true
@@ -196,15 +201,15 @@ jobs:
       - name: "Run supercell"
         working-directory: ./supercell
         run: 'wine64 src/sc_cli/supercell.exe -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
-      - name: Upload Supercell 
-        uses: actions/upload-artifact@v3.1.1
+      - name: Upload Supercell
+        uses: actions/upload-artifact@v4
         with:
           name: windows-bin
           path: ./supercell/src/sc_cli/supercell.exe
-          
+
   deploy-to-site:
     if: github.event_name == 'release'
-    needs: [deploy-build-linux, deploy-build-macos, deploy-build-windows]
+    needs: [ deploy-build-linux, deploy-build-macos, deploy-build-windows ]
     runs-on: ubuntu-latest
     steps:
       - name: "Install dependencies"
@@ -212,18 +217,18 @@ jobs:
           sudo apt-get update && sudo apt-get full-upgrade -y
           sudo apt-get update
           sudo apt-get install -y git wget tar openssh-client zip
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: linux-bin
           path: ./art/linux
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: windows-bin
           path: ./art/windows
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: macos-bin
-          path: ./art/osx          
+          path: ./art/osx
       - name: "Deploy to file"
         env:
           SITE_REPO_KEY: ${{ secrets.DEPLOY_KEY }}
@@ -234,11 +239,11 @@ jobs:
           DEPLOY_REPO="git@github.com:orex/orex.github.io.git"
           DEPLOY_BRANCH="master"
           DEPLOY_DIR="supercell/external"
-          # 
+          #
           mkdir ~/.ssh
           eval `ssh-agent -s`
           echo "${SITE_REPO_KEY}" | ssh-add -
-          ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts          
+          ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
           # Clone the existing gh-pages for this repo into out/
           # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
           git clone --recurse-submodules "${DEPLOY_REPO}" --branch "${DEPLOY_BRANCH}" out && cd out
@@ -249,7 +254,7 @@ jobs:
           #Main code
           mkdir -p "${REPO_PATH}/${DEPLOY_DIR}/exe/."
           cd `mktemp -d -t XXXXXX`
-          wget -nv https://github.com/orex/supercell/raw/deploy/README -O README            
+          wget -nv https://github.com/orex/supercell/raw/deploy/README -O README
           for i in ${ART_DIR}/*
           do
             cp -a "${i}"/* .
@@ -274,4 +279,4 @@ jobs:
           git status
           git commit -m "Deploy to GitHub Pages: ${GITHUB_SHA}"
           # Now that we're all set up, we can push.
-          git push $DEPLOY_REPO $DEPLOY_BRANCH          
+          git push $DEPLOY_REPO $DEPLOY_BRANCH

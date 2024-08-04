@@ -76,12 +76,15 @@ void cif_output::add_atom(int el_num, const std::string &label, const Eigen::Vec
       v[i] = 0.0;
   }
 
-  snprintf(buffer, sizeof(buffer), "    %-8s%-5s%.5f%10.5f%10.5f%8.3f\n",
+  int spnr = snprintf(buffer, sizeof(buffer), "    %-8s%-5s%.5f%10.5f%10.5f%8.3f\n",
            label.c_str(),  gemmi::Element(el_num).name(),
            v.x(), v.y(), v.z(), occupancy);
 
-  so << buffer;
-
+  if( spnr > 0 || spnr < sizeof(buffer) ) {
+    so << buffer;
+  } else {
+    so << "ERROR data write!!!";
+  }
 }
 
 static
