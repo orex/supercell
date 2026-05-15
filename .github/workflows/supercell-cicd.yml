@@ -72,8 +72,8 @@ jobs:
       - name: "Get TBB"
         uses: actions/checkout@v5
         with:
-          repository: oneapi-src/oneTBB
-          ref: v2021.13.0
+          repository: uxlfoundation/oneTBB
+          ref: v2023.0.0
           path: ./tbb
           submodules: true
       - name: "Compile and install tbb"
@@ -115,8 +115,8 @@ jobs:
       - name: "Clone oneTBB"
         uses: actions/checkout@v5
         with:
-          repository: oneapi-src/oneTBB
-          ref: v2021.13.0
+          repository: uxlfoundation/oneTBB
+          ref: v2023.0.0
           path: ./oneTBB
           submodules: true
       - name: "Compile supercell with deps"
@@ -188,7 +188,7 @@ jobs:
           make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache
           echo 'max_size = 15.0G' > .ccache/ccache/ccache.conf
           .ccache/bin/ccache -s 
-          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache cc cmake intel-tbb boost eigen libarchive --jobs=4 JOBS=4
+          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache cc cmake onetbb boost eigen libarchive --jobs=4 JOBS=4
           .ccache/bin/ccache -s
           echo "${PWD}/usr/bin" >> $GITHUB_PATH
       - name: "Clone supercell"
