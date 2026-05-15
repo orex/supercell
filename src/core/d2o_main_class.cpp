@@ -31,11 +31,6 @@
 #include "cryst_tools/cryst_tools.h"
 
 #include <tbb/tbb.h>
-#ifdef ONETBB_SPEC_VERSION
-  using tbb_filter_mode = tbb::filter_mode;
-#else
-  using tbb_filter_mode = tbb::filter;
-#endif
 
 #ifdef LIBARCHIVE_ENABLED
 #include <archive_entry.h>
@@ -881,13 +876,13 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
   generate_comb_t gc(num_tokens, tot_comb, packet_size, sms, psm.prm_indexes, init_cmb);
 
   auto gen_f = tbb::make_filter<void, permut_process_t *>(
-      tbb_filter_mode::serial_in_order,
+      tbb::filter_mode::serial_in_order,
       [&gc](tbb::flow_control &fc) -> permut_process_t * {
         return gc.generator(fc);
       });
 
   auto parr_proc_f = tbb::make_filter<permut_process_t *, permut_process_t *>(
-      tbb_filter_mode::parallel,
+      tbb::filter_mode::parallel,
       [dry_run, &qrd, merge_confs,
        this](permut_process_t *p) -> permut_process_t * {
         if (merge_confs)
@@ -910,7 +905,7 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
   auto ctime = std::chrono::steady_clock::now();
 
   auto serial_after_proc_f = tbb::make_filter<permut_process_t *, void>(
-      tbb_filter_mode::serial_in_order,
+      tbb::filter_mode::serial_in_order,
       [this, &gc, dry_run, &str_proc, &psm, &ctime,
        tot_comb](permut_process_t *p) -> void {
         if (p->ps_size > 0 && !dry_run) {
