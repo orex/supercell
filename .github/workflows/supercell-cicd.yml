@@ -6,6 +6,8 @@ on:
       - 'src/**'
       - 'lib/**'
       - '3rd_party/**'
+      - '.github/workflows/**'
+      - 'CMakeLists.txt'
   pull_request:
     branches:
       - master
@@ -14,52 +16,84 @@ on:
 
 jobs:
   build-develop-linux:
+    # Sweep the full gcc/clang spectrum on a single Ubuntu 22.04 host. Older
+    # ubuntu-22.04 apt deps (Boost 1.74, oneTBB 2021.5, Eigen 3.4) are the most
+    # constrained set the codebase needs to build against. Cross-distro builds
+    # are covered by the separate build-from-source-linux job below.
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
-        compiler: [gcc, gcc-9, gcc-10, gcc-11, gcc-12, gcc-13, clang]
         include:
-          - os: ubuntu-latest
-            compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-          - os: ubuntu-20.04
-            compiler: clang-11
-          - os: ubuntu-22.04
-            compiler: clang-13
-          - os: ubuntu-24.04
-            compiler: gcc-14
-        exclude:
-          - os: ubuntu-20.04
-            compiler: gcc-12
-          - os: ubuntu-20.04
-            compiler: gcc-13
+          - { os: ubuntu-22.04, compiler: gcc-11 }
+          - { os: ubuntu-22.04, compiler: gcc-12 }
+          - { os: ubuntu-22.04, compiler: gcc-13 }
+          - { os: ubuntu-22.04, compiler: gcc-14 }
+          - { os: ubuntu-22.04, compiler: gcc-15 }
+          - { os: ubuntu-22.04, compiler: gcc-16 }
+          - { os: ubuntu-22.04, compiler: clang-14 }
+          - { os: ubuntu-22.04, compiler: clang-15 }
+          - { os: ubuntu-22.04, compiler: clang-16 }
+          - { os: ubuntu-22.04, compiler: clang-17 }
+          - { os: ubuntu-22.04, compiler: clang-18 }
+          - { os: ubuntu-22.04, compiler: clang-19 }
+          - { os: ubuntu-22.04, compiler: clang-20 }
+          - { os: ubuntu-22.04, compiler: clang-21 }
+          - { os: ubuntu-22.04, compiler: clang-22 }
     runs-on: ${{ matrix.os }}
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: "500M"
+      CCACHE_COMPRESS: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - name: Setup C++
-        uses: aminya/setup-cpp@v0.37.0
+        uses: aminya/setup-cpp@v1
         with:
           compiler: ${{ matrix.compiler }}
           cmake: true
           make: true
+          ccache: true
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          # Per-OS and per-compiler so e.g. gcc-15 doesn't pollute clang-22's cache.
+          # Unique run_id suffix means each run produces its own save entry; the
+          # prefix-only restore-keys fall back to the most recent older cache.
+          key: ccache-${{ matrix.os }}-${{ matrix.compiler }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ matrix.os }}-${{ matrix.compiler }}-
       - name: "Install dependencies"
         run: |
-          sudo apt update && sudo apt install -y \
+          sudo apt-get update && sudo apt-get install -y \
           cmake build-essential libboost-test-dev libtbb-dev \
-          libarchive-dev libboost-program-options-dev libboost-filesystem-dev \
-          libboost-system-dev libeigen3-dev liblzma-dev libbz2-dev zlib1g-dev zip
-      - name: "Compile supercell."
-        run: cmake . -DCMAKE_BUILD_TYPE=Release && make supercell -j 4
-      - name: "Check supercell"
+          libarchive-dev libboost-program-options-dev \
+          libeigen3-dev liblzma-dev libbz2-dev zlib1g-dev zip
+      - name: "Configure"
+        run: |
+          cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF \
+                  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - name: "Build supercell and tests"
+        run: cmake --build . -j $(nproc)
+      - name: "ccache stats"
+        if: always()
+        run: ccache -s
+      - name: "Smoke test"
         run: 'src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
+      - name: Save ccache
+        if: always() && steps.ccache-restore.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
   deploy-build-macos:
     strategy:
       fail-fast: false
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -68,7 +102,7 @@ jobs:
         run: |
           brew install boost eigen libarchive zlib
       - name: "Get TBB"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: oneapi-src/oneTBB
           ref: v2021.13.0
@@ -80,15 +114,18 @@ jobs:
           cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
           make -j 4
           sudo make install
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           path: ./supercell
           submodules: true
       - name: "Compile supercell."
         working-directory: ./supercell
         run: |
-          export PKG_CONFIG_PATH="/usr/local/opt/libarchive/lib/pkgconfig"
-          cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON -DLibArchive_INCLUDE_DIR=/usr/local/opt/libarchive/include && make supercell -j 4
+          export PKG_CONFIG_PATH="$(brew --prefix libarchive)/lib/pkgconfig"
+          cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON \
+                  -DLibArchive_INCLUDE_DIR=$(brew --prefix libarchive)/include \
+                  -DBUILD_DOC=OFF
+          make supercell -j $(sysctl -n hw.ncpu)
       - name: "Check supercell"
         working-directory: ./supercell
         run: 'src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
@@ -96,22 +133,22 @@ jobs:
         working-directory: ./supercell
         run: 'otool -l src/sc_cli/supercell'
       - name: Upload Supercell
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macos-bin
           path: ./supercell/src/sc_cli/supercell
   deploy-build-linux:
     strategy:
       fail-fast: false
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: "Clone supercell"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ./supercell
           submodules: true
       - name: "Clone oneTBB"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: oneapi-src/oneTBB
           ref: v2021.13.0
@@ -120,29 +157,30 @@ jobs:
       - name: "Compile supercell with deps"
         uses: addnab/docker-run-action@v3
         with:
-          image: ubuntu:18.04
+          image: ubuntu:20.04
           options: -v ${{ github.workspace }}:/work
           run: |
+            set -e
+            export DEBIAN_FRONTEND=noninteractive
             apt-get update && apt-get full-upgrade -y
-            apt-get install -y software-properties-common wget tar cmake build-essential \
-            libboost-program-options-dev libboost-filesystem-dev libboost-test-dev \
-            libarchive-dev liblzma-dev libbz2-dev zlib1g-dev zip libboost-system-dev
-            add-apt-repository ppa:git-core/ppa
-            add-apt-repository ppa:ubuntu-toolchain-r/test
+            apt-get install -y wget tar zip git cmake software-properties-common \
+            libboost-program-options-dev libboost-test-dev \
+              liblzma-dev libbz2-dev zlib1g-dev libzstd-dev liblz4-dev
+            add-apt-repository -y ppa:ubuntu-toolchain-r/test
             apt-get update
-            apt-get install -y git gcc-9 g++-9
-            export CC=gcc-9
-            export CXX=g++-9
-            export BASE_DIR="/work"
-            mkdir ${BASE_DIR}/eigen && cd ${BASE_DIR}/eigen
-            wget -nv https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz -O - | tar -zxf -
-            mkdir build && cd build
-            cmake ../eigen-3.4.0
-            make install
+            apt-get install -y gcc-14 g++-14
+            export CC=gcc-14
+            export CXX=g++-14
+            export BASE_DIR=/work
+            cd $BASE_DIR
+            wget -nv https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.gz -O - | tar -zxf -
+            cmake -S eigen-5.0.1 -B eigen-build -DEIGEN_BUILD_TESTING=OFF -DEIGEN_BUILD_DOC=OFF -DEIGEN_BUILD_BLAS=OFF -DEIGEN_BUILD_LAPACK=OFF
+            cmake --install eigen-build
+            # oneTBB
             cd $BASE_DIR/oneTBB
             mkdir cmake-build && cd cmake-build
             cmake ../ -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DTBB_TEST=OFF
-            make -j 4 && make install
+            make -j $(nproc) && make install
             wget -nv https://github.com/libarchive/libarchive/releases/download/v3.7.4/libarchive-3.7.4.tar.gz -O - | tar -zxf -
             cd libarchive-3.7.4
             ./configure --without-openssl --without-libb2 --without-xml2 --without-expat --disable-bsdtar
@@ -153,7 +191,7 @@ jobs:
             cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON && make supercell -j 4
             $BASE_DIR/supercell/src/sc_cli/supercell -d -i $BASE_DIR/supercell/data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"
       - name: Upload Supercell
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-bin
           path: ./supercell/src/sc_cli/supercell
@@ -165,7 +203,7 @@ jobs:
           sudo apt update && sudo apt -y full-upgrade
           sudo apt install -y gcc cmake build-essential wine-stable autopoint gperf intltool libtool libtool-bin lzip p7zip-full python3 python3-mako
       - name: "Download MXE"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: mxe/mxe
           path: ./mxe
@@ -182,14 +220,14 @@ jobs:
         working-directory: ./mxe
         run: |
           sed -i -r 's/ nettle / /g' src/libarchive.mk && sed -i -r 's/with-nettle/without-nettle --without-openssl --without-iconv /g' src/libarchive.mk
-          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc13 ccache
+          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache
           echo 'max_size = 15.0G' > .ccache/ccache/ccache.conf
           .ccache/bin/ccache -s 
-          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc13 ccache cc cmake intel-tbb boost eigen libarchive --jobs=4 JOBS=4
+          make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache cc cmake intel-tbb boost eigen libarchive --jobs=4 JOBS=4
           .ccache/bin/ccache -s
           echo "${PWD}/usr/bin" >> $GITHUB_PATH
       - name: "Clone supercell"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ./supercell
           submodules: true
@@ -200,9 +238,9 @@ jobs:
           make supercell
       - name: "Run supercell"
         working-directory: ./supercell
-        run: 'wine64 src/sc_cli/supercell.exe -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
+        run: 'wine src/sc_cli/supercell.exe -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
       - name: Upload Supercell
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-bin
           path: ./supercell/src/sc_cli/supercell.exe
@@ -217,15 +255,15 @@ jobs:
           sudo apt-get update && sudo apt-get full-upgrade -y
           sudo apt-get update
           sudo apt-get install -y git wget tar openssh-client zip
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: linux-bin
           path: ./art/linux
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: windows-bin
           path: ./art/windows
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: macos-bin
           path: ./art/osx

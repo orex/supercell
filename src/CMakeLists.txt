@@ -1,6 +1,7 @@
 #set common includes
 set(sc_includes
         ${CMAKE_CURRENT_SOURCE_DIR}/core
+        ${CMAKE_CURRENT_SOURCE_DIR}/utils
         ${CMAKE_SOURCE_DIR}/libs/common_utils/
         ${CMAKE_SOURCE_DIR}/3rd_party/gemmi/include
         ${CMAKE_SOURCE_DIR}/3rd_party/xxHash)

@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 #include <regex>
 

@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 project(supercell)
 include(FeatureSummary)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_PROGRAM "Build supercell program" ON)
 option(BUILD_DOC "Build supercell manual and tutorial" ON)
@@ -19,11 +21,7 @@ if (BUILD_PROGRAM)
 
   if (${CMAKE_COMPILER_IS_GNUCXX})
     if (${LINK_STATIC_LIBS})
-      if(NOT WIN32)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -fuse-ld=gold -Wl,--no-gnu-unique")
-      else()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ ")
-      endif()
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
       set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
     endif ()
   endif ()

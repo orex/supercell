@@ -11,11 +11,10 @@
 #include <string>
 #include <set>
 
-#include "boost/program_options.hpp" 
-#include "boost/filesystem.hpp"
+#include "boost/program_options.hpp"
 #include "parse_d2o_input.h"
 #include "d2o_main_class.h"
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include "common_types.h"
  

@@ -16,9 +16,11 @@
 #include <array>
 
 #include <boost/align/aligned_allocator.hpp>
-#include <boost/optional.hpp>
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
+#include "science/math_constants.h"
+#include <optional>
 #include <random>
 #include <deque>
 
@@ -52,17 +54,17 @@ public:
 class c_man_atom_prop_item
 {
 public:
-  boost::optional<double> charge;
-  boost::optional<bool> fixed;
-  boost::optional<int> population;
- 
+  std::optional<double> charge;
+  std::optional<bool> fixed;
+  std::optional<int> population;
+
   inline void assign(const c_man_atom_prop_item &orig)
   {
-    if( orig.charge.is_initialized() )
+    if( orig.charge.has_value() )
       charge = orig.charge;
-    if( orig.fixed.is_initialized() )
+    if( orig.fixed.has_value() )
       fixed = orig.fixed;
-    if( orig.population.is_initialized() )
+    if( orig.population.has_value() )
       population = orig.population;
   };
 };        
@@ -148,7 +150,7 @@ class unit_cell_t {
  private:
   Eigen::Matrix3d _cell;
   inline static double v_ang(const Eigen::Vector3d &v1, const Eigen::Vector3d &v2) {
-    return abs(std::atan2(v1.cross(v2).norm(), v1.dot(v2))) * 180.0 / M_PI;
+    return abs(std::atan2(v1.cross(v2).norm(), v1.dot(v2))) * 180.0 / cnst::pi;
   }
  public:
   unit_cell_t() = default;
