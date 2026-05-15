@@ -816,11 +816,48 @@ class generate_comb_t {
   };
 };
 
+// Remove previously generated output files that would clash with the upcoming
+// run. Called from process() before any output streams are opened so that on
+// Windows we don't try to unlink files we are about to hold open ourselves
+// (POSIX unlink-while-open succeeds; Win32 DeleteFile returns SHARING_VIOLATION).
+void d2o_main_class::cleanup_output_files(const string &output_base_name)
+{
+  namespace bfs = std::filesystem;
+  const bfs::path p_suffix = bfs::path(output_base_name);
+  const std::regex cif_file_filter(p_suffix.filename().string() + "_i.[0-9]+.*\\.cif");
+  const std::regex eng_file_filter(p_suffix.filename().string() +
+                                   struct_processor::coulomb_energy_suffix +
+                                   ".*\\.txt");
+
+  const bfs::path scan_dir = p_suffix.is_absolute()
+      ? p_suffix.parent_path()
+      : (bfs::current_path() / p_suffix.parent_path());
+
+  if (!bfs::is_directory(scan_dir))
+    return;
+
+  int del_file_count = 0;
+  for (bfs::directory_iterator i(scan_dir), end; i != end; ++i) {
+    if (!bfs::is_regular_file(i->status())) continue;
+
+    const std::string fname = i->path().filename().string();
+    if (std::regex_match(fname, cif_file_filter) ||
+        std::regex_match(fname, eng_file_filter)) {
+      bfs::remove(i->path());
+      del_file_count++;
+    }
+  }
+
+  if ((verbose_level >= 2) && (del_file_count > 0))
+    cout << "Total " << del_file_count
+         << " output files was deleted successfully" << endl;
+}
+
 bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, bool merge_confs)
 {
   if(dry_run && (!merge_confs) )
     return true;
-  
+
   t_vec_comb init_cmb;
   t_comb_descr psm;
   t_symm_set sms;
@@ -828,46 +865,11 @@ bool d2o_main_class::write_files(const string &output_base_name, bool dry_run, b
   q_energy_reduced qrd;
   if( calc_q_energy ) {
     qrd = reduce_q_matrix(psm);
-  }  
-  
+  }
+
   int64_t tot_comb = total_combinations();
   struct_processor str_proc(output_base_name, tot_comb);
 
-  if(!dry_run && !tar_enabled() )
-  {
-    namespace bfs = std::filesystem;
-    const bfs::path p_suffix = bfs::path(output_base_name);
-    const std::regex cif_file_filter(p_suffix.filename().string() + "_i.[0-9]+.*\\.cif");
-    const std::regex eng_file_filter(p_suffix.filename().string() +
-                                     struct_processor::coulomb_energy_suffix +
-                                     ".*\\.txt");
-
-    bfs::directory_iterator end_itr; // Default ctor yields past-the-end
-    bfs::directory_iterator
-      i(p_suffix.is_absolute() ? p_suffix.parent_path() : (bfs::current_path() / p_suffix.parent_path()));
-
-    int del_file_count = 0;
-    for( ; i != end_itr; ++i )
-    {
-      // Skip if not a file
-      if( !bfs::is_regular_file( i->status() ) ) continue;
-
-      std::smatch what;
-
-      std::string fname = i->path().filename().string();
-
-      if (std::regex_match(fname, what, cif_file_filter) ||
-          std::regex_match(fname, what, eng_file_filter)) {
-        bfs::remove(i->path());
-        del_file_count++;
-      }
-    }
-
-    if( (verbose_level >= 2) && (del_file_count > 0) )
-      cout << "Total " << del_file_count
-           << " output files was deleted successfully" << endl;
-  }
-  
   int syms_num = max<int>(occup_groups[0].symms_sets.size(), 1);
   ss_p.set_containers_prop(tot_comb, syms_num);
 
@@ -1816,7 +1818,13 @@ bool d2o_main_class::process(std::string input_file_name, bool dry_run,
     return false;
   }
 
-  if( calc_q_energy )  
+  // Sweep stale output files from a prior run *before* we open any output stream
+  // for this run. Doing it later (e.g. inside write_files) trips a sharing
+  // violation on Windows for the Coulomb-energy file we are about to hold open.
+  if (!dry_run && output_tar_name.empty())
+    cleanup_output_files(output_base_name);
+
+  if( calc_q_energy )
   {
     if(!charge_balancing)
     {
