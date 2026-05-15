@@ -1,0 +1,72 @@
+#------------------------------------------------------------------------------
+#$Date: 2012-02-28 13:14:52 +0100 (Tue, 28 Feb 2012) $
+#$Revision: 35911 $
+#$URL: svn://www.crystallography.net/cod/cif/5/90/00/5900001.cif $
+#------------------------------------------------------------------------------
+#
+# This file is available in the Crystallography Open Database (COD),
+# http://www.crystallography.net/
+#
+# All data on this site have been placed in the public domain by the
+# contributors.
+#
+data_5900001
+_journal_name_full               'DAN SSSR'
+_journal_page_first              1161
+_journal_volume                  78
+_journal_year                    1951
+_chemical_formula_sum            'C H I3'
+_chemical_name_systematic        Triiodomethane
+_symmetry_Int_Tables_number      173
+_symmetry_space_group_name_H-M   'P 63'
+_cell_angle_alpha                90
+_cell_angle_beta                 90
+_cell_angle_gamma                120
+_cell_formula_units_Z            2
+_cell_length_a                   6.83
+_cell_length_b                   6.83
+_cell_length_c                   7.53
+_[local]_cod_data_source_file    002_triiodomethane.cif
+_[local]_cod_data_source_block   triiodomethane
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+I I 6 c 0.356 0.044 0
+C C 2 b 0.66667 0.33333 0.096
+H H 2 b 0.66667 0.33333 0.239
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+C I 2.18(6)
+C H .
+loop_
+_citation_id
+_citation_coordinate_linkage
+_citation_title
+_citation_book_title
+_citation_country
+_citation_page_first
+_citation_page_last
+_citation_year
+_citation_book_publisher
+_[local]_cod_citation_special_details
+1 yes ? 'Organicheskaja Kristallokhimija' USSR ? ? 1955
+'Izdatel'stvo Akademii Nauk SSSR'
+;
+
+Coordinates are presented as published in this book, Kitajgorodskij's
+"Organicheskaja Kristallokhimija", keyed in manually.
+
+Saulius Gra\<zulis
+;
+loop_
+_citation_author_citation_id
+_citation_author_name
+1 'A. I. Kitajgorodskij'
+_cod_database_code 5900001

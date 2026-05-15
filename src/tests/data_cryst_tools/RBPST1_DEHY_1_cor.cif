@@ -1,0 +1,43 @@
+data_added_by_encifer
+# from C:/gsas/RbPST1_dehy/RBPST1_DEHY.EXP 
+_audit_creation_date             2013-01-25T21:30:56
+_symmetry_cell_setting           tetragonal
+_symmetry_space_group_name_H-M   'I -4 2 d'
+_symmetry_int_tables_number      122
+_cell_length_a                   12.680970
+_cell_length_b                   12.680970
+_cell_length_c                   6.616540
+_cell_angle_alpha                90.0000
+_cell_angle_beta                 90.0000
+_cell_angle_gamma                90.0000
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Si1 +4
+Si2 +4
+O1  -2
+O2  -2
+O3  -2
+Ga1 +3
+Ga2 +3
+Rb1 +1
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_B_iso_or_equiv
+_atom_site_occupancy
+Si1 Si 0.08942 0.63503 0.62640 0.555065613828 0.57200
+Si2 Si 0.00000 0.00000 0.00000 0.555065613828 0.49100
+O1 O 0.94750 0.64790 0.73120 6.46655387945 1.00000
+O2 O 0.04290 0.57840 0.41310 6.46655387945 1.00000
+O3 O 0.12590 0.75000 0.62500 6.46655387945 1.00000
+Ga1 Ga 0.06088 0.62806 0.62690 0.555065613828 0.43800
+Ga2 Ga 0.00000 0.00000 0.00000 0.555065613828 0.44400
+Rb1 Rb 0.86512 0.23710 0.13480 2.08840476327 0.54800
+
+
+
+
