@@ -1022,8 +1022,9 @@ std::pair<int, int> d2o_main_class::correct_rms_range(const int total_sites,
 
   for(int i = 0; i <= total_sites; i++)
   {
-    double x2_curr = pow( double(i)/double(total_sites) - occup, 2);
-    
+    double d = double(i)/double(total_sites) - occup;
+    double x2_curr = d * d;
+
     if(x2_min > x2_curr)    
     {
       x2_min = x2_curr;
@@ -1231,7 +1232,8 @@ bool d2o_main_class::get_atoms_population()
         {  
           double group_sites = occup_groups[rc[i].group_index].number_of_sites();
           const c_occup_item & cp = occup_groups[rc[i].group_index].items[rc[i].atom_index];
-          double rms_item = pow( double(rc[i].curr_value)/group_sites - cp.occup_target ,2);
+          double d = double(rc[i].curr_value)/group_sites - cp.occup_target;
+          double rms_item = d * d;
 
           rms_curr += rms_item;
         }
