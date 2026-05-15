@@ -286,6 +286,7 @@ private:
                     const t_comb_descr &cd, const std::string &sampl_type = "");
 
   bool store_sampling(const std::string &output_base_name, const t_comb_descr &cd, int64_t tot_comb);
+  void cleanup_output_files(const std::string &output_base_name);
   bool write_files(const std::string &output_base_name, bool dry_run, bool merge_confs);
   std::tuple<t_symm_set, t_vec_comb, t_comb_descr> create_init_perm_structs() const;
   q_energy_reduced reduce_q_matrix(const t_comb_descr &cd) const;
