@@ -11,9 +11,9 @@
 
 #include <cassert>
 
+#include <filesystem>
 #include <regex>
 #include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
 
 #include <iostream>
 
@@ -370,7 +370,7 @@ bool parse_d2o_input::parse_sel_input(const std::vector<std::string>& inp,
 bool parse_d2o_input::check_adjust_output_name(std::string &out_name,
                                                bool archive_enabled,
                                                std::string &err_msg) {
-  namespace bfs = boost::filesystem;
+  namespace bfs = std::filesystem;
   err_msg = "";
 
   const bfs::path p_suffix = bfs::path(out_name);
@@ -379,7 +379,7 @@ bool parse_d2o_input::check_adjust_output_name(std::string &out_name,
     err_msg = "Absolute path can't be used in archive.";
     return false;
   }
-  if( p_suffix.filename_is_dot() ) {
+  if( p_suffix.filename() == "." ) {
      out_name = (p_suffix / "supercell").generic_string();
   }
 

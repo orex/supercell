@@ -1,5 +1,5 @@
 set(Boost_USE_STATIC_LIBS ${LINK_STATIC_LIBS})
-find_package(Boost 1.63 REQUIRED COMPONENTS program_options filesystem system)
+find_package(Boost 1.71 REQUIRED COMPONENTS program_options)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(PkgConfig)
@@ -7,8 +7,6 @@ find_package(PkgConfig)
 find_package(Threads REQUIRED)
 
 find_package(Eigen3 REQUIRED)
-add_definitions     ( ${EIGEN3_DEFINITIONS} )
-include_directories ( ${EIGEN3_INCLUDE_DIRS} )
 
 find_package(TBB COMPONENTS tbb)
 if( NOT ${TBB_FOUND} )
@@ -57,7 +55,7 @@ endif()
 
 include_directories(${sc_includes})
 add_executable(supercell ${sc_sources} main.cpp parse_d2o_input.cpp)
-target_link_libraries(supercell Boost::program_options Boost::filesystem Boost::system
+target_link_libraries(supercell Boost::program_options Eigen3::Eigen
         ${LibArchive_LIBRARIES} TBB::tbb Threads::Threads )
 
 install(TARGETS supercell RUNTIME DESTINATION bin)

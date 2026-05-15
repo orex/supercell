@@ -6,7 +6,6 @@
 #define SUPERCELL_SRC_CORE_PERMUT_PROCESS_T_H_
 
 #include <vector>
-#include <boost/optional.hpp>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
