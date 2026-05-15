@@ -52,12 +52,15 @@ target_link_libraries(test_combinatorics Boost::unit_test_framework)
 add_test(NAME TestCombinatorics COMMAND test_combinatorics)
 
 # ---- test_cryst_tools (gemmi-based, was OpenBabel) ----
+# Pulls in gemmi/src/symmetry.cpp for the symbols moved out of headers in 0.7+
+# (parse_triplet, find_spacegroup_by_name, spacegroup_tables::main, etc.).
 add_executable(test_cryst_tools
         ${_core}/common_types.cpp
         ${_core}/cif_io.cpp
         ${_utils}/others/string_utils.cpp
         ${_utils}/cryst_tools/cryst_tools.cpp
         ${_utils}/cryst_tools/comb_points.cpp
+        ${_3rdparty}/gemmi/src/symmetry.cpp
         test_cryst_tools.cpp)
 target_include_directories(test_cryst_tools PRIVATE ${_test_includes})
 target_compile_definitions(test_cryst_tools PRIVATE
