@@ -14,50 +14,69 @@ on:
 
 jobs:
   build-develop-linux:
+    # One job per compiler: oldest/newest gcc and oldest/newest clang we
+    # support, all on ubuntu-24.04. The aminya/setup-cpp action handles
+    # PPA/apt.llvm.org plumbing and exports CC/CXX into $GITHUB_ENV for
+    # subsequent steps.
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
-        compiler: [gcc, gcc-9, gcc-10, gcc-11, gcc-12, gcc-13, clang]
         include:
-          - os: ubuntu-latest
-            compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-          - os: ubuntu-20.04
-            compiler: clang-11
-          - os: ubuntu-22.04
-            compiler: clang-13
-          - os: ubuntu-24.04
-            compiler: gcc-14
-        exclude:
-          - os: ubuntu-20.04
-            compiler: gcc-12
-          - os: ubuntu-20.04
-            compiler: gcc-13
-    runs-on: ${{ matrix.os }}
+          - compiler: gcc-11
+          - compiler: gcc-16
+          - compiler: clang-14
+          - compiler: clang-22
+    runs-on: ubuntu-24.04
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: "500M"
+      CCACHE_COMPRESS: "true"
     steps:
       - uses: actions/checkout@v5
         with:
           submodules: true
-      - name: Setup C++
+      - name: "Install project deps"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libboost-program-options-dev libboost-test-dev \
+            libtbb-dev libarchive-dev libeigen3-dev \
+            liblzma-dev libbz2-dev zlib1g-dev
+      - name: "Setup C++ (${{ matrix.compiler }})"
         uses: aminya/setup-cpp@v1
         with:
           compiler: ${{ matrix.compiler }}
           cmake: true
-          make: true
-      - name: "Install dependencies"
+          ccache: true
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          # Per-compiler cache so gcc-11 doesn't pollute clang-22's entries.
+          key: ccache-linux-${{ matrix.compiler }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-linux-${{ matrix.compiler }}-
+      - name: "Configure & build"
         run: |
-          sudo apt update && sudo apt install -y \
-          cmake build-essential libboost-test-dev libtbb-dev \
-          libarchive-dev libboost-program-options-dev \
-          libeigen3-dev liblzma-dev libbz2-dev zlib1g-dev zip
-      - name: "Compile supercell and tests"
-        run: cmake . -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF && cmake --build . -j $(nproc)
-      - name: "Check supercell"
-        run: 'src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
+          cmake -S . -B build \
+                -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF \
+                -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          cmake --build build -j"$(nproc)"
+      - name: "Smoke test"
+        run: 'build/src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
       - name: "Run unit tests"
-        run: ctest --output-on-failure -j $(nproc)
+        run: ctest --test-dir build --output-on-failure -j"$(nproc)"
+      - name: "ccache stats"
+        if: always()
+        run: ccache -s
+      - name: Save ccache
+        if: always() && steps.ccache-restore.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
   deploy-build-macos:
     strategy:
       fail-fast: false
