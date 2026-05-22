@@ -50,7 +50,7 @@ jobs:
           ccache: true
       - name: Restore ccache
         id: ccache-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           # Per-compiler cache so gcc-11 doesn't pollute clang-22's entries.
@@ -73,7 +73,7 @@ jobs:
         run: ccache -s
       - name: Save ccache
         if: always() && steps.ccache-restore.outputs.cache-primary-key != ''
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
@@ -228,24 +228,30 @@ jobs:
           repository: mxe/mxe
           path: ./mxe
           submodules: true
-      - name: Cache
-        uses: actions/cache@v4
+      - name: Restore MXE cache
+        id: mxe-cache
+        uses: actions/cache/restore@v5
         with:
-          save-always: true
           path: ./mxe/.ccache
-          key: win-cache-${{ github.run_id }} # Can use time based key as well
+          key: win-cache-${{ github.run_id }}
           restore-keys: |
-            win-cache-          
+            win-cache-
       - name: "Compile MXE"
         working-directory: ./mxe
         run: |
           sed -i -r 's/ nettle / /g' src/libarchive.mk && sed -i -r 's/with-nettle/without-nettle --without-openssl --without-iconv /g' src/libarchive.mk
           make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache
           echo 'max_size = 15.0G' > .ccache/ccache/ccache.conf
-          .ccache/bin/ccache -s 
+          .ccache/bin/ccache -s
           make MXE_TARGETS=x86_64-w64-mingw32.static MXE_PLUGIN_DIRS=plugins/gcc14 ccache cc cmake onetbb boost eigen libarchive --jobs=4 JOBS=4
           .ccache/bin/ccache -s
           echo "${PWD}/usr/bin" >> $GITHUB_PATH
+      - name: Save MXE cache
+        if: always() && steps.mxe-cache.outputs.cache-primary-key != ''
+        uses: actions/cache/save@v5
+        with:
+          path: ./mxe/.ccache
+          key: ${{ steps.mxe-cache.outputs.cache-primary-key }}
       - name: "Clone supercell"
         uses: actions/checkout@v5
         with:
