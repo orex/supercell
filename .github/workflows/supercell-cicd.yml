@@ -13,11 +13,69 @@ on:
     types: [published]
 
 jobs:
+  reference-data:
+    # Build a reference output bundle from a known-good supercell v2.1.1
+    # binary so every downstream build can compare its own output against
+    # the same baseline. As a sanity check we also run the latest snap
+    # supercell on the same inputs and require the two archives to compare
+    # at least "almost_equivalent" — if that fails, something already drifted
+    # between v2.1.1 and the published snap and the rest of the pipeline
+    # would be checking against a poisoned baseline.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+      - name: "Install runtime deps"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            wget tar time python3
+      - name: "Download supercell v2.1.1"
+        run: |
+          mkdir -p ref211
+          wget -nv -O ref211.tar.gz \
+            https://orex.github.io/supercell/archive/supercell_v2.1.1/supercell-linux.tar.gz
+          tar -xzf ref211.tar.gz -C ref211
+          chmod +x ref211/supercell
+          ref211/supercell -d -i data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif \
+            | grep -q "The total number of combinations is 6"
+      - name: "Run tutorial cases on v2.1.1"
+        # v2.1.x has a pre-fix cleanup-order bug that loses case C's
+        # cell113_coulomb_energy.txt; rescue_wrap.sh pre-stages a hardlink
+        # so the inode survives the unlink-while-open. See tests/rescue_wrap.sh.
+        run: RUN_WRAP=tests/rescue_wrap.sh tests/run_examples.sh ref211/supercell v211 data/examples out
+      - name: "Install supercell from snap (latest stable)"
+        run: |
+          sudo snap install supercell
+          which supercell
+          /snap/bin/supercell -d -i data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif \
+            | grep -q "The total number of combinations is 6"
+      - name: "Run tutorial cases on snap supercell"
+        # Same pre-fix bug as v2.1.1 — snap also ships the unfixed build.
+        run: RUN_WRAP=tests/rescue_wrap.sh tests/run_examples.sh /snap/bin/supercell snap data/examples out
+      - name: "Compare v2.1.1 vs snap (must be at least almost_equivalent)"
+        run: |
+          set +e
+          python3 tests/compare_outputs.py out/v211.tar.gz out/snap.tar.gz --quiet
+          rc=$?
+          if [ "$rc" -gt 1 ]; then
+            echo "::error::reference vs snap drifted (exit=$rc)"
+            exit "$rc"
+          fi
+      - name: "Upload v2.1.1 reference archive"
+        uses: actions/upload-artifact@v7
+        with:
+          name: reference-test-data
+          path: out/v211.tar.gz
+          retention-days: 7
+
   build-develop-linux:
     # One job per compiler: oldest/newest gcc and oldest/newest clang we
     # support, all on ubuntu-24.04. The aminya/setup-cpp action handles
     # PPA/apt.llvm.org plumbing and exports CC/CXX into $GITHUB_ENV for
     # subsequent steps.
+    needs: reference-data
     strategy:
       fail-fast: false
       matrix:
@@ -68,6 +126,22 @@ jobs:
         run: 'build/src/sc_cli/supercell -d -i ./data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"'
       - name: "Run unit tests"
         run: ctest --test-dir build --output-on-failure -j"$(nproc)"
+      - name: "Download v2.1.1 reference"
+        uses: actions/download-artifact@v7
+        with:
+          name: reference-test-data
+          path: ref
+      - name: "Run tutorial cases on current build"
+        run: tests/run_examples.sh build/src/sc_cli/supercell current data/examples out
+      - name: "Compare against v2.1.1 reference"
+        run: |
+          set +e
+          python3 tests/compare_outputs.py ref/v211.tar.gz out/current.tar.gz
+          rc=$?
+          if [ "$rc" -gt 1 ]; then
+            echo "::error::current build drifted from v2.1.1 reference (exit=$rc)"
+            exit "$rc"
+          fi
       - name: "ccache stats"
         if: always()
         run: ccache -s
@@ -87,7 +161,7 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
       - name: "Install brew dependencies"
         run: |
-          brew install boost eigen libarchive zlib
+          brew install boost eigen libarchive zlib gnu-time
       - name: "Get TBB"
         uses: actions/checkout@v5
         with:
@@ -126,6 +200,7 @@ jobs:
           name: macos-bin
           path: ./supercell/src/sc_cli/supercell
   deploy-build-linux:
+    needs: reference-data
     strategy:
       fail-fast: false
       matrix:
@@ -210,18 +285,44 @@ jobs:
             src/sc_cli/supercell -d -i data/examples/Ca2Al2SiO7/Ca2Al2SiO7.cif | grep -q "The total number of combinations is 6"
             echo "=== testing stage ==="
             ctest --output-on-failure -j $(nproc)
+      - name: "Install host-side test deps"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends time python3
+      - name: "Download v2.1.1 reference"
+        uses: actions/download-artifact@v7
+        with:
+          name: reference-test-data
+          path: ref
+      - name: "Run tutorial cases on current build"
+        run: ./supercell/tests/run_examples.sh ./supercell/src/sc_cli/supercell current ./supercell/data/examples out
+      - name: "Compare against v2.1.1 reference"
+        run: |
+          set +e
+          python3 ./supercell/tests/compare_outputs.py ref/v211.tar.gz out/current.tar.gz
+          rc=$?
+          if [ "$rc" -gt 1 ]; then
+            echo "::error::current build drifted from v2.1.1 reference (exit=$rc)"
+            exit "$rc"
+          fi
       - name: Upload Supercell
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: ./supercell/src/sc_cli/supercell
   deploy-build-windows:
+    needs: reference-data
     runs-on: ubuntu-22.04
+    env:
+      # Silence wine's startup chatter (the "it looks like wine32 is missing"
+      # / "fixme:" messages) so they don't leak into the captured run.log
+      # and falsely flag the run.log as differing from the Linux reference.
+      WINEDEBUG: "-all"
     steps:
       - name: "Install dependencies"
         run: |
           sudo apt update && sudo apt -y full-upgrade
-          sudo apt install -y gcc cmake build-essential wine-stable autopoint gperf intltool libtool libtool-bin lzip p7zip-full python3 python3-mako
+          sudo apt install -y gcc cmake build-essential wine-stable autopoint gperf intltool libtool libtool-bin lzip p7zip-full python3 python3-mako time
       - name: "Download MXE"
         uses: actions/checkout@v5
         with:
@@ -268,11 +369,85 @@ jobs:
       - name: "Run unit tests under wine"
         working-directory: ./supercell
         run: ctest --output-on-failure -j 4
+      - name: "Download v2.1.1 reference"
+        uses: actions/download-artifact@v7
+        with:
+          name: reference-test-data
+          path: ref
+      - name: "Run tutorial cases on current Windows build (under wine)"
+        working-directory: ./supercell
+        # run_examples.sh auto-detects .exe and prepends wine. Case C is
+        # known to abort under wine due to a pre-existing Windows-only
+        # cleanup-order bug (see tests/README.md); the compare step below
+        # will surface that as `not_equivalent` and fail the job until
+        # the underlying bug is fixed.
+        run: tests/run_examples.sh src/sc_cli/supercell.exe current data/examples ../out
+      - name: "Compare against v2.1.1 reference"
+        run: |
+          set +e
+          python3 ./supercell/tests/compare_outputs.py ref/v211.tar.gz out/current.tar.gz
+          rc=$?
+          if [ "$rc" -gt 1 ]; then
+            echo "::error::current Windows build drifted from v2.1.1 reference (exit=$rc)"
+            exit "$rc"
+          fi
       - name: Upload Supercell
         uses: actions/upload-artifact@v7
         with:
           name: windows-bin
           path: ./supercell/src/sc_cli/supercell.exe
+
+  parallel-test:
+    # Build supercell with completely default cmake flags against Ubuntu's
+    # stock TBB / libarchive / Boost / Eigen, then run the regression suite
+    # four times pinned to 1, 2, 3 and 4 cores via `taskset`. TBB picks the
+    # affinity mask up via sched_getaffinity, so this is enough to cap the
+    # worker count without any source change. All four archives must compare
+    # byte-for-byte (binary_equivalent, --strict-order) — any drift would
+    # mean the program produces different doubles depending on thread count,
+    # which is exactly what this job catches.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+      - name: "Install build + test deps"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake build-essential time python3 \
+            libboost-program-options-dev libboost-test-dev \
+            libtbb-dev libarchive-dev libeigen3-dev \
+            liblzma-dev libbz2-dev zlib1g-dev
+      - name: "Configure & build (default flags)"
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_DOC=OFF
+          cmake --build build -j"$(nproc)"
+      - name: "Confirm at least 4 CPUs are available"
+        run: |
+          n=$(nproc)
+          echo "nproc=$n"
+          if [ "$n" -lt 4 ]; then
+            echo "::error::need >=4 CPUs for the parallel test, got $n"
+            exit 1
+          fi
+      - name: "Run on 1, 2, 3, 4 cores"
+        run: |
+          for n in 1 2 3 4; do
+            last=$((n - 1))
+            RUN_WRAP="taskset -c 0-$last" \
+              tests/run_examples.sh build/src/sc_cli/supercell "n$n" data/examples out
+          done
+      - name: "Compare all four archives (must be binary_equivalent)"
+        run: |
+          set +e
+          python3 tests/compare_outputs.py --strict-order \
+            out/n1.tar.gz out/n2.tar.gz out/n3.tar.gz out/n4.tar.gz
+          rc=$?
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::parallel runs disagree (exit=$rc) — supercell is not thread-count-deterministic"
+            exit "$rc"
+          fi
 
   deploy-to-site:
     if: github.event_name == 'release'
