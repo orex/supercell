@@ -1,7 +1,9 @@
 build/
+build_*/
 nbproject/
 tmp/
 obsolete/
+__pycache__/
 
 # Compiled Object files
 *.slo
