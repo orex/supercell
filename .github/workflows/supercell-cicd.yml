@@ -128,7 +128,19 @@ jobs:
   deploy-build-linux:
     strategy:
       fail-fast: false
-    runs-on: ubuntu-22.04
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-22.04
+            march: sandybridge
+            legacy_glibc_exp: "ON"
+            artifact: linux-bin
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+            march: armv8-a
+            legacy_glibc_exp: "OFF"
+            artifact: linux-arm64-bin
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: "Clone supercell"
         uses: actions/checkout@v5
@@ -180,16 +192,17 @@ jobs:
             ./configure --without-openssl --without-libb2 --without-xml2 --without-expat --without-nettle --disable-bsdtar
             sed -ir '/^.*#define HAVE_LZMA_STREAM_ENCODER_MT 1.*$/d' config.h
             make -j $(nproc) && make install && ldconfig
-            # supercell — apply AVX2 + LTO only to the project's own TUs;
-            # oneTBB and libarchive above were built without these flags.
-            # LEGACY_GLIBC_EXP redirects libm exp() to its glibc 2.2.5 symbol
-            # so the deploy binary loads on pre-glibc-2.29 hosts (RHEL 8,
-            # Ubuntu 18.04, Debian 10, Leap 15.x).
+            # supercell — apply per-arch -march + LTO only to the project's
+            # own TUs; oneTBB and libarchive above were built without these
+            # flags. LEGACY_GLIBC_EXP redirects libm exp() to its glibc
+            # 2.2.5 symbol on x86_64 to load on pre-glibc-2.29 hosts (RHEL 8,
+            # Ubuntu 18.04, Debian 10, Leap 15.x); the symbol version is
+            # x86-only, so the option is OFF on arm64.
             cd $BASE_DIR/supercell
             cmake . -DCMAKE_BUILD_TYPE=Release -DLINK_STATIC_LIBS=ON -DBUILD_DOC=OFF \
-              -DLEGACY_GLIBC_EXP=ON \
-              -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -march=sandybridge -flto=auto" \
-              -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -march=sandybridge -flto=auto" \
+              -DLEGACY_GLIBC_EXP=${{ matrix.legacy_glibc_exp }} \
+              -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG -march=${{ matrix.march }} -flto=auto" \
+              -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG -march=${{ matrix.march }} -flto=auto" \
               -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-flto=auto"
             # Build the full target set (supercell + unit tests) so the same
             # deploy-flags binary that we ship is also exercised by ctest.
@@ -200,7 +213,7 @@ jobs:
       - name: Upload Supercell
         uses: actions/upload-artifact@v7
         with:
-          name: linux-bin
+          name: ${{ matrix.artifact }}
           path: ./supercell/src/sc_cli/supercell
   deploy-build-windows:
     runs-on: ubuntu-22.04
@@ -269,6 +282,10 @@ jobs:
         with:
           name: linux-bin
           path: ./art/linux
+      - uses: actions/download-artifact@v7
+        with:
+          name: linux-arm64-bin
+          path: ./art/linux-arm64
       - uses: actions/download-artifact@v7
         with:
           name: windows-bin
