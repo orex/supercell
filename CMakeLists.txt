@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(BUILD_PROGRAM "Build supercell program" ON)
 option(BUILD_DOC "Build supercell manual and tutorial" ON)
+option(BUILD_TESTING "Build supercell unit tests" ON)
 
 if (BUILD_PROGRAM)
   if (CMAKE_BUILD_TYPE STREQUAL "")

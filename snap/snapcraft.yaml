@@ -7,39 +7,32 @@ website: https://orex.github.io/
 source-code: https://github.com/orex/supercell
 summary: Disordered crystal structures transformation software.
 description: |
-  A a combinatorial structure-generation approach for the local-level 
-  modeling of atomic substitutions and partial occupancies in crystals. 
-  It uses supercell approximation and enumeration algorithm to convert 
+  A a combinatorial structure-generation approach for the local-level
+  modeling of atomic substitutions and partial occupancies in crystals.
+  It uses supercell approximation and enumeration algorithm to convert
   structures with vacancies and/or substitution to "binary" occupied.
   The program mostly uses to prepare DFT calculations of battery matrials,
   semiconductors etc.
 
-base: core22
+base: core24
 grade: stable
 confinement: strict
 type: app
 
-architectures:
-  - build-on: amd64
-    build-for: amd64
-  - build-on: arm64
-    build-for: arm64
+platforms:
+  amd64:
+  arm64:
 
 parts:
   supercell:
-    plugin: cmake
-    cmake-parameters:
-      - '-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='
+    plugin: nil
     source-type: local
     source: .
     build-packages:
       - build-essential
       - cmake
       - libarchive-dev
-      - libboost-program-options1.74-dev
-      - libboost-filesystem1.74-dev
-      - libboost-test1.74-dev
-      - libboost-system1.74-dev
+      - libboost-program-options1.83-dev
       - libtbb-dev
       - libeigen3-dev
       - liblzma-dev
@@ -48,11 +41,25 @@ parts:
     stage-packages:
       - libarchive13
       - libtbb12
-      - libboost-program-options1.74.0
-      - libboost-filesystem1.74.0
-      - libboost-system1.74.0
+      - libboost-program-options1.83.0
       - liblzma5
       - zlib1g
+    override-build: |
+      case "$CRAFT_ARCH_BUILD_FOR" in
+        amd64) MARCH="-march=sandybridge" ;;
+        arm64) MARCH="-march=armv8-a" ;;
+        *) echo "Unsupported arch: $CRAFT_ARCH_BUILD_FOR" >&2; exit 1 ;;
+      esac
+      cmake "$CRAFT_PART_SRC" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX= \
+        -DBUILD_TESTING=OFF \
+        -DBUILD_DOC=OFF \
+        -DCMAKE_C_FLAGS_RELEASE="-O3 -DNDEBUG $MARCH -flto=auto" \
+        -DCMAKE_CXX_FLAGS_RELEASE="-O3 -DNDEBUG $MARCH -flto=auto" \
+        -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-flto=auto"
+      cmake --build . -j "$CRAFT_PARALLEL_BUILD_COUNT"
+      DESTDIR="$CRAFT_PART_INSTALL" cmake --install .
 
 apps:
   supercell:
