@@ -154,7 +154,15 @@ jobs:
   deploy-build-macos:
     strategy:
       fail-fast: false
-    runs-on: macos-14
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+            artifact: macos-bin
+          - arch: x86_64
+            runner: macos-15-intel
+            artifact: macos-intel-bin
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -197,7 +205,7 @@ jobs:
       - name: Upload Supercell
         uses: actions/upload-artifact@v7
         with:
-          name: macos-bin
+          name: ${{ matrix.artifact }}
           path: ./supercell/src/sc_cli/supercell
   deploy-build-linux:
     needs: reference-data
@@ -475,6 +483,10 @@ jobs:
         with:
           name: macos-bin
           path: ./art/osx
+      - uses: actions/download-artifact@v7
+        with:
+          name: macos-intel-bin
+          path: ./art/osx-intel
       - name: "Deploy to file"
         env:
           SITE_REPO_KEY: ${{ secrets.DEPLOY_KEY }}
