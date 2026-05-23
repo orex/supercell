@@ -18,4 +18,6 @@ set(sc_sources ${core_sources}
         ${CMAKE_SOURCE_DIR}/3rd_party/gemmi/src/symmetry.cpp)
 
 add_subdirectory(sc_cli)
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
