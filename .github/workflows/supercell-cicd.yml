@@ -457,16 +457,20 @@ jobs:
             exit "$rc"
           fi
 
-  deploy-to-site:
+  deploy-to-release:
+    # Attach the per-platform binaries to the GitHub Release as downloadable
+    # assets. Replaces the previous gh-pages push to orex.github.io —
+    # Releases are the canonical home for versioned downloads now.
     if: github.event_name == 'release'
     needs: [ deploy-build-linux, deploy-build-macos, deploy-build-windows ]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: "Install dependencies"
         run: |
-          sudo apt-get update && sudo apt-get full-upgrade -y
           sudo apt-get update
-          sudo apt-get install -y git wget tar openssh-client zip
+          sudo apt-get install -y --no-install-recommends wget tar zip
       - uses: actions/download-artifact@v7
         with:
           name: linux-bin
@@ -487,54 +491,29 @@ jobs:
         with:
           name: macos-intel-bin
           path: ./art/osx-intel
-      - name: "Deploy to file"
-        env:
-          SITE_REPO_KEY: ${{ secrets.DEPLOY_KEY }}
+      - name: "Package binaries"
         run: |
-          mkdir ./site && cd ./site
-          # Save some useful information
-          ART_DIR=${PWD}/../art/
-          DEPLOY_REPO="git@github.com:orex/orex.github.io.git"
-          DEPLOY_BRANCH="master"
-          DEPLOY_DIR="supercell/external"
-          #
-          mkdir ~/.ssh
-          eval `ssh-agent -s`
-          echo "${SITE_REPO_KEY}" | ssh-add -
-          ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts
-          # Clone the existing gh-pages for this repo into out/
-          # Create a new empty branch if gh-pages doesn't exist yet (should only happen on first deply)
-          git clone --recurse-submodules "${DEPLOY_REPO}" --branch "${DEPLOY_BRANCH}" out && cd out
-          REPO_PATH=${PWD}
-          # Now let's go have some fun with the cloned repo
-          git config user.name "Github Action"
-          git config user.email "kirill.okhotnikov@gmail.com"
-          #Main code
-          mkdir -p "${REPO_PATH}/${DEPLOY_DIR}/exe/."
-          cd `mktemp -d -t XXXXXX`
+          mkdir -p packaged
+          # README bundled inside each archive; lives on the `deploy` branch.
           wget -nv https://github.com/orex/supercell/raw/deploy/README -O README
-          for i in ${ART_DIR}/*
-          do
-            cp -a "${i}"/* .
-            OS=`basename "${i}"`
+          for d in art/*; do
+            OS=$(basename "$d")
+            cp "$d"/* .
             if [[ "$OS" == "windows" ]]; then
-              zip -9 supercell-$OS.zip README supercell.exe
+              zip -9 "packaged/supercell-$OS.zip" README supercell.exe
             else
               chmod +x supercell
-              tar czvf supercell-$OS.tar.gz README supercell
+              tar -czf "packaged/supercell-$OS.tar.gz" README supercell
             fi
             rm -f supercell supercell.exe
           done
-          cp -afv supercell-* "${REPO_PATH}/${DEPLOY_DIR}/exe/."
-
-          cd ${REPO_PATH}
-
-          ls -lah
-
-          # Commit the "changes", i.e. the new version.
-          # The delta will show diffs between new and old version
-          git add --no-ignore-removal .
-          git status
-          git commit -m "Deploy to GitHub Pages: ${GITHUB_SHA}"
-          # Now that we're all set up, we can push.
-          git push $DEPLOY_REPO $DEPLOY_BRANCH
+          ls -lah packaged/
+      - name: "Upload binaries as Release assets"
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            packaged/supercell-linux.tar.gz
+            packaged/supercell-linux-arm64.tar.gz
+            packaged/supercell-osx.tar.gz
+            packaged/supercell-osx-intel.tar.gz
+            packaged/supercell-windows.zip
